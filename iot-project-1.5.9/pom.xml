@@ -54,5 +54,8 @@
     <module>iot-device-service</module>
     <module>iot-mqtt-adapter</module>
     <module>iot-base-service</module>
+    <module>iot-common-adapter</module>
+    <module>iot-controller-service</module>
+    <module>iot-nbiot-adapter</module>
   </modules>
 </project>
