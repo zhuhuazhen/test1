@@ -27,8 +27,9 @@ public class OrderController {
 	@RequestMapping(value = "/sos", method = RequestMethod.POST)
 	public String sos(@RequestBody JSONObject json) throws MqttException {
 		JSONObject jsonObject = JSONUtil.parseObj(json);
-		PublishSample publish = new PublishSample();
-		publish.Publish(jsonObject.get("topic").toString(), jsonObject.toString());
+		
+		/*PublishSample publish = new PublishSample();
+		publish.Publish(jsonObject.get("topic").toString(), jsonObject.toString());*/
 
 		return "hello";
 	}

@@ -6,6 +6,7 @@ import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.springframework.context.annotation.Bean;
 
 public class KafkaConsumerExample {
 	public static void main(String[] args) {
@@ -17,14 +18,24 @@ public class KafkaConsumerExample {
         props.put("session.timeout.ms", "30000");
         props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("auto.offset.reset", "earliest");
+        //props.put("auto.offset.reset", "earliest");
+        props.put("auto.offset.reset", "latest");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Arrays.asList("test"));
+        consumer.subscribe(Arrays.asList("topic_wan"));
+         
         
-        for(int i = 0; i < 10; i++) {
+        //for(int i = 0; i < 10; i++) {
+        for( ;  ;  ) {
             ConsumerRecords<String, String> records = consumer.poll(10);
+            //if(true)throw new RuntimeException("xxxxxxxxxx");
             for (ConsumerRecord<String, String> record : records)
                 System.out.printf("offset = %d, key = %s, value = %s\n", record.offset(), record.key(), record.value());
+            try {
+				Thread.currentThread().sleep(1000*5);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
     }
 }

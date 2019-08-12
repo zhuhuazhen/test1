@@ -43,13 +43,6 @@ public class KafkaConfig {
 		host = pro.get("redis.url").toString();
 		password = pro.get("redis.passWord").toString();*/
 		
-		 
-        props.put("bootstrap.servers", "47.106.189.255:9092");
-        props.put("group.id", "group_zhu");
-        props.put("enable.auto.commit", "true");
-        props.put("auto.commit.interval.ms", "1000");
-        props.put("session.timeout.ms", "30000");
-        props.put("auto.offset.reset", "earliest");
 		props.put("bootstrap.servers", pro.get("spring.kafka.bootstrap.servers"));    
         props.put("group.id", "group_zhu");   
         props.put("enable.auto.commit", "true"); 

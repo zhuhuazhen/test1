@@ -14,9 +14,10 @@ import com.hzyw.iot.adapter.transform.JsonUtil;
 /**
  *订阅端
  */
-@Configuration
+
 public class SubscribeSample {
-    public void testMqtt() {   
+	
+    public MqttClient testMqtt() {   
     	
     	//1,获取所有纳管状态下的主题，以及HOST TOPIC clientid userName passWord 协议类型=mqtt,namespace
     	//2,循环处理以下逻辑，建立长连接
@@ -54,7 +55,7 @@ public class SubscribeSample {
             client.connect(options);
             // 订阅消息
             client.subscribe(TOPIC, qos);
-            
+            return client;
             /*//(测试) 断开连接
             client.disconnect();
             // 关闭客户端
@@ -67,5 +68,7 @@ public class SubscribeSample {
         } catch (Exception e) {
             e.printStackTrace();
         }
+		return null;
+		
     }
 }

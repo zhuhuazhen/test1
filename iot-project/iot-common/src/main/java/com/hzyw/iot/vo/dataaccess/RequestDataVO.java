@@ -8,7 +8,7 @@ import java.util.Map;
  * 设备数据接入-下发消息
  */
 @SuppressWarnings("rawtypes")
-public class RequestDataVO implements Serializable {
+public class RequestDataVO  extends DataVO implements Serializable {
   
 	private static final long serialVersionUID = -1080455511252050149L;
 	private String deviceId; // 设备ID

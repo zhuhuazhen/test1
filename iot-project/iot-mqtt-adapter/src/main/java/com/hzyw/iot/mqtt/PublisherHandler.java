@@ -9,7 +9,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 /**
  * 发布端
  */
-public class PublishSample {
+public class PublisherHandler {
 	private MqttClient sampleClient;// 创建客户端
 	//public MqttConnectOptions options;// 创建链接参数
 	public static int qos = 1;//通道
@@ -19,7 +19,7 @@ public class PublishSample {
 	public static String clientId = "pubClient";//发布ID
 	
 	//内存存储
-	public PublishSample () throws MqttException {
+	public PublisherHandler () throws MqttException {
 		sampleClient = new MqttClient(url, clientId, new MemoryPersistence());
 	}
 	

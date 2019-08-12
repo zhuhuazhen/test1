@@ -27,7 +27,7 @@ import net.sf.json.JSONArray;
 public class FormatTest {
 	
 	public static void main(String[] args){
-		DevInfoDataVO dinfo = new DevInfoDataVO();
+		/*DevInfoDataVO dinfo = new DevInfoDataVO();
 		//dinfo.put("aaaa", "vlaue");
 		dinfo.setDeviceId("xxxx");
 		 
@@ -52,7 +52,7 @@ public class FormatTest {
 		MessageVO<DevInfoDataVO> msg = new MessageVO<DevInfoDataVO>(dinfo);
 		msg.setMsgId("1111111111111111010011");
 		 
-		System.out.println(">>"+JSON.toJSONString(msg));
+		System.out.println(">>"+JSON.toJSONString(msg));*/
 		
 	}
 	

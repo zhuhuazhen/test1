@@ -8,7 +8,7 @@ import java.util.Map;
  * 设备数据接入-信号返回
  */
 @SuppressWarnings("rawtypes")
-public class DevSignlResponseDataVO implements Serializable {
+public class DevSignlResponseDataVO  extends DataVO  implements Serializable {
 	private static final long serialVersionUID = 4111731933287831123L;
 	private String deviceId; // 设备ID
 	private List<Map> signals; // [消息中断]  还待确定返回的消息结构

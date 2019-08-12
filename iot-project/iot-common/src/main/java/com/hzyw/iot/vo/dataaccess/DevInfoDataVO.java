@@ -8,14 +8,14 @@ import java.util.Map;
  * 设备数据接入-设备基本消息
  */
 @SuppressWarnings("rawtypes")
-public class DevInfoDataVO implements Serializable {
+public class DevInfoDataVO extends DataVO implements Serializable {
 	private static final long serialVersionUID = 4111731933287831358L;
 	private String deviceId; // 设备ID
 	private String status; // 状态
-	private List<Map> attributers; // 基本属性
-	private List<Map> methods; // 操作方法
-	private List<Map> definedAttributers; // 自定义属性
-	private List<Map> definedMethods; // []
+	private List<String> attributers; // 基本属性
+	private List<String> methods; // 操作方法
+	private List<String> definedAttributers; // 自定义属性
+	private List<String> definedMethods; // []
 	private List<Map> signals; // [消息中断]
 	public String getDeviceId() {
 		return deviceId;
@@ -29,28 +29,28 @@ public class DevInfoDataVO implements Serializable {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public List<Map> getAttributers() {
+	public List<String> getAttributers() {
 		return attributers;
 	}
-	public void setAttributers(List<Map> attributers) {
+	public void setAttributers(List<String> attributers) {
 		this.attributers = attributers;
 	}
-	public List<Map> getMethods() {
+	public List<String> getMethods() {
 		return methods;
 	}
-	public void setMethods(List<Map> methods) {
+	public void setMethods(List<String> methods) {
 		this.methods = methods;
 	}
-	public List<Map> getDefinedAttributers() {
+	public List<String> getDefinedAttributers() {
 		return definedAttributers;
 	}
-	public void setDefinedAttributers(List<Map> definedAttributers) {
+	public void setDefinedAttributers(List<String> definedAttributers) {
 		this.definedAttributers = definedAttributers;
 	}
-	public List<Map> getDefinedMethods() {
+	public List<String> getDefinedMethods() {
 		return definedMethods;
 	}
-	public void setDefinedMethods(List<Map> definedMethods) {
+	public void setDefinedMethods(List<String> definedMethods) {
 		this.definedMethods = definedMethods;
 	}
 	public List<Map> getSignals() {
@@ -59,6 +59,7 @@ public class DevInfoDataVO implements Serializable {
 	public void setSignals(List<Map> signals) {
 		this.signals = signals;
 	}
+	 
 
 	 
 

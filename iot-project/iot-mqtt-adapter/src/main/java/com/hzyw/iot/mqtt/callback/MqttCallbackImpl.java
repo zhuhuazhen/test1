@@ -19,7 +19,7 @@ public class MqttCallbackImpl implements MqttCallback{
      public void messageArrived(String topic, MqttMessage message) {
          //System.out.println("topic:"+topic);//订阅的主题(厂商/设备唯一标识)
          //System.out.println("Qos:"+message.getQos());
-         //System.out.println("接收，message content:"+new String(message.getPayload()));//接收的byte数据
+         System.out.println("接收，message content:"+new String(message.getPayload()));//接收的byte数据
          //处理消息
          Handler handler =new Handler();
          handler.handlerMessages(topic, message.toString());

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 设备数据接入-服务消息
  */
-public class ServiceDataVO implements Serializable {
+public class ServiceDataVO extends DataVO  implements Serializable {
   
 	private static final long serialVersionUID = -1777834634257025224L;
 	private String serviceId; // 服务ID

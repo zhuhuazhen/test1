@@ -12,7 +12,7 @@ public class PublishSample {
 	 */
 	    public static void main(String[] args) {
 
-	        String topic = "test/pub/willflag";
+	        String topic = "topic_wan";
 	        String content = "wanweiyi111";
 	        int qos = 1;
 	        String broker = "tcp://47.106.189.255:1883";
