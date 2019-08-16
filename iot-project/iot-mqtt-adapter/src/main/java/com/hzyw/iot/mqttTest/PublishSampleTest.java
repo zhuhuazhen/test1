@@ -15,7 +15,7 @@ public class PublishSampleTest {
 	 */
 	    public static void main(String[] args) {
 
-	        String topic = "pub";
+	        String topic = "sub";
 	        String content = "wanweiyi111";
 	        int qos = 1;
 	        String broker = "tcp://47.106.189.255:1883";

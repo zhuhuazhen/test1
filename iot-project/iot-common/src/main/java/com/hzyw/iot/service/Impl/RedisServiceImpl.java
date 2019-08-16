@@ -12,7 +12,8 @@ import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.util.JSONUtil;
 
 import javax.annotation.Resource;  
-import java.util.List;  
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;  
   
 /** 
@@ -110,4 +111,26 @@ public class RedisServiceImpl implements RedisService {
         });  
         return result;  
     }  
+    
+    @Override  
+    public void hmSet(String key,String field,String value) {  
+        this.redisTemplate.opsForHash().put(key,field,value);
+    } 
+    
+    @Override 
+    public void hmGet(String key,String field) {  
+        this.redisTemplate.opsForHash().get(key, field);
+    }
+    
+    @Override 
+    public Map hmGetAll(String key,String field) {  
+        return this.redisTemplate.opsForHash().entries(key);
+    }
+    
+    @Override 
+    public boolean hasHmkey(String key,String field) {  
+        return this.redisTemplate.opsForHash().hasKey(key,field);
+    }
+    
+    
 }  

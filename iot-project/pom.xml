@@ -57,5 +57,10 @@
     <module>iot-common</module>
     <module>iot-controller-service</module>
     <module>iot-nbiot-adapter</module>
+    
+    
+    <module>iot-heartbeat-service</module>
+    <module>iot-rpc-adapter</module>
+    <module>iot-plc-adapter</module>
   </modules>
 </project>

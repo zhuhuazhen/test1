@@ -39,7 +39,8 @@ public class KafkaProducerExample {
 	        mapData.put("deviceid", "dg01");
 	        mapData.put("methods", listMap);
 	        JSONObject jsonObject = JSONUtil.parseObj(mapData);
-	        producer.send(new ProducerRecord<>("wan", jsonObject.toString()));
+	        producer.send(new ProducerRecord<>("topic_wan", "helloWorld".toString()));
+	        
 	        
 	        
 

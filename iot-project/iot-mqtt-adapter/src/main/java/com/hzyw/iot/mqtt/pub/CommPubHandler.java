@@ -1,60 +1,86 @@
 package com.hzyw.iot.mqtt.pub;
 
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.PostConstruct;
 import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.hzyw.iot.config.MqttConnectionConfig;
 
 /**
- * 发布端
+ * 请求下发，发布完毕则关闭连接
  */
-public class CommPubHandler {
-	private MqttClient sampleClient;// 创建客户端
-	//public MqttConnectOptions options;// 创建链接参数
-	public static int qos = 1;//通道
-	public static String url = "tcp://47.106.189.255:1883";//地址
-	public static String userName = "test";//用户名
-	public static String password = "test";//密码
-	public static String clientId = "pubClient";//发布ID
+@Service
+public class CommPubHandler extends AbstractPubHandler {
 	
-	//内存存储
-	public CommPubHandler () throws MqttException {
-		sampleClient = new MqttClient(url, clientId, new MemoryPersistence());
+	private static Logger logger = LoggerFactory.getLogger(CommPubHandler.class);
+	
+	@Autowired
+	private MqttConnectionConfig mqttConnectionConfig;
+	
+	public CommPubHandler() {
+		//super.setConfig(getConfig());
 	}
 	
-	public void Publish(String topic, String content) {
+	@PostConstruct
+    public void init() {
 		try {
-			// 创建链接参数
-            MqttConnectOptions options = new MqttConnectOptions();
-			// 在重新启动和重新连接时记住状态
-			options.setCleanSession(false);
-			// 设置连接的用户名
-			options.setUserName(userName);
-			options.setPassword(password.toCharArray());
-			// 遗愿消息
-			//options.setWill("pub", "pub down!~".getBytes(), qos, true);
+			setConfig(getConfig(),mqttConnectionConfig);
+		} catch (MqttException e) {
+			logger.error(">>>CommPubHandler::init ",e);
+		}
+    }
+
+	@Override
+	public void Publish(String ... para) {
+		try {
+			//NEW一个客户端连接对象
+			this.setMqttClient(new MqttClient(this.getUrl(), this.getClientId(), new MemoryPersistence()));
 			// 建立连接
-			sampleClient.connect(options);
+			this.getMqttClient().connect(this.getOptions());
 			// 创建消息
-			MqttMessage message = new MqttMessage(content.getBytes());
+			MqttMessage message = new MqttMessage(para[0].getBytes());
 			// 设置消息的服务质量
-			message.setQos(qos);
+			message.setQos(this.getQos());
 			// 发布消息
-			sampleClient.publish(topic, message);
+			this.getMqttClient().publish(this.getTopic()+ para[1], message); //要拼上网关ID
 			// 断开连接
-			sampleClient.disconnect();
+			this.getMqttClient().disconnect();
 			// 关闭客户端
-			sampleClient.close();
+			this.getMqttClient().close();
 		} catch (MqttException me) {
-			System.out.println("reason " + me.getReasonCode());
-			System.out.println("msg " + me.getMessage());
-			System.out.println("loc " + me.getLocalizedMessage());
-			System.out.println("cause " + me.getCause());
-			System.out.println("excep " + me);
-			me.printStackTrace();
+			logger.error(">>>CommPubHandler::Publish ",me);
+			try {
+				this.getMqttClient().disconnect();
+			} catch (MqttException e) {
+				logger.error(">>>CommPubHandler::Publish ;getMqttClient().disconnect() exception! ",e);
+			}
+			// 关闭客户端
+			try {
+				this.getMqttClient().close();
+			} catch (MqttException e) {
+				logger.error(">>>CommPubHandler::Publish ;getMqttClient().close() exception! ",e);
+			}
 		}
 
 	}
 
+	@Override
+	public Map<String, String> getConfig() {
+		Map<String,String> config = new HashMap<String,String>();
+		config.put("topic", mqttConnectionConfig.getRequest().get("topic"));
+		config.put("qos", mqttConnectionConfig.getRequest().get("qos"));
+		config.put("url", mqttConnectionConfig.getComm().get("url"));
+		config.put("userName", mqttConnectionConfig.getComm().get("userName"));
+		config.put("password", mqttConnectionConfig.getComm().get("password"));
+		config.put("clientId", mqttConnectionConfig.getRequest().get("clientId"));
+		return config;
+	}
+ 
 }

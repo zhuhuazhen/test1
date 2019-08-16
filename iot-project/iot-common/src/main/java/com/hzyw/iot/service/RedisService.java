@@ -1,6 +1,7 @@
 package com.hzyw.iot.service;
 
 import java.util.List;
+import java.util.Map;
  
 
 public interface RedisService {
@@ -20,4 +21,13 @@ public interface RedisService {
  	    public long rpush(final String key, Object obj); 
 	  
  	    public String lpop(final String key);
+ 	    
+ 	   
+ 	    public void hmSet(String key,String field,String value);
+ 	    
+  	    public void hmGet(String key,String field);
+ 	    
+  	    public Map hmGetAll(String key,String field);
+ 	    
+  	    public boolean hasHmkey(String key,String field);
 }

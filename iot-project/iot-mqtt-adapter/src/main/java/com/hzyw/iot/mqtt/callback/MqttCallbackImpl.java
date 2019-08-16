@@ -1,36 +1,52 @@
 package com.hzyw.iot.mqtt.callback;
 
-
+import org.drools.core.util.StringUtils;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import com.hzyw.iot.mqtt.sub.GatewayMqttSub;
 import com.hzyw.iot.util.Format;
 
-
 /**
- *实现回调函数
+ * 实现回调函数
+ *
+ *
+ * //订阅包括以下消息类型 devOnline DEV在线 devOffline DEV离线 response 上报下发请求结果
+ * devInfoResponse 属性上报 metricInfoResponse设备状态数据上报 devSignlResponse 设备信号上报
+ *
+ * 
  */
-public class MqttCallbackImpl implements MqttCallback{
-	 public void connectionLost(Throwable cause) {
-         System.out.println("connectionLost");
-     }
-
-     public void messageArrived(String topic, MqttMessage message) {
-         //System.out.println("topic:"+topic);//订阅的主题(厂商/设备唯一标识)
-         //System.out.println("Qos:"+message.getQos());
-         System.out.println("接收，message content:"+new String(message.getPayload()));//接收的byte数据
-         //处理消息
-         Handler handler =new Handler();
-         handler.handlerMessages(topic, message.toString());
-         
-        /* Format format = new Format();
-         format.configure(topic,new String(message.getPayload()));*/
-     }
-
-     public void deliveryComplete(IMqttDeliveryToken token) {
-         System.out.println("deliveryComplete---------"+ token.isComplete());
-     }
-
- }	
+@Component
+public class MqttCallbackImpl implements MqttCallback {
+	private static Logger logger = LoggerFactory.getLogger(MqttCallbackImpl.class);
 	
+	@Autowired
+	private Handler handler;
+
+	public void connectionLost(Throwable cause) {
+		// 连接正常断开？
+		System.out.println("connectionLost");
+	}
+
+	public void messageArrived(String topic, MqttMessage message) {
+		try {
+			logger.info(">>>GatewayMqttSub订阅,接收，message content :"  + new String(message.getPayload()));
+			if(message !=null && !StringUtils.isEmpty(message.toString())){
+				handler.handlerMessages(topic, message.toString());
+			}
+		} catch (Exception e) {
+			//e.printStackTrace();
+			logger.error(">>>MqttCallbackImpl::messageArrived exception !", e);
+		}
+	}
+
+	public void deliveryComplete(IMqttDeliveryToken token) {
+		System.out.println("deliveryComplete---------" + token.isComplete());
+	}
+
+}

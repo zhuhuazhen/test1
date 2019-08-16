@@ -3,6 +3,7 @@ package com.hzyw.iot.config;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.log4j.Logger;
@@ -20,63 +21,78 @@ public class KafkaConfig {
     static String host;
     static String password;
      
+    public static String group_id = "group.id";
     
-    static Properties props = new Properties();;
+    static Properties props = new Properties();
     static {
 		// 手动加载加载配置文件
-		InputStream in = JedisPoolUtils.class.getClassLoader().getResourceAsStream("kafka.properties");
+		InputStream in = JedisPoolUtils.class.getClassLoader().getResourceAsStream("kafka.consumer.properties");
 		Properties pro = new Properties();
 		try {
 			pro.load(in);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		/*// 获得池子对象
-		poolConfig = new JedisPoolConfig();
-		poolConfig.setMaxIdle(Integer.parseInt(pro.get("redis.maxIdle").toString()));// 最大闲置个数
-		poolConfig.setMinIdle(Integer.parseInt(pro.get("redis.minIdle").toString()));// 最小闲置个数
-		poolConfig.setMaxTotal(Integer.parseInt(pro.get("redis.maxTotal").toString()));// 最大连接数
-		poolConfig.setTestOnBorrow(true);// 在borrow一个jedis实例的时候，是否需要验正作，如果是赋值true
-		poolConfig.setTestOnReturn(true);// 在return。。。。
-		poolConfig.setBlockWhenExhausted(true);// 连接耗尽时是否阻塞
-		port = new Integer(pro.get("redis.port").toString());
-		host = pro.get("redis.url").toString();
-		password = pro.get("redis.passWord").toString();*/
-		
 		props.put("bootstrap.servers", pro.get("spring.kafka.bootstrap.servers"));    
-        props.put("group.id", "group_zhu");   
+        ///props.put("group.id", "group_zhu");   
         props.put("enable.auto.commit", "true"); 
         props.put("auto.commit.interval.ms", "1000"); 
         props.put("session.timeout.ms", "30000");  
         props.put("auto.offset.reset", "earliest");  
-        //props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        //props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("key.deserializer", StringDeserializer.class.getName());
         props.put("value.deserializer", StringDeserializer.class.getName());
 	}
     
+
+    static Properties props_producer = new Properties();;
+    static {
+		// 手动加载加载配置文件
+		InputStream _in = JedisPoolUtils.class.getClassLoader().getResourceAsStream("kafka.producer.properties");
+		Properties _pro = new Properties();
+		try {
+			_pro.load(_in);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+  
+		props_producer.put("bootstrap.servers", _pro.get("spring.kafka.bootstrap.servers"));    
+		props_producer.put("acks", "all"); 
+		props_producer.put("retries", 0); 
+		props_producer.put("batch.size", 16384);  
+		props_producer.put("linger.ms", 1);  
+		props_producer.put("buffer.memory", 33554432);
+		props_producer.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		props_producer.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+	}
     
-     
-    /* 自动加载配置
+
     @Bean  
-    @ConfigurationProperties(prefix = "spring.kafka")  
-    public Properties getProperties() {  
-        Properties config = new Properties();  
-        return config;  
-    } */ 
-    
-    @Bean  
-    public Properties getProperties() {   
+    public Properties getConsumerProperties() {   
         return props;  //扩展并手动从指定文件加载
     } 
-  
+    
+    @Bean  
+    public Properties getProducerProperties() {   
+        return props_producer;  //扩展并手动从指定文件加载
+    } 
       
     //@ConfigurationProperties(prefix = "spring.kafka")  未來可以考慮直接走springboot默認配置
     @Bean
     public KafkaCommon getKafkaCommon() {  
     	KafkaCommon factory = new KafkaCommon();  
-        factory.setConfig(getProperties());  
+        factory.setProducerConfig(getProducerProperties());  
+        factory.setConsumerConfig(getConsumerProperties());
         logger.info("KafkaCommon bean init success.");    
         return factory;
     }  
+    
+    
+    public static Properties copeProperty(Properties config){
+		Properties props = new Properties();
+        Set<Object> keys = config.keySet();//返回属性key的集合
+        for (Object key : keys) {
+            props.put(key, config.get(key));   
+        }
+        return props;
+	}
 }

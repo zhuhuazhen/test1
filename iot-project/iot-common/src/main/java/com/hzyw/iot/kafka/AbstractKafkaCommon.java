@@ -4,13 +4,25 @@ import java.util.Properties;
 
 public abstract class AbstractKafkaCommon {
 
-	private Properties config = new Properties();
+	private Properties producerConfig = new Properties();
+	
+	private Properties consumerConfig = new Properties();
 
-	public void setConfig(Properties config) {
-		this.config = config;
+	public Properties getProducerConfig() {
+		return producerConfig;
 	}
 
-	public Properties getConfig() {
-		return config;
+	public void setProducerConfig(Properties producerConfig) {
+		this.producerConfig = producerConfig;
 	}
+
+	public Properties getConsumerConfig() {
+		return consumerConfig;
+	}
+
+	public void setConsumerConfig(Properties consumerConfig) {
+		this.consumerConfig = consumerConfig;
+	}
+
+	 
 }

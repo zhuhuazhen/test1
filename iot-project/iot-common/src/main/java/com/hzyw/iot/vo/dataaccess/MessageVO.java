@@ -3,7 +3,7 @@ package com.hzyw.iot.vo.dataaccess;
 import java.io.Serializable;
 
 /**
- * 设备数据接入-消息结构
+ * 设备数据接入- 下发消息外层结构
  */
 public class MessageVO<T> implements Serializable {
 	private static final long serialVersionUID = 2097112223168452858L;

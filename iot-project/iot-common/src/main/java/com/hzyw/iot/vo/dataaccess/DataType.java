@@ -8,14 +8,32 @@ package com.hzyw.iot.vo.dataaccess;
 public enum DataType {
 	ServiceOnline("serviceOnline"),   //平台上线
 	ServiceOffline("serviceOffline"),   //平台下线
-	DevLogin("devLogin"),   //DEV登陆认证
-	DevOnline("devOnline"),    //DEV在线
-	DevOffline("devOffline"),  //DEV离线
+	DevLogin("devLogin"),   //DEV登陆认证    暂时用不到，每次请求都会做消息认证
+	/**
+	 * DEV在线
+	 */
+	DevOnline("devOnline"),    
+	/**
+	 * DEV离线
+	 */
+	DevOffline("devOffline"),  
 	Request("request"),     //下发请求
-	Response("response"),   //上报下发请求结果
-	DevInfoResponse("devInfoResponse"),    //属性上报
-	MetricInfoResponse("metricInfoResponse"),  //设备状态数据上报
-	DevSignlResponse("devSignlResponse");      //设备信号上报
+	/**
+	 * 上报'下发请求'结果
+	 */
+	Response("response"),   
+	/**
+	 * 属性上报
+	 */
+	DevInfoResponse("devInfoResponse"),    
+	/**
+	 * 设备状态数据上报
+	 */
+	MetricInfoResponse("metricInfoResponse"),  
+	/**
+	 * 设备信号上报
+	 */
+	DevSignlResponse("devSignlResponse");     
 
 	private String messageType;
 
@@ -31,5 +49,14 @@ public enum DataType {
 		this.messageType = messageType;
 	}
 	
+	public static DataType getByValue(String value) {
+		for (DataType code : values()) {
+			if (value!=null && value.equals(code.getMessageType()) ) {
+				return code;
+			}
+		}
+		return null;
+	}
+    
 
 }

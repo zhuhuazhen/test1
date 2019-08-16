@@ -38,7 +38,7 @@ public class SubscribeSampleTest {
             // 设置会话心跳时间 单位为秒 服务器会每隔1.5*20秒的时间向客户端发送个消息判断客户端是否在线，但这个方法并没有重连的机制
             options.setKeepAliveInterval(20);
             // 遗愿消息
-            options.setWill("sub", "sub down!~".getBytes(), 1, false);
+            //options.setWill("sub", "sub down!~".getBytes(), 1, false);
             //设置断开后重新连接
            // options.setAutomaticReconnect(true);
            /*

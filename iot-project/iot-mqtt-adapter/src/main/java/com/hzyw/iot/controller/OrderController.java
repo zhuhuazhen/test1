@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hzyw.iot.mqtt.PublishSample;
 import com.hzyw.iot.service.RedisService;
 
 import cn.hutool.json.JSONObject;

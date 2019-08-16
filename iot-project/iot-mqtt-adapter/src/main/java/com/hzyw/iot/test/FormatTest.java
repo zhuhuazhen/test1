@@ -39,7 +39,7 @@ public class FormatTest {
 		je1.put("attributer2desc", "-");
 		attributer.add(je);
 		attributer.add(je1);
-		dinfo.setAttributers(attributer);
+		//dinfo.setAttributers(attributer);
 		
 		String testjson = JSON.toJSONString(dinfo);
 		System.out.println(testjson);
