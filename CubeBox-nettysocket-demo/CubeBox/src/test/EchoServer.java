@@ -17,6 +17,7 @@ public class EchoServer {
 			b.group(group);
 			b.channel(NioServerSocketChannel.class);// 设置nio类型的channel
 			b.localAddress(new InetSocketAddress(port));// 设置监听端口
+			b.h
 			b.childHandler(new ChannelInitializer<SocketChannel>() {//有连接到达时会创建一个channel
 						protected void initChannel(SocketChannel ch) throws Exception {
 							// pipeline管理channel中的Handler，在channel队列中添加一个handler来处理业务
