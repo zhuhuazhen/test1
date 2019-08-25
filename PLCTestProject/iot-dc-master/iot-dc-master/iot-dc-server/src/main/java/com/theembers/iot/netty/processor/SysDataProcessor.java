@@ -26,12 +26,12 @@ public class SysDataProcessor extends ProcessorAbstract implements IDataProcesso
     private static final String SN = "sn";
 
     public SysDataProcessor() {
-        super(ERTUChannelFlag.SYS);
+        super(ERTUChannelFlag.SYS); //表示操作类型
     }
 
     @Override
     public void translate(ChannelHandlerContext ctx, ByteBuf source, RTUInfo rtuInfo) throws Exception {
-        if (checkAndGetAvailable(source)) {
+        if (checkAndGetAvailable(source)) { //读取
             byte[] dataBytes = new byte[source.readableBytes()];
             source.readBytes(dataBytes);
             String sourceStr = new String(dataBytes);

@@ -22,11 +22,11 @@ import java.io.IOException;
  * @version 1.0
  * createTime 2018-11-09 11:09
  */
-@Component
+//@Component
 public class MqListener {
     private static final Logger LOGGER = LoggerFactory.getLogger(MqListener.class);
 
-    @Autowired
+    //@Autowired
     private IoTService ioTService;
 
     /**
@@ -34,8 +34,8 @@ public class MqListener {
      *
      * @param message
      */
-    @RabbitListener(queues = "rtu_inst_queue")
-    @RabbitHandler
+    //@RabbitListener(queues = "rtu_inst_queue")
+    //@RabbitHandler
     public void command(Message message) throws IOException {
         String msg = new String(message.getBody());
         LOGGER.info("rtu-command: {}", msg);
@@ -56,8 +56,8 @@ public class MqListener {
      * @param message
      * @throws Exception
      */
-    @RabbitListener(queues = "rtu_refresh_queue")
-    @RabbitHandler
+    //@RabbitListener(queues = "rtu_refresh_queue")
+    //@RabbitHandler
     public void refreshIotInfo(Message message) throws Exception {
         String msg = new String(message.getBody());
         if (GlobalInfo.Global_Iot_Redis_Key.equals(msg)) {

@@ -30,6 +30,7 @@ public class ModbusInfo {
 
     public ModbusInfo(ByteBuf source) {
         this.source = source;
+        //这种数据 貌似报文  地址 | 命令 | 长度 |数据| CRC检验码
         this.data = new byte[source.readableBytes() - address.length - command.length - length.length - crc.length];
         this.fullData = new byte[source.readableBytes() - crc.length];
 
@@ -39,7 +40,7 @@ public class ModbusInfo {
                 // length
                 .readBytes(length)
                 // data
-                .readBytes(data)
+                .readBytes(data) 
                 // crc
                 .readBytes(crc);
         // fullData

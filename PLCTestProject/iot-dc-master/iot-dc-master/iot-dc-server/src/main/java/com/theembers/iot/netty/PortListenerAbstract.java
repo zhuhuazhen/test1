@@ -92,9 +92,9 @@ abstract class PortListenerAbstract {
             ;
             // 拓展
             extHandler(socketChannel.pipeline());
-            pipeline.addLast(new MqHandler())
+            //pipeline.addLast(new MqHandler())
                     // 异常管理
-                    .addLast(new ExceptionHandler())
+            pipeline.addLast(new ExceptionHandler())
             ;
         }
     }

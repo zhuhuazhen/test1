@@ -26,7 +26,7 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
         LOGGER.info("new channel coming! ----> {}", ctx.channel());
         ChannelId channelId = ctx.channel().id();
         RTUChannelInfo channelInfo = GlobalInfo.CHANNEL_INFO_MAP.getOrDefault(channelId, RTUChannelInfo.build("unknownSN", channelId));
-        GlobalInfo.CHANNEL_INFO_MAP.put(channelId, channelInfo);
+        GlobalInfo.CHANNEL_INFO_MAP.put(channelId, channelInfo);//还不知道此channel对应到哪个SN上
         ctx.fireChannelRegistered();
     }
 

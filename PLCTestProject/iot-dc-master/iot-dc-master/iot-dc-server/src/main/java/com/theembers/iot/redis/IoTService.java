@@ -67,7 +67,14 @@ public class IoTService {
      */
     private Map<String, IotInfo> getIoTSnIdMapper(String key) throws Exception {
         LOGGER.info("get IoT SnId Mapper... key is [{}]", key);
-        Map<Object, Object> mapperMap = redisService.hGetAll(key);
+        //Map<Object, Object> mapperMap = redisService.hGetAll(key);
+        Map<Object, Object> mapperMap = new HashMap<Object, Object>();
+        IotInfo dev = new IotInfo();
+        dev.setId("devid1");
+        Map<String, String> dd =new HashMap<String, String>();
+        dd.put("field1", "11");
+        dev.setData(dd);
+        mapperMap.put("sn1", dd);
         if (CollectionUtils.isEmpty(mapperMap)) {
             LOGGER.warn("the IoTSnIdMapper is empty!");
             return new HashMap<>(0);

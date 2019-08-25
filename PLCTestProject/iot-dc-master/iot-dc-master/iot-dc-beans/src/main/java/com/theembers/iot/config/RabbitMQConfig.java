@@ -11,33 +11,33 @@ import org.springframework.context.annotation.Configuration;
  * @version 1.0
  * createTime 2018-11-05 16:29
  */
-@Configuration
+//@Configuration
 public class RabbitMQConfig {
-    @Bean
+    //@Bean
     FanoutExchange fanoutExchange() {
         return new FanoutExchange(EMqExchange.RTU_DATA.getMqFanoutExchange());
     }
 
-    @Bean
+    //@Bean
     FanoutExchange fanoutExchange1() {
         return new FanoutExchange(EMqExchange.RTU_HEART.getMqFanoutExchange());
     }
 
-    @Bean
+    //@Bean
     FanoutExchange fanoutExchange2() {
         return new FanoutExchange(EMqExchange.RTU_SIGNAL.getMqFanoutExchange());
     }
 
-    @Bean
+    //@Bean
     FanoutExchange fanoutExchange3() {
         return new FanoutExchange(EMqExchange.RTU_UNREGISTERED.getMqFanoutExchange());
     }
     
-    @Bean
+    //@Bean
     public Queue instQueue() {
         return new Queue("rtu_inst_queue", true);
     }
-    @Bean
+    //@Bean
     public Queue refreshQueue() {
         return new Queue("rtu_refresh_queue", true);
     }

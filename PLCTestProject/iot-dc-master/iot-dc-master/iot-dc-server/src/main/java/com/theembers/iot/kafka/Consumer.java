@@ -20,11 +20,11 @@ import org.springframework.util.StringUtils;
  * @author TheEmbers Guo
  * createTime 2019-08-01 11:06
  */
-@Component
+//@Component
 public class Consumer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Consumer.class);
 
-    @Autowired
+    //@Autowired
     private IoTService ioTService;
     /**
      * 指令队列
@@ -32,7 +32,7 @@ public class Consumer {
      * @param record
      * @throws Exception
      */
-    @KafkaListener(topics = "rtu_inst_topic")
+    //@KafkaListener(topics = "rtu_inst_topic")
     public void listen(ConsumerRecord<String, byte[]> record) throws Exception {
         String msg = new String(record.value());
         LOGGER.info("rtu-command: {}", msg);
@@ -53,7 +53,7 @@ public class Consumer {
      * @param record
      * @throws Exception
      */
-    @KafkaListener(topics = "rtu_refresh_topic")
+    //@KafkaListener(topics = "rtu_refresh_topic")
     public void refreshIotInfo(ConsumerRecord<String, byte[]> record) throws Exception {
         String msg = new String(record.value());
         if (GlobalInfo.Global_Iot_Redis_Key.equals(msg)) {

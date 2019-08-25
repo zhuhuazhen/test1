@@ -32,10 +32,10 @@ public class R485DataProcessor extends ProcessorAbstract implements IDataProcess
     public void translate(ChannelHandlerContext ctx, ByteBuf source, RTUInfo rtuInfo) throws Exception {
         if (checkAndGetAvailable(source)) {
             // 截取数据
-            ModbusInfo modbusInfo = new ModbusInfo(source);
+            ModbusInfo modbusInfo = new ModbusInfo(source); //其实读取的指针已经到最后了，格式也是符合要求的 数据对不对是另一码事
             // 校验数据
             if (!CRCUtils.checkCRC(modbusInfo.getFullData(), modbusInfo.getCrc())) {
-                LOGGER.warn("R485 bad data: {}", String.valueOf(source));
+                LOGGER.warn("R485 bad data: {}", String.valueOf(source));//数据有问题 还要继续处理 ？
             }
             // 数据转换
             List<byte[]> dataItemList = IR485DataProcessor.subData(modbusInfo.getData());

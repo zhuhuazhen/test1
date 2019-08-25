@@ -26,16 +26,16 @@ import java.util.Map;
 @Component
 public class ProcessorHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessorHandler.class);
-    private final IDataProcessor sysDataProcessor = new SysDataProcessor();
-    private final IDataProcessor simDataProcessor = new SimDataProcessor();
+    //private final IDataProcessor sysDataProcessor = new SysDataProcessor();
+    //private final IDataProcessor simDataProcessor = new SimDataProcessor();
     private final IDataProcessor displayDataProcessor = new DisplayDataProcessor();
     private final IDataProcessor r485DataProcessor = new R485DataProcessor();
 
 
     public ProcessorHandler() {
-        sysDataProcessor.setNextProcessor(simDataProcessor);
-        simDataProcessor.setNextProcessor(r485DataProcessor);
-        r485DataProcessor.setNextProcessor(displayDataProcessor);
+        //sysDataProcessor.setNextProcessor(simDataProcessor);
+        //simDataProcessor.setNextProcessor(r485DataProcessor);
+        //r485DataProcessor.setNextProcessor(displayDataProcessor);
     }
 
     @Override
@@ -43,7 +43,8 @@ public class ProcessorHandler extends ChannelInboundHandlerAdapter {
         if (msg instanceof ByteBuf) {
             ByteBuf byteBuf = (ByteBuf) msg;
             RTUInfo rtuInfo = new RTUInfo(null);
-            sysDataProcessor.translate(ctx, byteBuf, rtuInfo);
+            //sysDataProcessor.translate(ctx, byteBuf, rtuInfo);
+            r485DataProcessor.translate(ctx, byteBuf, rtuInfo);
             buildRtuInfo(ctx, rtuInfo);
             ctx.fireChannelRead(rtuInfo); //调用fireChannelRead方法时，调用该方法的context会从自己开始在链表中根据自己的next指针来寻找下一个注册（invoke）的handler去处理事件
         } else {

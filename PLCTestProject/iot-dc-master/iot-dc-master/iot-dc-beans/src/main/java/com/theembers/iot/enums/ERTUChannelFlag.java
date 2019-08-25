@@ -13,6 +13,8 @@ public enum ERTUChannelFlag {
     R485("2#".getBytes()),
     R232("3#".getBytes()),
     SIM("4#".getBytes());
+	
+	//定义控制指令
 
 
     private byte[] flag;
