@@ -82,13 +82,14 @@ public class Handler {
 		case DevInfoResponse://属性上报
 			//设备基本消息
 			DevInfoDataVO devInfoDataVo = new DevInfoDataVO();
-			devInfoDataVo.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devInfoDataVo.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_status).toString());
-			devInfoDataVo.setAttributers((List<String>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers)));
-			devInfoDataVo.setMethods((List<String>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_methods)));
-			devInfoDataVo.setDefinedAttributers((List<String>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers) ));
-			devInfoDataVo.setDefinedMethods((List<String>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_definedMethods) ));
-			devInfoDataVo.setSignals((List<Map>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_signals) ));
+			devInfoDataVo.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
+			//devInfoDataVo.setStatus(data.get(GatewayMqttUtil.dataModel_messageVO_data_status).toString());
+			devInfoDataVo.setAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers));
+			devInfoDataVo.setMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
+			devInfoDataVo.setDefinedAttributers((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers) );
+			devInfoDataVo.setDefinedMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedMethods) );
+			devInfoDataVo.setSignals((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
+			devInfoDataVo.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			/*//消息结构
 			messageVo.setType(type);
 			messageVo.setSeq(Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)));
@@ -96,66 +97,60 @@ public class Handler {
 			messageVo.setMsgId((String)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId));
 			messageVo.setData(devInfoDataVo);*/
 			
-			messageVo= getMessageVO(devInfoDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+			messageVo= getMessageVO(devInfoDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//消息结构
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDevInfoResponseTopic());
 			break;
 			
 		case Response://请求返回
 			ResponseDataVO responseDataVo = new ResponseDataVO();
-			responseDataVo.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			responseDataVo.setMethods((List<Map>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_methods)));
-			responseDataVo.setTags((Map)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_tags)));
+			responseDataVo.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
+			responseDataVo.setMethods((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
+			responseDataVo.setMessageCode(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_messageCode).toString());
+			responseDataVo.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			//消息结构
-			messageVo= getMessageVO(responseDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+			messageVo= getMessageVO(responseDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
 			break;
 		case MetricInfoResponse://设备状态数据上报
 			MetricInfoResponseDataVO  metricInfoResponseDataVO = new MetricInfoResponseDataVO();
-			System.out.println(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId));
-			metricInfoResponseDataVO.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			metricInfoResponseDataVO.setAttributers((List<Map>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers)));
-			metricInfoResponseDataVO.setTags((Map)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_tags)));
+			metricInfoResponseDataVO.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
+			metricInfoResponseDataVO.setAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers));
+			metricInfoResponseDataVO.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			//消息结构
-			messageVo= getMessageVO(metricInfoResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+			messageVo= getMessageVO(metricInfoResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
+			//sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDatasendTopic());//测试
 			break;
 		case DevSignlResponse://设备信号上报
 			DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
-			devSignlResponseDataVO.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devSignlResponseDataVO.setSignals((List<Map>)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_signals)));
-			devSignlResponseDataVO.setTags((Map)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_tags)));
+			devSignlResponseDataVO.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
+			devSignlResponseDataVO.setSignals((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
+			devSignlResponseDataVO.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			//消息结构
-			messageVo= getMessageVO(devSignlResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+			messageVo= getMessageVO(devSignlResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
 			break;
-		case DevOnline://DEV在线
+		case DevOnline://DEV在线离线
 			DevOnOffline devOnline = new DevOnOffline();
-			devOnline.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devOnline.setStatus(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devOnline.setTags((Map)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_tags)));
+			devOnline.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
+			devOnline.setStatus(data.get(GatewayMqttUtil.dataModel_messageVO_data_status).toString());
+			devOnline.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			//消息结构
-			messageVo= getMessageVO(devOnline,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+			messageVo= getMessageVO(devOnline,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo).toString(),applicationConfig.getDataAcessTopic());
 			//更新缓存中的设备上线状态
+			if(data.get(GatewayMqttUtil.dataModel_messageVO_data_status).toString().equals("online")) {
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, (String)data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId), GatewayMqttUtil.onLine);
-            break;
-		case DevOffline://DEV离线
-			DevOnOffline devOffline = new DevOnOffline();
-			devOffline.setDeviceId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devOffline.setStatus(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
-			devOffline.setTags((Map)data.get(data.get(GatewayMqttUtil.dataModel_messageVO_data_tags)));
-			//消息结构
-			messageVo= getMessageVO(devOffline,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_seq)),Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
-			//kafka处理
-			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
-			//更新缓存中的设备下线状态
+			}else {
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, (String)data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId), GatewayMqttUtil.offLine);
-            break;
+			}
+			break;
+		
         default:
             System.out.println("未知消息类型");
             break;
@@ -167,15 +162,15 @@ public class Handler {
 	 * 消息结构处理
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> MessageVO<T>  getMessageVO(T data,String type,Long seq,Long timestamp,String msgId) {
+	public <T> MessageVO<T>  getMessageVO(T data,String type,Long timestamp,String msgId,String gwId) {
 		//消息结构
 		ResultMessageVO<T> messageVo = new ResultMessageVO<T>();
 		//消息结构
 		messageVo.setType(type);
-		messageVo.setSeq(seq);
 		messageVo.setTimestamp(timestamp);//消息上报时间
 		messageVo.setMsgId(msgId);
 		messageVo.setData(data);
+		messageVo.setGwId(gwId);
 		return messageVo;
 	}
 

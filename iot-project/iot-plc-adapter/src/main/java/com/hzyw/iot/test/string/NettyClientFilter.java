@@ -23,6 +23,6 @@ public class NettyClientFilter extends ChannelInitializer<SocketChannel> {
         //lengthAdjustment：这里取值为10=7(系统时间) + 1（校验码）+ 2 (包尾)
         ph.addLast("decoder", new StringDecoder());
         ph.addLast("encoder", new StringEncoder());
-        ph.addLast("handler", new NettyClientHandler()); //客户端的逻辑
+     //   ph.addLast("handler", new NettyClientHandler()); //客户端的逻辑
     }
 }

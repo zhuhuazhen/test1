@@ -6,10 +6,10 @@ import java.util.Date;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class NettyServerHandler extends SimpleChannelInboundHandler<String> {
-    /*
+/*public class NettyServerHandler extends SimpleChannelInboundHandler<String> {
+    
      * 收到消息时，返回信息
-     */
+     
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg)
             throws Exception {
@@ -23,9 +23,9 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<String> {
         ctx.writeAndFlush(date+"\n");
     }
 
-    /*
+    
      * 建立连接时，返回消息
-     */
+     
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("连接的客户端地址:" + ctx.channel().remoteAddress());
@@ -33,4 +33,4 @@ public class NettyServerHandler extends SimpleChannelInboundHandler<String> {
         super.channelActive(ctx);
     }
 }
- 
+ */

@@ -118,8 +118,9 @@ public class RedisServiceImpl implements RedisService {
     } 
     
     @Override 
-    public void hmGet(String key,String field) {  
-        this.redisTemplate.opsForHash().get(key, field);
+    public String hmGet(String key,String field) {  
+       
+		return  this.redisTemplate.opsForHash().get(key, field).toString();
     }
     
     @Override 

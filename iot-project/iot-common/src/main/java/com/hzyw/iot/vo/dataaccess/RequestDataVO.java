@@ -11,19 +11,26 @@ import java.util.Map;
 public class RequestDataVO  extends DataVO implements Serializable {
   
 	private static final long serialVersionUID = -1080455511252050149L;
-	private String deviceId; // 设备ID
+	private String id; // 设备ID
 	private List<Map> methods; // 操作方法   [{method:方法名, in:[{字段：值，字段:值，...}] out:[返回字段，返回字段...]}]
-	public String getDeviceId() {
-		return deviceId;
-	}
-	public void setDeviceId(String deviceId) {
-		this.deviceId = deviceId;
-	}
+	private String messageCode;//返回值
 	public List<Map> getMethods() {
 		return methods;
 	}
 	public void setMethods(List<Map> methods) {
 		this.methods = methods;
+	}
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public String getMessageCode() {
+		return messageCode;
+	}
+	public void setMessageCode(String messageCode) {
+		this.messageCode = messageCode;
 	}
 	 
  

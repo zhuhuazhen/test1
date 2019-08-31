@@ -92,23 +92,23 @@ public class DataSendDownConsumer implements Runnable {
 						JSONObject data = JSONUtil.parseObj(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data));
 						// 判断type类型
 						type = (String)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_type);
-						deviceId = (String)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId);//设备ID
+						deviceId = (String)data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId);//设备ID
 						Map<String,String> tags = (Map<String,String>)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_tags);
-						gatewayId = tags.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId) ;//网关ID
+						gatewayId = jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString();//网关ID
 						isOnline = gateWayService.deviceOnLine(deviceId);//设备是否在线？
 						logger.info(">>>DataSendDownConsumer::consumerProcess;  p=" + p);
 	
 						logger.info(">>>DataSendDownConsumer::consumerProcess; type/gatewayId/deviceId/isOnline=" + type +"/"+ gatewayId +"/"+ deviceId +"/"+ isOnline);
 						//推送到MQTT
-						if(isOnline){
+						//if(isOnline){
 							logger.info(">>>DataSendDownConsumer::consumerProcess::Publish(下发);.... /topic/value =" + commPubHandler.getTopic()+ "/"+value );
 							commPubHandler.Publish(value,gatewayId); 
-						}else{
+						/*}else{
 							//反馈失败信息
 							jsonObject.put(GatewayMqttUtil.dataModel_messageVO_messageCode, GatewayMqttUtil.return_devoffline_code);
 							jsonObject.put(GatewayMqttUtil.dataModel_messageVO_message, GatewayMqttUtil.return_devoffline_message);//反馈不在线
 							sendKafka(JSON.toJSONString(jsonObject),applicationConfig.getDataAcessTopic());
-						}
+						}*/
 					}
 				}catch(Exception e){
 					//反馈异常失败信息

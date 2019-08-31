@@ -9,9 +9,9 @@ public class MessageVO<T> implements Serializable {
 	private static final long serialVersionUID = 2097112223168452858L;
 	private String type; // 消息类型
 	private T data; // 消息体
-	private Long seq; // 序号 相对于某个主题来说消息通信的一个序号
 	private Long timestamp; // 13位时间戳
 	private String msgId; // 消息唯一ID,全流程跟踪，要求设备端把此值返回
+	private String gwId;//网关Id 
 
 	public MessageVO() {
 	}
@@ -36,13 +36,6 @@ public class MessageVO<T> implements Serializable {
 		this.data = data;
 	}
 
-	public Long getSeq() {
-		return seq;
-	}
-
-	public void setSeq(Long seq) {
-		this.seq = seq;
-	}
 
 	public Long getTimestamp() {
 		return timestamp;
@@ -58,6 +51,14 @@ public class MessageVO<T> implements Serializable {
 
 	public void setMsgId(String msgId) {
 		this.msgId = msgId;
+	}
+
+	public String getGwId() {
+		return gwId;
+	}
+
+	public void setGwId(String gwId) {
+		this.gwId = gwId;
 	}
 
 }

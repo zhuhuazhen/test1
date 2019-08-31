@@ -73,7 +73,7 @@ public class GatewayMqttSub extends AbstractSubHandler  {
 			this.getOptions().setKeepAliveInterval(20);
 			
 			// 遗愿消息
-			this.getOptions().setWill(this.getMqttConnConfig().getResponseFailover().get("topic"), "公共订阅线程掉线!".getBytes(), this.getQos(), true);
+			//this.getOptions().setWill(this.getMqttConnConfig().getResponseFailover().get("topic"), "公共订阅线程掉线!".getBytes(), this.getQos(), true);
 			// 设置断开后重新连接
 			this.getOptions().setAutomaticReconnect(true);
 			// 设置回调函数

@@ -21,7 +21,7 @@ public class KafkaConsumerExample {
         //props.put("auto.offset.reset", "earliest");
         props.put("auto.offset.reset", "latest");
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        consumer.subscribe(Arrays.asList("iot_topic_dataAcess_devInfoResponse"));
+        consumer.subscribe(Arrays.asList("iot_topic_dataAcess"));
        
         //for(int i = 0; i < 10; i++) {
         for( ;  ;  ) {

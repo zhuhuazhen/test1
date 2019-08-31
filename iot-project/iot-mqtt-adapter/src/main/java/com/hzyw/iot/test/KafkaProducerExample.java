@@ -29,42 +29,47 @@ public class KafkaProducerExample {
 
 	        Producer<String, String> producer = new KafkaProducer<>(props);
 	        
-	        Map<String,Object> mapData =new HashMap<String,Object>();
-	        List<Map> listMap = new ArrayList<Map>();
+	        
+	        
+	       
+	        
+	        Map<String,Object> setListMap =new HashMap<String,Object>();
+	        List<Map> inList = new ArrayList<Map>();
+	        List outList = new ArrayList();
+	        Map<String,Object> inMap =new HashMap<String,Object>();
+	        /*inMap.put("program", "pictrue_and_multy_text.vsn");
+	        inMap.put("src", "lan");*/
+	        inMap.put("level", "100");
+	        inList.add(inMap);
+	        /*outList.add("test");
+	        outList.add("test1");*/
+	        
+	        
+	        Map<String,Object> tags =new HashMap<String,Object>();
+	        tags.put("key", "value");
+	        
+	        List listMethods = new ArrayList();
+	        Map<String,Object> methods =new HashMap<String,Object>();
+	        methods.put("method", "set_brightness");
+	        methods.put("in", inList);
+	        methods.put("out", outList);
+	        listMethods.add(methods);
+	        setListMap.put("id", "0001-f82d132f9bb018ca-2001-ffff-70a0");
+	        setListMap.put("methods", listMethods);
+	        setListMap.put("tags", tags);
+	        
 	        Map<String,Object> map =new HashMap<String,Object>();
-	        map.put("method", "setLghtOn");
-	        map.put("ledOnOff", "on");
-	        listMap.add(map);
+	        map.put("type", "request");
+	        map.put("timestamp", "1566205651");
+	        map.put("msgId", "bdde30e7-1248-410f-8084-c13b9162beee");
+	        map.put("gwId", "0001-f82d132f9bb018ca-2001-ffff-d28a");
+	        map.put("data", setListMap);
 	        
-	        mapData.put("deviceid", "dg01");
-	        mapData.put("methods", listMap);
-	        JSONObject jsonObject = JSONUtil.parseObj(mapData);
-	        producer.send(new ProducerRecord<>("topic_wan", "helloWorld".toString()));
-	        
-	        
-	        
+	       
+	        JSONObject jsonObject = JSONUtil.parseObj(map);
+	        System.out.println(jsonObject.toString());
+	        producer.send(new ProducerRecord<>("iot_topic_dataAcess_request", jsonObject.toString()));
 
 	        producer.close();
 	    }
-	 
-	 
-	 
-	 public Properties getProperties() {
-		   	Properties props = new Properties();
-	        props.put("bootstrap.servers", "47.106.189.255:9092");
-	        props.put("acks", "all");
-	        props.put("retries", 0);
-	        props.put("batch.size", 16384);	
-	        props.put("linger.ms", 1);
-	        props.put("buffer.memory", 33554432);
-	        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-	        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-	        Producer<String, String> producer = new KafkaProducer<>(props);
-	        producer.send(new ProducerRecord<>("test", "group123"));
-	       /* for(int i = 0; i < 10; i++)
-	            producer.send(new ProducerRecord<>("topic1", "demo", "helloWorld"));*/
-
-	        producer.close();
-			return props;
-	}
 }

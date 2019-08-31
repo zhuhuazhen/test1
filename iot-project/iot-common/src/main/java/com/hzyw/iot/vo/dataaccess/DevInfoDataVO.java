@@ -10,29 +10,24 @@ import java.util.Map;
 @SuppressWarnings("rawtypes")
 public class DevInfoDataVO extends DataVO implements Serializable {
 	private static final long serialVersionUID = 4111731933287831358L;
-	private String deviceId; // 设备ID
+	private String id; // 设备ID
 	private String status; // 状态
-	private List<String> attributers; // 基本属性
+	private List<Map> attributers; // 基本属性
 	private List<String> methods; // 操作方法
 	private List<String> definedAttributers; // 自定义属性
 	private List<String> definedMethods; // []
-	private List<Map> signals; // [消息中断]
-	public String getDeviceId() {
-		return deviceId;
-	}
-	public void setDeviceId(String deviceId) {
-		this.deviceId = deviceId;
-	}
+	private List<String> signals; // [消息中断]
+	
 	public String getStatus() {
 		return status;
 	}
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public List<String> getAttributers() {
+	public List<Map> getAttributers() {
 		return attributers;
 	}
-	public void setAttributers(List<String> attributers) {
+	public void setAttributers(List<Map> attributers) {
 		this.attributers = attributers;
 	}
 	public List<String> getMethods() {
@@ -53,10 +48,17 @@ public class DevInfoDataVO extends DataVO implements Serializable {
 	public void setDefinedMethods(List<String> definedMethods) {
 		this.definedMethods = definedMethods;
 	}
-	public List<Map> getSignals() {
+	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
+	public List<String> getSignals() {
 		return signals;
 	}
-	public void setSignals(List<Map> signals) {
+	public void setSignals(List<String> signals) {
 		this.signals = signals;
 	}
 	 

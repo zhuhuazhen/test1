@@ -49,7 +49,7 @@ public class CommPubHandler extends AbstractPubHandler {
 			// 设置消息的服务质量
 			message.setQos(this.getQos());
 			// 发布消息
-			this.getMqttClient().publish(this.getTopic()+ para[1], message); //要拼上网关ID
+			this.getMqttClient().publish(this.getTopic(), message);
 			// 断开连接
 			this.getMqttClient().disconnect();
 			// 关闭客户端

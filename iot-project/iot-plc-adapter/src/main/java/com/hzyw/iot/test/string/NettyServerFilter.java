@@ -18,6 +18,6 @@ public class NettyServerFilter extends ChannelInitializer<SocketChannel> {
         // 解码和编码，应和客户端一致
         ph.addLast("decoder", new StringDecoder());
         ph.addLast("encoder", new StringEncoder());
-        ph.addLast("handler", new NettyServerHandler());// 服务端业务逻辑
+        //ph.addLast("handler", new NettyServerHandler());// 服务端业务逻辑
     }
 }

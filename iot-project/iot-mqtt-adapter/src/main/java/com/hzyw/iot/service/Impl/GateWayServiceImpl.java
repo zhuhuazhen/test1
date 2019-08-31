@@ -1,5 +1,8 @@
 package com.hzyw.iot.service.Impl;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,23 +56,29 @@ public class GateWayServiceImpl implements GateWayService {
 	 */
 	@Override
 	public void serviceOnline() {
+		Map<String, String> map = new HashMap<String,String>();
+		map.put("key", "value");
 		//下线消息
 		String msgId = GatewayMqttUtil.getUUID();
 		ServiceDataVO serviceOfflineVO = new ServiceDataVO();
-		serviceOfflineVO.setServiceId("service_00001");
+		serviceOfflineVO.setId("0001-f82d132f9bb018ca-2001-ffff-acbc");
 		serviceOfflineVO.setStatus("offline");
+		serviceOfflineVO.setTags(map);
 		MessageVO offlineMessageVO = new MessageVO(serviceOfflineVO);
 		offlineMessageVO.setType(DataType.ServiceOffline.getMessageType());
 		offlineMessageVO.setMsgId(msgId);
 		offlineMessageVO.setTimestamp(System.currentTimeMillis());
+		offlineMessageVO.setGwId("");
 		//上线消息
 		ServiceDataVO serviceOnlineVO = new ServiceDataVO();
-		serviceOnlineVO.setServiceId("service_00001");
+		serviceOnlineVO.setId("0001-f82d132f9bb018ca-2001-ffff-acbc");
 		serviceOnlineVO.setStatus("online");
+		serviceOnlineVO.setTags(map);
 		MessageVO onlineMessageVO = new MessageVO(serviceOnlineVO);
 		onlineMessageVO.setType(DataType.ServiceOnline.getMessageType());
 		onlineMessageVO.setMsgId(msgId);
 		onlineMessageVO.setTimestamp(System.currentTimeMillis());
+		onlineMessageVO.setGwId("");
 		//服务上线完毕后才能做下发和上报之类的交互，所以这里不用起新的线程处理
 		servicePubHandler.Publish(JSON.toJSONString(onlineMessageVO),JSON.toJSONString(offlineMessageVO));
 	}

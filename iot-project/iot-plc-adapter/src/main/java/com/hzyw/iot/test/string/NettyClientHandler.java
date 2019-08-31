@@ -3,7 +3,7 @@ package com.hzyw.iot.test.string;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
+/*public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
@@ -23,3 +23,4 @@ public class NettyClientHandler extends SimpleChannelInboundHandler<String> {
         super.channelInactive(ctx);
     }
 }
+*/

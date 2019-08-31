@@ -46,11 +46,11 @@ public class JedisPoolUtils {
 	public static String getPool(String key) {
 		return getJedis().get(key);
 	}
-	public static void main(String[] args) {
-        /*setPool("hello","123");
-    	getJedis().del("hello");*/
+	/*public static void main(String[] args) {
+        setPool("hello","123");
+    	getJedis().del("hello");
         System.out.println(getPool("test"));
         
         pool.close();
-    }
+    }*/
 }

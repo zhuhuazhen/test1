@@ -25,7 +25,7 @@ public interface RedisService {
  	   
  	    public void hmSet(String key,String field,String value);
  	    
-  	    public void hmGet(String key,String field);
+  	    public String hmGet(String key,String field);
  	    
   	    public Map hmGetAll(String key,String field);
  	    

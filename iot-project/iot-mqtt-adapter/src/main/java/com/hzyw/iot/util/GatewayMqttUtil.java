@@ -17,7 +17,7 @@ public class GatewayMqttUtil {
 	  public static final String dataModel_messageVO_messageCode ="messageCode";
 	  public static final String dataModel_messageVO_message ="message";
 	  
-	  public static final String dataModel_messageVO_data_deviceId ="deviceId";
+	  public static final String dataModel_messageVO_data_deviceId ="id";
 	  public static final String dataModel_messageVO_data_status ="status";
 	  public static final String dataModel_messageVO_data_attributers ="attributers";
 	  public static final String dataModel_messageVO_data_methods ="methods";
@@ -25,11 +25,12 @@ public class GatewayMqttUtil {
 	  public static final String dataModel_messageVO_data_definedMethods ="definedMethods";
 	  public static final String dataModel_messageVO_data_signals ="signals";
 	  public static final String dataModel_messageVO_data_tags ="tags";
+	  public static final String dataModel_messageVO_data_messageCode ="messageCode";
 	  
 	  /**
 	 * 网关ID
 	 */
-	public static final String dataModel_messageVO_data_gatewayId="gatewayId";
+	public static final String dataModel_messageVO_data_gatewayId="gwId";
 	
 	public static final String rediskey_iot_cache_dataAccess="iotCacheDataAccess";
 	

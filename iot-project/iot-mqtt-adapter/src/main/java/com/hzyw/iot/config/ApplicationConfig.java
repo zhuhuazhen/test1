@@ -12,16 +12,16 @@ public class ApplicationConfig {
 	*/
 	@Value(value = "${iot.mqtt.adapter.serviceid}")
 	private String  serviceId;
-	
+	//下发请求上报(生产消息)
 	@Value(value = "${iot.mqtt.adapter.topic.producer.dataAcess}")
 	private String  dataAcessTopic;
-	
+	//设备属性上报(生产消息)
 	@Value(value = "${iot.mqtt.adapter.topic.producer.devInfoResponse}")
 	private String  devInfoResponseTopic;
-	
+	//下发(消费消息)
 	@Value(value = "${iot.mqtt.adapter.topic.consumer.datasend}")
 	private String  datasendTopic;
-	
+	//下发列队
 	@Value(value = "${iot.mqtt.adapter.topic.consumer.datasend.groupid}")
 	private String  datasendTopicGroup;
 	 

@@ -7,16 +7,13 @@ package com.hzyw.iot.vo.dataaccess;
  */
 public enum DataType {
 	ServiceOnline("serviceOnline"),   //平台上线
-	ServiceOffline("serviceOffline"),   //平台下线
+	ServiceOffline("serviceOffline"),//平台下线
 	DevLogin("devLogin"),   //DEV登陆认证    暂时用不到，每次请求都会做消息认证
 	/**
-	 * DEV在线
+	 * DEV在线离线
 	 */
 	DevOnline("devOnline"),    
-	/**
-	 * DEV离线
-	 */
-	DevOffline("devOffline"),  
+	  
 	Request("request"),     //下发请求
 	/**
 	 * 上报'下发请求'结果

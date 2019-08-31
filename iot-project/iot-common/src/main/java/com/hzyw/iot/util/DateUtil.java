@@ -86,8 +86,8 @@ public class DateUtil {
         return locatlDate;
     }
     
-    public static void main(String[] args) {
+   /* public static void main(String[] args) {
         String time = "2018-10-19 04:23:34";
         System.out.println(DateUtil.utcToLocal(time));
-    }
+    }*/
 }

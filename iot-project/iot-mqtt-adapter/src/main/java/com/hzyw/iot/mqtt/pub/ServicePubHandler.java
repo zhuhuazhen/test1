@@ -74,8 +74,8 @@ public class ServicePubHandler  extends AbstractPubHandler  {
 			////NEW一个客户端连接对象
 			this.setMqttClient(new MqttClient(this.getUrl(), this.getClientId(), new MemoryPersistence()));
 			// 遗愿处理
-			String failoverTopic = mqttConnectionConfig.getServiceOffline().get("topic");//下线主题
-			this.getOptions().setWill(failoverTopic, JSON.toJSONString(content[1]).getBytes(), this.getQos(), true);
+			String failoverTopic = this.getTopic();//下线主题
+			this.getOptions().setWill(failoverTopic, content[1].getBytes(), this.getQos(), true);
 			// 建立连接
 			this.getMqttClient().connect(getOptions());
 			// 创建消息
@@ -83,12 +83,11 @@ public class ServicePubHandler  extends AbstractPubHandler  {
 			// 设置消息的服务质量
 			message.setQos(this.getQos());
 			// 发布上线消息
-			this.getMqttClient().publish(this.getTopic(), message);
+			this.getMqttClient().publish(this.getTopic(), message.toString().getBytes(),1,true);
 			logger.info("==============ServicePubHandler平台上线,已上线==============================");
 
 			//更新服务上线状态
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, applicationConfig.getServiceId(), GatewayMqttUtil.onLine);
-			
 		} catch (MqttException me) {
 			logger.error("服务上线-发布异常:", me);
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, applicationConfig.getServiceId(), GatewayMqttUtil.offLine);
