@@ -27,6 +27,7 @@ public class CommandHandler extends MessageToByteEncoder<ByteBuf> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
+    	System.out.println(">>>>>>>>CommandHandler::encode -------out.writeBytes(msg)--");
         out.writeBytes(msg);
     }
 

@@ -30,8 +30,8 @@ public class R485DataProcessor extends ProcessorAbstract implements IDataProcess
 
     @Override
     public void translate(ChannelHandlerContext ctx, ByteBuf source, RTUInfo rtuInfo) throws Exception {
-        if (checkAndGetAvailable(source)) {
-            // 截取数据
+        if (checkAndGetAvailable(source)) { //判断是否PLC接入类型
+            // 截取数据   王剑把这个类型重新定义下
             ModbusInfo modbusInfo = new ModbusInfo(source); //其实读取的指针已经到最后了，格式也是符合要求的 数据对不对是另一码事
             // 校验数据
             if (!CRCUtils.checkCRC(modbusInfo.getFullData(), modbusInfo.getCrc())) {
@@ -40,8 +40,8 @@ public class R485DataProcessor extends ProcessorAbstract implements IDataProcess
             // 数据转换
             List<byte[]> dataItemList = IR485DataProcessor.subData(modbusInfo.getData());
 
-            // 构建 rtuInfo 信息
-            List<ItemInfo> itemInfoList = new ArrayList<>(2);
+            // 构建 rtuInfo 信息  这里修改下 定义成KAFKA 要接入的数据模型一致的类型即可 即MessageVO对象的构建
+           /* List<ItemInfo> itemInfoList = new ArrayList<>(2);
             byte[] SSLL = dataItemList.get(0);
             String itemKeySSLL = buildDataKey("SSLL");
             itemInfoList.add(new ItemInfo(itemKeySSLL, String.valueOf(IR485DataProcessor.exchangeHL(SSLL))));
@@ -55,9 +55,9 @@ public class R485DataProcessor extends ProcessorAbstract implements IDataProcess
             }
             rtuInfo.setData(itemInfoList);
 
-            // 设置 mq 交换器
+            // 设置 消息类型
             EMqExchange[] eMqExchanges = {EMqExchange.RTU_DATA, EMqExchange.RTU_HEART};
-            rtuInfo.setMqExchange(eMqExchanges);
+            rtuInfo.setMqExchange(eMqExchanges);*/
         } else {
             if (super.getNextProcessor() != null)
                 super.getNextProcessor().translate(ctx, source, rtuInfo);

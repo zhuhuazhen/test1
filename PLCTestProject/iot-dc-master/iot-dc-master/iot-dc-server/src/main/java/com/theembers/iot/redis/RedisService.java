@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
  * @version 1.0
  * createTime 2018-08-09 16:36
  */
-@Component
+//@Component
 public class RedisService {
-    @Autowired
+    //@Autowired
     private RedisTemplate redisTemplate;
 
     public void setRedisTemplate(RedisTemplate redisTemplate) {

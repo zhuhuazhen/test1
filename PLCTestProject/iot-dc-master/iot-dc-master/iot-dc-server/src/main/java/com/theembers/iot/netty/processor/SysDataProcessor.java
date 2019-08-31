@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 系统信息 处理器
+ * PLC集中器的场景   这里可以这么定义： 1，  设备主动连接到此服务，会发一个{SN:集中器ID}的值到此服务 ，算是做了登陆嘛
  *
  * @author TheEmbers Guo
  * @version 1.0

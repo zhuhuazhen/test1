@@ -25,8 +25,7 @@ public class TheEmbersBanner implements Banner {
         out.println();
     }
     private static final String SPRING_BOOT = " :: Spring Boot Version :: ";
-    private static final String[] BANNER = {
-"\n" +
+    private static final String[] BANNER = {"\n" +
         "  _______ _          ______           _                   \n" +
         " |__   __| |        |  ____|         | |                  \n" +
         "    | |  | |__   ___| |__   _ __ ___ | |__   ___ _ __ ___ \n" +

@@ -1,5 +1,6 @@
 package com.theembers.iot.redis;
 
+import com.alibaba.fastjson.JSON;
 import com.theembers.iot.GlobalInfo;
 import com.theembers.iot.IotInfo;
 import com.theembers.iot.utils.JsonUtils;
@@ -27,8 +28,8 @@ import static com.theembers.iot.GlobalInfo.Global_Iot_Redis_Key;
 public class IoTService {
     private static final Logger LOGGER = LoggerFactory.getLogger(IoTService.class);
 
-    @Autowired
-    private RedisService redisService;
+    //@Autowired
+    //private RedisService redisService;
 
     /**
      * 加载 IoT 映射信息到 全局
@@ -64,17 +65,18 @@ public class IoTService {
 
     /**
      * 获取 IoT 映射信息
+     * <sn ,<objid,objData>>
      */
     private Map<String, IotInfo> getIoTSnIdMapper(String key) throws Exception {
         LOGGER.info("get IoT SnId Mapper... key is [{}]", key);
         //Map<Object, Object> mapperMap = redisService.hGetAll(key);
         Map<Object, Object> mapperMap = new HashMap<Object, Object>();
         IotInfo dev = new IotInfo();
-        dev.setId("devid1");
+        dev.setId("devid1"); 
         Map<String, String> dd =new HashMap<String, String>();
         dd.put("field1", "11");
         dev.setData(dd);
-        mapperMap.put("sn1", dd);
+        mapperMap.put("sn1", dev);
         if (CollectionUtils.isEmpty(mapperMap)) {
             LOGGER.warn("the IoTSnIdMapper is empty!");
             return new HashMap<>(0);
@@ -84,7 +86,8 @@ public class IoTService {
         Set<Object> keySet = mapperMap.keySet();
         for (Object sn : keySet) {
             Object data = mapperMap.get(sn);
-            IotInfo dataMap = JsonUtils.jsonStr2Obj(String.valueOf(data), IotInfo.class);
+            //IotInfo dataMap = JsonUtils.jsonStr2Obj(String.valueOf(data), IotInfo.class); 
+            IotInfo dataMap = JSON.parseObject(JSON.toJSONString(data), IotInfo.class);
             mapperStrMap.put(String.valueOf(sn), dataMap);
         }
         return mapperStrMap;

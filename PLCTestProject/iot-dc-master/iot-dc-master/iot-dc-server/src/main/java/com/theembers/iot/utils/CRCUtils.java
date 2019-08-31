@@ -49,8 +49,8 @@ public class CRCUtils {
         return ByteUtils.bytesToHexString(crc).equals(getCRC(data));
     }
     
-    public static void main(String[] s) {
-    	String cshex = "68 00 00 00 00 00 01 68 00 01 73";
+    /*public static void main(String[] s) {
+    	String cshex = "68 00 00 00 00 00 01 68 80 02 70 01";
     	String[] fulldata = cshex.split(" ");
     	byte[] b = new byte[fulldata.length];
     	int p = 0;
@@ -80,7 +80,7 @@ public class CRCUtils {
     	//
     	System.out.println(makeChecksum(cshex));
     	
-    }
+    }*/
     
     
     /**

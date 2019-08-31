@@ -20,6 +20,9 @@ public class RTUInfo<T> {
 
     @JsonIgnore
     private String sn;
+    
+    private String dataAccessType; //设备类型 如 PLC ,WIFF ,传感器
+    
     /**
      * 指标信息
      */
@@ -37,7 +40,15 @@ public class RTUInfo<T> {
     private EMqExchange[] mqExchange;
 
 
-    public RTUInfo(String id) {
+    public String getDataAccessType() {
+		return dataAccessType;
+	}
+
+	public void setDataAccessType(String dataAccessType) {
+		this.dataAccessType = dataAccessType;
+	}
+
+	public RTUInfo(String id) {
         this.id = id;
         this.publish = true;
     }
