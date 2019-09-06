@@ -8,19 +8,20 @@ import java.io.Serializable;
 public class ResultMessageVO<T> extends MessageVO<T> implements Serializable {
 	private static final long serialVersionUID = 2097112223328452858L;
 
-	private String messageCode;
+	private int messageCode;
 	private String message;
-	public String getMessageCode() {
-		return messageCode;
-	}
-	public void setMessageCode(String messageCode) {
-		this.messageCode = messageCode;
-	}
+	
 	public String getMessage() {
 		return message;
 	}
 	public void setMessage(String message) {
 		this.message = message;
+	}
+	public int getMessageCode() {
+		return messageCode;
+	}
+	public void setMessageCode(int messageCode) {
+		this.messageCode = messageCode;
 	}
   
 }

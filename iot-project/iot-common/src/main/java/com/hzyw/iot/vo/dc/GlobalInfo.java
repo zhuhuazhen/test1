@@ -13,11 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GlobalInfo {
 
     public static String Global_Iot_Redis_Key;
-
-    /**
-     * 全局 物联网设备映射
-     */
-    //public static Map<String, IotInfo> iotMapper;
+ 
     /**
      * 全局 netty channel 管理器
      * map{channelId, channelinfo}
@@ -26,7 +22,9 @@ public class GlobalInfo {
 
     /**
      * 全局 netty channel 管理器
-     * map{sn, channelinfo}
+     * map{port+sn, channelinfo}
+     * sn可能会存在不唯一情况 ，这里的KEY约定为= port+sn
+     * 接入一种新产品的时候尽量指定一个新的端口，一般来说相同的产品的SN码应该会不一样
      */
     public static final Map<String, RTUChannelInfo> SN_CHANNEL_INFO_MAP = new ConcurrentHashMap<>();
 }

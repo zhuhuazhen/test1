@@ -18,7 +18,7 @@ public class ExceptionHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOGGER.error("Error: ", cause);
+        LOGGER.error(">>>异常控制器Error: channelid="+ctx.channel().id(), cause);
         ctx.channel().close();
         ctx.fireExceptionCaught(cause);
     }

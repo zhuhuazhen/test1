@@ -113,13 +113,12 @@ public class IotInfo {
 	 */
 	public static void addNode(Map<String, Map<String, String>> plc_iotInfo_,String SN1,String SN2,String... plc_node_attributers) {
 		Map<String,String> init_value = new HashMap<String,String>();
-		init_value.put(IotInfoConstant.dev_plc_plc_sn, SN1);
-		init_value.put(IotInfoConstant.dev_plc_node_sn, SN2);
-		init_value.put(IotInfoConstant.dev_plc_dataaccess_key, IotInfoConstant.dev_plc_dataaccess_value);
         for(String attr : plc_node_attributers){
         	init_value.put(attr, "");
         }
-    	plc_iotInfo_.put(SN2, init_value);
+        init_value.put(IotInfoConstant.dev_plc_plc_sn, SN1);
+		init_value.put(IotInfoConstant.dev_plc_node_sn, SN2);
+    	plc_iotInfo_.put(SN2+"_attribute", init_value);
 	}
 	 
 

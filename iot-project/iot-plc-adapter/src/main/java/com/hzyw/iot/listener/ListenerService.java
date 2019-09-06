@@ -1,19 +1,16 @@
 package com.hzyw.iot.listener;
 
-import com.hzyw.iot.config.NettyConfig;
-import com.hzyw.iot.netty.RTUPortListener;
-import com.hzyw.iot.redis.IoTService;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-
-import java.net.InetAddress;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.hzyw.iot.config.NettyConfig;
+import com.hzyw.iot.netty.RTUPortListener;
+import com.hzyw.iot.redis.IoTService;
+import io.netty.channel.nio.NioEventLoopGroup;
 
  
 /**
@@ -53,7 +50,7 @@ public class ListenerService implements CommandLineRunner {
 				}
 			}
         );
-        singleThreadExecutor.submit( 
+        /*singleThreadExecutor.submit( 
             new Runnable() {
 				@Override
 				public void run() {
@@ -61,6 +58,6 @@ public class ListenerService implements CommandLineRunner {
 		            new RTUPortListener(5678, new NioEventLoopGroup(), new NioEventLoopGroup());
 				}
 			} 
-         );
+         );*/
     }
 }

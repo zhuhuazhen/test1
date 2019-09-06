@@ -30,7 +30,7 @@ public enum DataType {
 	/**
 	 * 设备信号上报
 	 */
-	DevSignlResponse("devSignlResponse");     
+	DevSignalResponse("devSignalResponse");     
 
 	private String messageType;
 

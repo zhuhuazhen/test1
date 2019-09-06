@@ -9,7 +9,7 @@ public class MetricInfoResponseDataVO extends DataVO implements Serializable {
 	private static final long serialVersionUID = 4111731933287812345L;
 	private String id; // 设备ID
 	private List<Map> attributers; // 详细属性
-
+	private List<Map> definedAttributers; // 详细属性
 	
 
 	public List<Map> getAttributers() {
@@ -26,5 +26,13 @@ public class MetricInfoResponseDataVO extends DataVO implements Serializable {
 
 	public void setId(String id) {
 		this.id = id;
+	}
+
+	public List<Map> getDefinedAttributers() {
+		return definedAttributers;
+	}
+
+	public void setDefinedAttributers(List<Map> definedAttributers) {
+		this.definedAttributers = definedAttributers;
 	}
 }

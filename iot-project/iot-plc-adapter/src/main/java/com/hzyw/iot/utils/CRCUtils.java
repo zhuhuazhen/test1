@@ -54,12 +54,15 @@ public class CRCUtils {
     }*/
     
     public static boolean checkCRC(byte[] data, byte[] crc) {
-    	String datastr = ConverUtil.convertUUIDByteToHexString(data);
-    	String crcstr = ConverUtil.convertUUIDByteToHexString(crc);
+    	String datastr = ConverUtil.convertByteToHexString(data);
+    	String crcstr = ConverUtil.convertByteToHexString(crc);
         return crcstr.equals(ConverUtil.makeChecksum(datastr));
     }
+    
+     
+    
     public static void main(String[] s) {
-    	String cshex = "68 00 00 00 00 01 00 68 03 09 42 00 00 00 00 00 00 03 00";
+    	String cshex = "68 00 00 00 00 01 00 68 04 02 F1 00";
     	String[] fulldata = cshex.split(" ");
     	byte[] b = new byte[fulldata.length];
     	int p = 0;
@@ -86,13 +89,8 @@ public class CRCUtils {
     	System.out.println(sum );
     	
     	//
-    	System.out.println("--CRC="+makeChecksum(cshex));
-    	
-    	//int ii = 2;
-    	//byte[] iibyte= int2Bytes(2);
-    	//System.out.println("--lenght="+   ConverUtil.convertByteToHexString(iibyte));
+    	System.out.println("--CRC="+makeChecksum(cshex));   //取低字节位 ，经过验证是准确的
     	 
-    	
     	
     }
     

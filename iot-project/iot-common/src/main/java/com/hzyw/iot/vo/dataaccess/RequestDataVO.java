@@ -12,8 +12,7 @@ public class RequestDataVO  extends DataVO implements Serializable {
   
 	private static final long serialVersionUID = -1080455511252050149L;
 	private String id; // 设备ID
-	private List<Map> methods; // 操作方法   [{method:方法名, in:[{字段：值，字段:值，...}] out:[返回字段，返回字段...]}]
-	private String messageCode;//返回值
+	private List<Map> methods; // 操作方法 
 	public List<Map> getMethods() {
 		return methods;
 	}
@@ -26,12 +25,7 @@ public class RequestDataVO  extends DataVO implements Serializable {
 	public void setId(String id) {
 		this.id = id;
 	}
-	public String getMessageCode() {
-		return messageCode;
-	}
-	public void setMessageCode(String messageCode) {
-		this.messageCode = messageCode;
-	}
+	
 	 
  
 

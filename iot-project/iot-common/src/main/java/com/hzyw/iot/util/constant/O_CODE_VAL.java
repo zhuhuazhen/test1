@@ -7,20 +7,27 @@ public enum O_CODE_VAL{
     /* 集中器继电器开 */
     T70H("70",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),70)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception {
             if("".equals(cmdParam) || cmdParam==null) return "";
-            // 控制对象	Bit0- Bit2 每一位对应一路继电器。为1有效	1B
-            byte[] byteArry=null;  //默认 ISO8859-1编码格式设置
             String pdtMesg="";
-            try {
-                byteArry= ConverUtil.hexStrToByteArr(cmdParam);  //16进制转成字节数组
-                if(byteArry.length==1){//校验 PDT 字节长度
-                    pdtMesg= ConverUtil.convertByteToHexString(byteArry);
-                }else{
-                    throw new Exception("pdt param length is 1B!");
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+            	// 控制对象	Bit0- Bit2 每一位对应一路继电器。为1有效	1B
+                byte[] byteArry=null;  //默认 ISO8859-1编码格式设置
+                try {
+                	cmdParam=DecimalTransforUtil.toHexStr(cmdParam,1);
+                    byteArry= ConverUtil.hexStrToByteArr(cmdParam);  //16进制转成字节数组
+                    if(byteArry.length==1){//校验 PDT 字节长度
+                        pdtMesg= ConverUtil.convertByteToHexString(byteArry);
+                    }else{
+                        throw new Exception("pdt param length is 1B!");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+            }else { //pdt 响应报文解析处理
+            	pdtMesg=cmdParam;
+            	ConverUtil.MappCODE(cmdParam);
+            	//调KAFKA，发送应用平台
             }
             return pdtMesg;
         }
@@ -29,364 +36,658 @@ public enum O_CODE_VAL{
     T71H("71",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),71)+"")
             {
                 @Override
-                public String pdtData(String c,String cmdParam) {
+                public String pdtData(String c,String cmdParam) throws Exception{
+                	int[][] byteLenReqTemp=new int[][]{{1,1},{3,1},{3,1},{1,2},{1,1},{1,2},{2,1},{1,1},{1,2},{1,1},{1,2},{1,2},{1,2}};
+                	int[][] byteLenResTemp=new int[][]{{1,1},{3,1},{3,1},{1,2},{1,1},{1,2},{2,1},{1,1},{1,2},{1,1},{1,2},{1,2},{1,2}};
+                	if(!"80H".equals(c)){ //pdt 请求报文解析处理
+                		PDTAdapter.pdtRequstParser(byteLenReqTemp, cmdParam);
+                	}else { //pdt 响应报文解析处理
+                		//PDTAdapter.pdtResposeParser(byteLenResTemp, cmdParam);
+                    }
                     return "";
                 }
             },
     /* 查询集中器状态 */
     T73H("73",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),73)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
-            return "";
+        public String pdtData(String c,String cmdParam) throws Exception{
+        	/*
+        	 * 参数 字节长度的二维数组模板
+        	 * 一维：第个参数值的固定字节长度；
+        	 * 二维： 解析参数值方法【1:十进制转,2:二进制转 3:码映射，4：直接赋值】）
+        	 * 三维：属性值单位【十进制转时:1、相电压,2、相电流,3、相功率,4、相功率因数,5、电能,6、AD输入电压】; 二进制转时:转二进制保留位数
+        	 * 请求模板 不考虑二进制位的转换
+        	*/
+        	int[][] byteLenResTemp=new int[][]{{2,1,1},{2,1,1},{2,1,1},{2,1,2},{2,1,2},{2,1,2},{2,1,3},{2,1,3},
+        		                               {2,1,3},{2,1,3},{1,1,4}, {1,1,4},{1,1,4},{1,1,4},{3,1,5},
+        		                               {1,2,2},{2,1,6},{2,1,6},{1,2,2}};
+
+            //参数属性名模板
+        	String[] paramNameTemp=new String[] {"A相电压","B相电压","C相电压","A相电流","B相电流","C相电流","A相功率","B相功率","C相功率","总功率","PFa","PFb","PFc",
+        			"PFs","电能","继电器状态","AD1路输入电压","AD2路输入电压","光耦输入电平"};	      
+        	String pdtMesg="";
+        	if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		pdtMesg=cmdParam;
+        	}else { //pdt 响应报文解析处理     
+        		//校验pdt参数（规则依据文档）
+            	if (PDTAdapter.validateResT73HPdt(cmdParam)) {
+            		String responStr=PDTAdapter.pdtResposeParser(byteLenResTemp,paramNameTemp,cmdParam);
+            		System.out.println("======解析 查询集中器状态(73H) 响应PDT协议报文的 结果:" +responStr);
+            		//封装成指定JSON结构返回 或 调KAFKA发送报文
+            	}
+            }
+            return pdtMesg;
         }
     },
     /* 下发定时任务 */
     T82H("82",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),82)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam) throws Exception{
+        	/*
+        	 * 参数 字节长度的二维数组模板
+        	 * 一维：第个参数值的固定字节长度；
+        	 * 二维： 解析参数值方法【1:进制转, 2:码映射，3：直接赋值】）
+        	 * 请求模板 不考虑二进制位的转换
+        	*/
+        	int[][] byteLenTemp=new int[][]{{1,1},{3,1},{3,1},{1,2},{1,1},{1,2},{2,1},{1,1},{1,2},{1,1},{1,2},{1,2},{1,2}};
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+            	//校验pdt参数（规则依据文档）
+            	if (PDTAdapter.validateT82HPdt(cmdParam)) {
+            		return PDTAdapter.pdtRequstParser(byteLenTemp, cmdParam);
+            	}
+        	}else { //pdt 响应报文解析处理
+        		//String responStr=PDTAdapter.pdtResposeParser(byteLenTemp, cmdParam);
+        		//System.out.println("======解析 响应PDT协议报文的 结果:" +responStr);
+        		//封装成指定JSON结构返回 或 调KAFKA发送报文
+            }
             return "";
         }
     },
     /* 查询定时任务 */
     T83H("83",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),83)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 清除定时任务 */
     T84H("84",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),84)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设置集中器时间 */
     T8CH("8c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8c")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设置集中器参数 */
     T8EH("8e",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8e")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器参数 */
     T8FH("8f",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8f")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 下发节点 */
     T96H("96",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),96)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 读取节点 */
     T97H("97",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue(),97)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 配置节点 */
     T98H("98",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue(),98)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 删除节点 */
     T99H("99",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),99)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 集中器登录 集中器->主机 */
     F0H("f0",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f0")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+            	cmdParam="01";
+        	}else { //pdt 响应报文解析处理
+        		cmdParam="01";
+            }
             return cmdParam;
         }
     },
     /* 集中器与主机保持连接心跳 集中器->主机 */
     F1H("f1",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f1")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 系统控制 */
     F2H("f2",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f2")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 集中器报警 集中器->主机 */
     F3H("f3",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f3")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 执行失败返回 */
     F4H("f4",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue(),"f4")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 报警能使设置 */
     F5H("f5",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f5")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 报警能使查询 */
     F6H("f6",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f6")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 节点调光 */
     T42H("42",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),42)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 主动上报节点数据 集中器->主机 */
     F7H("f7",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f7")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询节点详细数据 */
     T45H("45",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),45)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询和上传历史数据 */
     FBH("fb",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fb")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设置集中器远程更新IP和端口 */
     FCH("fc",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fc")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器远程更新IP和端口 */
     FDH("fd",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fd")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器组网情况 */
     T9AH("9a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9a")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器版本信息 */
     T9BH("9b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9b")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* PLC软件复位 */
     T9CH("9c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9c")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设置集中器继电器必须开启时间 */
     T60H("60",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),60)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器继电器必须开启时间 */
     T61H("61",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),61)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询节点传感器信息 */
     T46H("46",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),46)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 节点传感器主动上报信息 集中器->主机 */
     FEH("fe",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"fe")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 2480开始组网 */
     T62H("62",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),62)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 2480停止组网 */
     T63H("63",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),63)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 2480存储节点列表 */
     T66H("66",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),66)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 读取2480FLAH节点列表 */
     T67H("67",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),67)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 增加单个节点 */
     T9EH("9e",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"9e")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 删除单个节点 */
     T9DH("9d",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"9d")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 2480删除节点FLSH存储列表 */
     T69H("69",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),69)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器硬件信息 */
     T4AH("4a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"4a")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设置集中器服务器IP和端口 */
     F8H("f8",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f8")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询集中器服务器IP和端口 */
     F9H("f9",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f9")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设定电源最大功率 */
     T6AH("6a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"6a")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询电源最大功率 */
     T6BH("6b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6b")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设定电源报警阀值 */
     T6CH("6c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"6c")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询电源报警阀值 */
     T6DH("6d",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6d")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询电源任务编号 */
     T6FH("6f",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6f")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 删除电源任务编号 */
     T47H("47",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),47)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询电源一条定时任务 */
     T48H("48",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),48)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设定电源时间 */
     T49H("49",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),49)+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 查询电源时间 */
     T4BH("4b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"4b")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     },
     /* 设定电源初始化值 */
     T4CH("4c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"4c")+""){
         @Override
-        public String pdtData(String c,String cmdParam) {
+        public String pdtData(String c,String cmdParam)throws Exception{
+            if(!"80H".equals(c)){ //pdt 请求报文解析处理
+        		
+        	}else { //pdt 响应报文解析处理
+            	
+            }
             return "";
         }
     };

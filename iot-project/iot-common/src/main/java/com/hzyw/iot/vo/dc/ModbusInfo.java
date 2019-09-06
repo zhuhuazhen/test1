@@ -1,15 +1,14 @@
 package com.hzyw.iot.vo.dc;
 
+import com.hzyw.iot.util.ByteUtils;
+import com.hzyw.iot.util.constant.ConverUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import org.apache.commons.lang.ArrayUtils;
-
-import com.hzyw.iot.util.constant.ConverUtil;
+import java.io.UnsupportedEncodingException;
 
 /**
  * modbus PLC -数据模型
@@ -19,6 +18,7 @@ import com.hzyw.iot.util.constant.ConverUtil;
  * createTime 2018-10-23 14:16
  */
 public class ModbusInfo {
+	private static final Logger logger = LoggerFactory.getLogger(ModbusInfo.class);
 	private byte[] headStart;  //1
     private byte[] address;  //6
     private byte[] headEnd;  //1
@@ -31,18 +31,70 @@ public class ModbusInfo {
     private byte[] end;  //1
     private byte[] fullData;
     
-    public  byte[] crcData(){
+    
+    /**
+     * 获取下发到设备的CRC数据
+     * @return
+     */
+    public  byte[] getNewCrcData(){
     	int len = headStart.length + address.length + headEnd.length + cCode.length + length.length 
     			+ cmdCode.length + pdt.length;   	
     	 //byte[] bt3 = new byte[len];  
          //System.arraycopy(headStart, 0, bt3, 0, headStart.length);  
          //System.arraycopy(address, 0, bt3, headStart.length, address.length);  
          
-         ByteBuf byteBuf = Unpooled.buffer();
+         ByteBuf byteBuf = Unpooled.buffer(len);
          byteBuf.writeBytes(headStart).writeBytes(address).writeBytes(headEnd).writeBytes(cCode).writeBytes(length)
-         			.writeBytes(cmdCode).writeBytes(pdt);
+         			.writeBytes(cmdCode).writeBytes(pdt); //CRC计算，根据CRC所在报文位置--》headStart所有的数据
+         byte[] temp = byteBuf.array();
+         //if(byteBuf !=null)byteBuf.release();
+         if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
+         return temp;  
+          
+    }
+    
+    /**
+     * 提供响应或下发到设备
+     * @return
+     */
+    public  byte[] getNewFullData(){
+    	this.refresh(); //内容刷到最新  
+    	int len = headStart.length + address.length + headEnd.length + cCode.length + length.length 
+    			+ cmdCode.length + pdt.length + crc.length +end.length;   	
+    	 //byte[] bt3 = new byte[len];  
+         //System.arraycopy(headStart, 0, bt3, 0, headStart.length);  
+         //System.arraycopy(address, 0, bt3, headStart.length, address.length);  
          
-         return byteBuf.array();  
+         ByteBuf byteBuf = Unpooled.buffer(len);
+         byteBuf.writeBytes(headStart).writeBytes(address).writeBytes(headEnd).writeBytes(cCode).writeBytes(length)
+         			.writeBytes(cmdCode).writeBytes(pdt).writeBytes(crc).writeBytes(end);
+         
+         byte[] temp = byteBuf.array();
+         //if(byteBuf !=null)byteBuf.release();
+         if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
+         return temp;  
+          
+    }
+    /**
+     * 提供响应或下发到设备
+     * @return
+     */
+    public  ByteBuf getNewFullDataWithByteBuf(){
+    	this.refresh(); //内容刷到最新  
+    	int len = headStart.length + address.length + headEnd.length + cCode.length + length.length 
+    			+ cmdCode.length + pdt.length + crc.length +end.length;   	
+    	 //byte[] bt3 = new byte[len];  
+         //System.arraycopy(headStart, 0, bt3, 0, headStart.length);  
+         //System.arraycopy(address, 0, bt3, headStart.length, address.length);  
+         
+         ByteBuf byteBuf = Unpooled.buffer(len);
+         byteBuf.writeBytes(headStart).writeBytes(address).writeBytes(headEnd).writeBytes(cCode).writeBytes(length)
+         			.writeBytes(cmdCode).writeBytes(pdt).writeBytes(crc).writeBytes(end);
+         
+         //byte[] temp = byteBuf.array();
+         //if(byteBuf !=null)byteBuf.release();
+         //if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
+         return byteBuf;  
           
     }
 
@@ -68,51 +120,70 @@ public class ModbusInfo {
 		}  
     }
     public ModbusInfo(ByteBuf source) { //上报场景
-        this.source = source;
-        //这种数据 貌似报文  地址 | 命令 | 长度 |数据| CRC检验码
-        this.data = new byte[source.readableBytes()- headStart.length - address.length - headEnd.length  
-                             - cCode.length  - length.length - crc.length - end.length];
-        this.fullData = new byte[source.readableBytes() - crc.length - end.length];
+    	try{
+    		this.source = source; 
+            //这种数据 貌似报文  地址 | 命令 | 长度 |数据| CRC检验码
+            this.data = new byte[this.source.readableBytes()- headStart.length - address.length - headEnd.length  
+                                 - cCode.length  - length.length - crc.length - end.length];
+            this.fullData = new byte[this.source.readableBytes() - crc.length - end.length];
 
-        this.source.readBytes(headStart)
-                .readBytes(address)
-                .readBytes(headEnd)
-                .readBytes(cCode)
-                .readBytes(length)
-                .readBytes(data) 
-                .readBytes(crc)
-                .readBytes(end);
-        // fullData
-        this.source.resetReaderIndex(); //从新回到起始位置
-        this.source.readBytes(fullData); //全部数据包
+            this.source.readBytes(headStart)
+                    .readBytes(address)
+                    .readBytes(headEnd)
+                    .readBytes(cCode)
+                    .readBytes(length)
+                    .readBytes(data) 
+                    .readBytes(crc)
+                    .readBytes(end);
+            // fullData
+            this.source.resetReaderIndex(); //从新回到起始位置
+            this.source.readBytes(fullData); //全部数据包
+            
+            ByteBuf byteBuf = Unpooled.wrappedBuffer(data);
+            byte[] cmd = new byte[1];
+            cmd[0] = data[0];
+            this.setCmdCode(cmd);
+            if(data.length > 2){
+            	byte[] pdt = new byte[data.length -1];
+            	int i=0;
+            	for(int p=1;p<data.length;p++){
+            		pdt[i] = data[p];
+            		i++;
+            	}
+            	this.setPdt(pdt);
+            }else{
+            	this.setPdt(new byte[0]);
+            }
+            
+             
+            //打印hex串
+            String bw ="ModbusInfo{" +
+    					        "headStart=" + ConverUtil.convertByteToHexString(headStart) +
+    					        "address=" + ConverUtil.convertByteToHexString(address) +
+    					        "headEnd=" + ConverUtil.convertByteToHexString(headEnd) +
+    					        "cCode=" + ConverUtil.convertByteToHexString(cCode) +
+    					        "length=" + ConverUtil.convertByteToHexString(length) + "/" + new String(length)+
+    					        "cmdCode=" + ConverUtil.convertByteToHexString(cmdCode) +
+    					        "pdt=" + (pdt.length>0?ConverUtil.convertByteToHexString(pdt):" ") +  "/" + (pdt.length>0?new String(pdt):"")+
+    					        "crc=" + ConverUtil.convertByteToHexString(crc) +
+    					        "end=" + ConverUtil.convertByteToHexString(end) +
+    					        '}';
+            System.out.println("====>>>init ModbusInfo :====");
+            System.out.println(bw);
+            System.out.println("====<<<===");
+            this.source.resetReaderIndex(); //从新回到起始位置
+    	}catch(Exception e){
+    		logger.error("///////////////上报数据 ModbusInfo模型转化异常:",e);
+    		byte[] req = new byte[source.readableBytes()]; //
+			source.readBytes(req);
+			try {
+				String body = new String(req, "UTF-8");
+				logger.warn("///////////////上报数据 ModbusInfo模型转化异常 : responseMsg" + ByteUtils.bytesToHexString(req));
+			} catch (UnsupportedEncodingException e1) {
+				logger.error("///////////////上报数据 ModbusInfo模型转化异常:",e1);
+			}
+    	}
         
-        ByteBuf byteBuf = Unpooled.wrappedBuffer(data);
-        byte[] cmd = new byte[1];
-        cmd[0] = data[0];
-        this.setCmdCode(cmd);
-        if(data.length > 1){
-        	byte[] pdt = new byte[data.length -1];
-        	int i=0;
-        	for(int p=1;p<data.length;p++){
-        		pdt[i] = data[p];
-        		i++;
-        	}
-        }
-         
-        String bw ="ModbusInfo{" +
-					        "headStart=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(headStart) +
-					        "address=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(address) +
-					        "headEnd=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(headEnd) +
-					        "cCode=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(cCode) +
-					        "length=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(length) +
-					        "cmdCode=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(cmdCode) +
-					        "pdt=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(pdt) +
-					        "crc=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(crc) +
-					        "end=" + com.hzyw.iot.util.constant.ConverUtil.convertByteToHexString(end) +
-					        '}';
-        System.out.println("---------ModbusInfo--------");
-        System.out.println(bw);
-        System.out.println();
     }
 
     private enum ModBusModel {
@@ -148,20 +219,20 @@ public class ModbusInfo {
 	public byte[] getHeadStart() {
 		return headStart;
 	}
-
-
+	
+	public String getHeadStart_str() {
+		return ConverUtil.convertByteToHexString(headStart);
+	}
 
 	public void setHeadStart(byte[] headStart) {
 		this.headStart = headStart;
 	}
 
-
-
 	public byte[] getAddress() {
 		return address;
 	}
 	public String getAddress_str() {
-		return ConverUtil.convertUUIDByteToHexString(address);
+		return ConverUtil.convertByteToHexString(address);
 	}
 	 
 
@@ -176,7 +247,9 @@ public class ModbusInfo {
 		return headEnd;
 	}
 
-
+	public String getHeadEnd_str() {
+		return ConverUtil.convertByteToHexString(headEnd);
+	}
 
 	public void setHeadEnd(byte[] headEnd) {
 		this.headEnd = headEnd;
@@ -186,6 +259,11 @@ public class ModbusInfo {
 
 	public byte[] getcCode() {
 		return cCode;
+		
+	}
+	
+	public String getcCode_str() {
+		return ConverUtil.convertByteToHexString(cCode);
 	}
 
 
@@ -204,6 +282,14 @@ public class ModbusInfo {
 
 	public void setLength(byte[] length) {
 		this.length = length;
+		
+	}
+	
+	public void resetLength() {
+		byte[] le = new byte[1];
+		le = new byte[1];
+		le[0] = (byte)(this.getCmdCode().length + this.getPdt().length);
+		this.setLength(le);
 	}
 
 
@@ -213,7 +299,7 @@ public class ModbusInfo {
 	}
 	
 	public String getCmdCode_str() {
-		return ConverUtil.convertUUIDByteToHexString(cmdCode);
+		return ConverUtil.convertByteToHexString(cmdCode);
 	}
 
 
@@ -246,14 +332,37 @@ public class ModbusInfo {
 		this.crc = crc;
 	}
 
-
+	public void resetCrc() {
+		//this.crc = crc;
+		String checksum = ConverUtil.makeChecksum(ConverUtil.convertByteToHexString(getNewCrcData()));
+		System.out.println("new crc=" + checksum);
+		try {
+			this.setCrc(ConverUtil.hexStrToByteArr(checksum));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+	}
+	
+	/**
+	 * 自动计算长度,CRC 
+	 */
+	public void refresh() {
+		// 3,长度
+		this.resetLength();  
+		// 4,CRC计算
+		this.resetCrc();
+	}
 
 	public byte[] getEnd() {
 		return end;
 	}
+	
+	public String getEnd_str() {
+		return ConverUtil.convertByteToHexString(end);
+	}
 
-
-
+ 
 	public void setEnd(byte[] end) {
 		this.end = end;
 	}
@@ -286,12 +395,35 @@ public class ModbusInfo {
 
 	@Override
     public String toString() {
-        return "ModbusInfo{" +
-                "address=" + Arrays.toString(address) +
-              //  ", command=" + Arrays.toString("") +
-                ", length=" + Arrays.toString(length) +
-                ", data=" + Arrays.toString(data) +
-                ", crc=" + Arrays.toString(crc) +
-                '}';
+        String bw = "ModbusInfo{" + "\n" + "    headStart="
+				+ ConverUtil.convertByteToHexString(getHeadStart()) + "\n"
+				+ "    address="
+				+ ConverUtil.convertByteToHexString(getAddress()) + "\n"
+				+ "    headEnd="
+				+ ConverUtil.convertByteToHexString(getHeadEnd()) + "\n"
+				+ "    cCode="
+				+ ConverUtil.convertByteToHexString(getcCode()) + "\n"
+				+ "    length="
+				+ ConverUtil.convertByteToHexString(getLength()) + "\n"
+				+ "    cmdCode="
+				+ ConverUtil.convertByteToHexString(getCmdCode()) + "\n"
+				+ "    pdt=" + ConverUtil.convertByteToHexString(getPdt())
+				+ "\n" + "    crc="
+				+ ConverUtil.convertByteToHexString(getCrc()) + "\n"
+				+ "    end=" + ConverUtil.convertByteToHexString(getEnd())
+				+ "\n" + '}';
+		 return bw;
+    }
+	public String toStringBW() {
+        String bw =  ConverUtil.convertByteToHexString(getHeadStart())  
+				+ ConverUtil.convertByteToHexString(getAddress())  
+				+ ConverUtil.convertByteToHexString(getHeadEnd())  
+				+ ConverUtil.convertByteToHexString(getcCode())  
+				+ ConverUtil.convertByteToHexString(getLength())  
+				+ ConverUtil.convertByteToHexString(getCmdCode())  
+				+ ConverUtil.convertByteToHexString(getPdt())
+				+ ConverUtil.convertByteToHexString(getCrc()) 
+				+ ConverUtil.convertByteToHexString(getEnd()) ;
+		 return bw;
     }
 }

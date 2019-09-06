@@ -2,12 +2,18 @@ package com.hzyw.iot.netty;
 
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.netty.channelhandler.ExceptionHandler;
+import com.hzyw.iot.netty.channelhandler.HeartBeatHandler;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,14 +81,14 @@ abstract class PortListenerAbstract {
 
 		@Override
 		protected void initChannel(SocketChannel socketChannel) {
-			ChannelPipeline pipeline = socketChannel.pipeline();int x = port;
+			ChannelPipeline pipeline = socketChannel.pipeline();
+			int x = port;
 			pipeline
 					// log
 					.addLast("logging", new LoggingHandler(LogLevel.INFO))
-					// 心跳检测
-					// .addLast(new IdleStateHandler(10, 0, 0,
-					// TimeUnit.SECONDS))
-					// .addLast(new HeartBeatHandler())
+					// 心跳检测  第一个参数是指定读操作空闲秒数，第二个参数是指定写操作的空闲秒数，第三个参数是指定读写空闲秒数，当有操作操作超出指定空闲秒数时，便会触发HeartBeatHandler::UserEventTriggered事件
+					 .addLast(new IdleStateHandler(10, 0, 0, TimeUnit.SECONDS))
+					 .addLast(new HeartBeatHandler())
 					// 链路管理
 					.addLast(new ChannelManagerHandler());
 			// 拓展

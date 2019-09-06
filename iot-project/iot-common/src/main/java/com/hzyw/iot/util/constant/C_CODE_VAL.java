@@ -28,7 +28,7 @@ public enum C_CODE_VAL{
     }
 
     public String getValue() {
-        return value;
+    	return C_CODE_VAL.TxxH.value!=null && !"".equals(C_CODE_VAL.TxxH.value)?C_CODE_VAL.TxxH.value:this.value;     
     }
 
     public void setValue(String value) {
@@ -40,7 +40,7 @@ public enum C_CODE_VAL{
      * @param code
      * @return
      */
-    public static void CMethod(String code){
+    public static synchronized void CMethod(String code){
         code=code==null?"NONE":code;
         try {
             code=code.toUpperCase();
@@ -52,7 +52,7 @@ public enum C_CODE_VAL{
         for (C_CODE_VAL cf : C_CODE_VAL.values()) {
             if (cf.name().endsWith(code)) {
                 System.out.println("查询到 "+cf.name()+" 的对应控件码值： " + cf.value);
-                C_CODE_VAL.TxxH.setValue(cf.value);  // 注意: 考虑并发情况 控制码值会不会覆盖!
+                C_CODE_VAL.TxxH.setValue(cf.value);  // 注意: 考虑并发情况 控制码值会不会覆盖!  “synchronized” 锁 方法解决并发线程
                 System.out.println("动态控制码赋值给TxxH");
                 break;
             }

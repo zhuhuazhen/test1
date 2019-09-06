@@ -7,22 +7,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.drools.core.util.Iterator;
-
-import com.alibaba.fastjson.JSON;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.hzyw.iot.bean.DeviceBean;
-import com.hzyw.iot.vo.dataaccess.DevInfoDataVO;
-import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.TagVO;
 
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
-import net.sf.json.JSONArray;
 
 public class FormatTest {
 	

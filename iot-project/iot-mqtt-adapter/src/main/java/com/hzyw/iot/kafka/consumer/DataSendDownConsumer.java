@@ -1,6 +1,7 @@
 package com.hzyw.iot.kafka.consumer;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -18,7 +19,9 @@ import com.hzyw.iot.mqtt.callback.MqttCallbackImpl;
 import com.hzyw.iot.mqtt.pub.CommPubHandler;
 import com.hzyw.iot.service.GateWayService;
 import com.hzyw.iot.util.GatewayMqttUtil;
+import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
+import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 
 import cn.hutool.core.util.ObjectUtil;
@@ -80,7 +83,8 @@ public class DataSendDownConsumer implements Runnable {
 	}
 	
 	public void process(ConsumerRecords<String, String> records){
-			String value,type,deviceId,gatewayId;boolean isOnline;
+			String value,type,deviceId,gatewayId;
+			boolean isOnline;
 			int p = 0;
 			for (ConsumerRecord<String, String> record : records) {
 				JSONObject jsonObject = new JSONObject();
@@ -90,25 +94,47 @@ public class DataSendDownConsumer implements Runnable {
 					if(ObjectUtil.isNotNull(value)) {
 						jsonObject = JSONUtil.parseObj(value);//格式=messageVO
 						JSONObject data = JSONUtil.parseObj(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data));
-						// 判断type类型
-						type = (String)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_type);
-						deviceId = (String)data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId);//设备ID
-						Map<String,String> tags = (Map<String,String>)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_tags);
+						
+						type = jsonObject.get(GatewayMqttUtil.dataModel_messageVO_type).toString();
+						deviceId = data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString();//设备ID
 						gatewayId = jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString();//网关ID
+						Map tags = (Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags);//tags
+						
+						//data数据
+						RequestDataVO requestDataVO = new RequestDataVO();
+						requestDataVO.setMethods((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
+						requestDataVO.setTags(tags);
+						requestDataVO.setId(deviceId);
+						//消息结构
+						MessageVO messageVo = new MessageVO();
+						//消息结构
+						messageVo.setType(type);
+						messageVo.setTimestamp((Object)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp));//消息上报时间
+						messageVo.setMsgId(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString());
+						messageVo.setData(requestDataVO);
+						messageVo.setGwId(gatewayId);
 						isOnline = gateWayService.deviceOnLine(deviceId);//设备是否在线？
 						logger.info(">>>DataSendDownConsumer::consumerProcess;  p=" + p);
 	
 						logger.info(">>>DataSendDownConsumer::consumerProcess; type/gatewayId/deviceId/isOnline=" + type +"/"+ gatewayId +"/"+ deviceId +"/"+ isOnline);
+						//判断是否PLC指令
+						if(tags!=null&& tags.get("agreement")!=null&&tags.get("agreement").equals("plc")) {
+							ProtocalAdapter protocalAdapter = new ProtocalAdapter();
+							System.out.println(JSONUtil.parseObj(messageVo));
+							protocalAdapter.messageRequest(JSON.parseObject(JSON.toJSONString(messageVo)));
+							break;
+						}
 						//推送到MQTT
-						//if(isOnline){
+						if(isOnline){
 							logger.info(">>>DataSendDownConsumer::consumerProcess::Publish(下发);.... /topic/value =" + commPubHandler.getTopic()+ "/"+value );
-							commPubHandler.Publish(value,gatewayId); 
-						/*}else{
+							
+							commPubHandler.Publish(JSONUtil.parseObj(messageVo).toString(),gatewayId); 
+						}else{
 							//反馈失败信息
 							jsonObject.put(GatewayMqttUtil.dataModel_messageVO_messageCode, GatewayMqttUtil.return_devoffline_code);
 							jsonObject.put(GatewayMqttUtil.dataModel_messageVO_message, GatewayMqttUtil.return_devoffline_message);//反馈不在线
 							sendKafka(JSON.toJSONString(jsonObject),applicationConfig.getDataAcessTopic());
-						}*/
+						}
 					}
 				}catch(Exception e){
 					//反馈异常失败信息

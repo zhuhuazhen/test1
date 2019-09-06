@@ -9,7 +9,7 @@ public class MessageVO<T> implements Serializable {
 	private static final long serialVersionUID = 2097112223168452858L;
 	private String type; // 消息类型
 	private T data; // 消息体
-	private Long timestamp; // 13位时间戳
+	private Object timestamp; // 13位时间戳
 	private String msgId; // 消息唯一ID,全流程跟踪，要求设备端把此值返回
 	private String gwId;//网关Id 
 
@@ -37,13 +37,7 @@ public class MessageVO<T> implements Serializable {
 	}
 
 
-	public Long getTimestamp() {
-		return timestamp;
-	}
-
-	public void setTimestamp(Long timestamp) {
-		this.timestamp = timestamp;
-	}
+	
 
 	public String getMsgId() {
 		return msgId;
@@ -59,6 +53,14 @@ public class MessageVO<T> implements Serializable {
 
 	public void setGwId(String gwId) {
 		this.gwId = gwId;
+	}
+
+	public Object getTimestamp() {
+		return timestamp;
+	}
+
+	public void setTimestamp(Object timestamp) {
+		this.timestamp = timestamp;
 	}
 
 }

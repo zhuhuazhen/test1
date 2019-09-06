@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -86,9 +87,9 @@ public class Handler {
 			//devInfoDataVo.setStatus(data.get(GatewayMqttUtil.dataModel_messageVO_data_status).toString());
 			devInfoDataVo.setAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers));
 			devInfoDataVo.setMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
-			devInfoDataVo.setDefinedAttributers((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers) );
+			devInfoDataVo.setDefinedAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers) );
 			devInfoDataVo.setDefinedMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedMethods) );
-			devInfoDataVo.setSignals((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
+			//devInfoDataVo.setSignals((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
 			devInfoDataVo.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			/*//消息结构
 			messageVo.setType(type);
@@ -106,10 +107,9 @@ public class Handler {
 			ResponseDataVO responseDataVo = new ResponseDataVO();
 			responseDataVo.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
 			responseDataVo.setMethods((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
-			responseDataVo.setMessageCode(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_messageCode).toString());
 			responseDataVo.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			//消息结构
-			messageVo= getMessageVO(responseDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
+			messageVo= getMessageVO(responseDataVo,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString(),(int)jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_messageCode));
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
 			break;
@@ -117,14 +117,17 @@ public class Handler {
 			MetricInfoResponseDataVO  metricInfoResponseDataVO = new MetricInfoResponseDataVO();
 			metricInfoResponseDataVO.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
 			metricInfoResponseDataVO.setAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_attributers));
+			metricInfoResponseDataVO.setDefinedAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers));
 			metricInfoResponseDataVO.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
+			
+			
 			//消息结构
 			messageVo= getMessageVO(metricInfoResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
 			//kafka处理
 			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
 			//sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDatasendTopic());//测试
 			break;
-		case DevSignlResponse://设备信号上报
+		case DevSignalResponse://设备信号上报
 			DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
 			devSignlResponseDataVO.setId(data.get(GatewayMqttUtil.dataModel_messageVO_data_deviceId).toString());
 			devSignlResponseDataVO.setSignals((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
@@ -162,9 +165,9 @@ public class Handler {
 	 * 消息结构处理
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> MessageVO<T>  getMessageVO(T data,String type,Long timestamp,String msgId,String gwId) {
+	public <T> MessageVO<T>  getMessageVO(T data,String type,Object timestamp,String msgId,String gwId) {
 		//消息结构
-		ResultMessageVO<T> messageVo = new ResultMessageVO<T>();
+		MessageVO<T> messageVo = new MessageVO<T>();
 		//消息结构
 		messageVo.setType(type);
 		messageVo.setTimestamp(timestamp);//消息上报时间
@@ -173,14 +176,41 @@ public class Handler {
 		messageVo.setGwId(gwId);
 		return messageVo;
 	}
-
+	
+	/**
+	 * 消息结构处理(返回code)
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> MessageVO<T>  getMessageVO(T data,String type,Long timestamp,String msgId,String gwId,int messageCode) {
+		//消息结构
+		ResultMessageVO<T> messageVo = new ResultMessageVO<T>();
+		//消息结构
+		messageVo.setType(type);
+		messageVo.setTimestamp(timestamp);//消息上报时间
+		messageVo.setMsgId(msgId);
+		messageVo.setData(data);
+		messageVo.setGwId(gwId);
+		messageVo.setMessageCode(messageCode);
+		return messageVo;
+	}
 	/**
 	 * setKafka处理
 	 */
 	public void sendKafka(String messageVo, String topic) {
 		try {
-			Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord<>(topic, messageVo.toString()));
+			  Properties props = new Properties();
+		        props.put("bootstrap.servers", "47.106.189.255:9092");
+		        props.put("acks", "all");
+		        props.put("retries", 0);
+		        props.put("batch.size", 16384);
+		        props.put("linger.ms", 1);
+		        props.put("buffer.memory", 33554432);
+		        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+		        Producer<String, String> producer = new KafkaProducer<>(props);
+			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
+			producer.send(new ProducerRecord<>(topic, messageVo));
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, applicationConfig.getServiceId(), GatewayMqttUtil.onLine);
 		} catch (Exception e) {
 			log.error(">>>Handler::handlerMessages::sendKafka ; producer.send异常 !",e);

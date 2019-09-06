@@ -68,7 +68,7 @@ public class GateWayServiceImpl implements GateWayService {
 		offlineMessageVO.setType(DataType.ServiceOffline.getMessageType());
 		offlineMessageVO.setMsgId(msgId);
 		offlineMessageVO.setTimestamp(System.currentTimeMillis());
-		offlineMessageVO.setGwId("");
+		offlineMessageVO.setGwId("1000-f82d132f9bb018ca-2001-ffff-d28a");
 		//上线消息
 		ServiceDataVO serviceOnlineVO = new ServiceDataVO();
 		serviceOnlineVO.setId("0001-f82d132f9bb018ca-2001-ffff-acbc");
@@ -78,7 +78,7 @@ public class GateWayServiceImpl implements GateWayService {
 		onlineMessageVO.setType(DataType.ServiceOnline.getMessageType());
 		onlineMessageVO.setMsgId(msgId);
 		onlineMessageVO.setTimestamp(System.currentTimeMillis());
-		onlineMessageVO.setGwId("");
+		onlineMessageVO.setGwId("1000-f82d132f9bb018ca-2001-ffff-d28a");
 		//服务上线完毕后才能做下发和上报之类的交互，所以这里不用起新的线程处理
 		servicePubHandler.Publish(JSON.toJSONString(onlineMessageVO),JSON.toJSONString(offlineMessageVO));
 	}

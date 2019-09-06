@@ -9,7 +9,7 @@ import com.hzyw.iot.vo.dataaccess.DevInfoDataVO;
 import com.hzyw.iot.vo.dc.IotInfo;
  
 public class IotInfoConstant {
-
+ 
 
     /**
      * 端口 - 设备  关系
@@ -28,7 +28,7 @@ public class IotInfoConstant {
     public static final String base_plc_port = "12345";
     public static final String dev_plc_dataaccess_key = "dataAccess"; //接入类型
     public static final String dev_plc_dataaccess_value = "plc"; //每种接入，初始化数据的时候应该要指定接入类型
-    public static final String dev_plc_devCode = "plc_devCode"; //设备码
+    public static final String dev_plc_productCode = "plc_productCode"; //设备码
     
     //PLC集中器
     public static final String dev_plc_plc_sn ="plc_sn"; //集中器地址，唯一标识
@@ -50,7 +50,7 @@ public class IotInfoConstant {
     public static final String dev_plc_c_power ="plc_c_power"; //集中器，C相功率
     public static final String dev_plc_c_pf ="plc_c_pf";       //集中器，C相功率因素
     public static final String dev_plc_3_power ="plc_3_power"; //集中器，三相功率因素
-    
+     
     //灯
     public static final String dev_plc_node_sn ="plc_node_sn"; //节点地址
     public static final String dev_plc_node_type ="plc_node_type";  //节点类型  :  单灯，双灯，HID,LED
@@ -63,6 +63,16 @@ public class IotInfoConstant {
     public static final String dev_plc_node_a_pf ="plc_node_a_pf";//A路功率因数
     public static final String dev_plc_node_a_lighting ="plc_node_a_lighting";//A亮度
     public static final String dev_plc_node_a_status ="plc_node_a_status";//状态 
+    
+    //def自定义属性
+	public static final String dev_plc_cfg_longitude ="plc_cfg_longitude";
+	public static final String dev_plc_cfg_latitude ="plc_cfg_latitude";
+	public static final String dev_plc_cfg_sq ="plc_cfg_sq";
+	public static final String dev_plc_cfg_gksd_start ="plc_cfg_gksd_start";
+	public static final String dev_plc_cfg_gksd_end ="plc_cfg_gksd_end";
+    public static final String dev_plc_cfg_systime ="plc_cfg_systime"; //时钟
+    public static final String dev_plc_cfg_step5_groupAtuo ="plc_cfg_step5_groupAtuo"; //组网个数
+    public static final String dev_plc_node_devCode ="plc_node_devCode"; //设备码
     
     static{
     	//加载PLC硬件设备属性参数
@@ -82,77 +92,143 @@ public class IotInfoConstant {
     			"operator_82:82",
     			"operator_83:83",
     			"operator_84:84",
-    			"operator_8C:8C",
-    			"operator_8E:8E",
-    			"operator_8F:8F",
+    			"operator_8c:8c",
+    			"operator_8e:8e",
+    			"operator_8f:8f",
     			"operator_96:96",
     			"operator_97:97",
     			"operator_98:98",
     			"operator_99:99",
-    			"operator_F0:F0",
-    			"operator_F1:F1",
-    			"operator_F2:F2",
-    			"operator_F3:F3",
-    			"operator_F4:F4",
-    			"operator_F5:F5",
-    			"operator_F6:F6",
+    			"operator_f0:f0",
+    			"operator_f1:f1",
+    			"operator_f2:f2",
+    			"operator_f3:f3",
+    			"operator_f4:f4",
+    			"operator_f5:f5",
+    			"operator_f6:f6",
     			"operator_42:42",
-    			"operator_F7:F7",
+    			"operator_f7:f7",
     			"operator_45:45",
-    			"operator_FB:FB",
-    			"operator_FC:FC",
-    			"operator_FD:FD",
-    			"operator_9A:9A",
-    			"operator_9B:9B",
-    			"operator_9C:9C",
+    			"operator_fb:fb",
+    			"operator_fc:fc",
+    			"operator_fd:fd",
+    			"operator_9a:9a",
+    			"operator_9b:9b",
+    			"operator_9c:9c",
     			"operator_60:60",
     			"operator_61:61",
     			"operator_46:46",
-    			"operator_FE:FE",
+    			"operator_fe:fe",
     			"operator_62:62",
     			"operator_63:63",
     			"operator_66:66",
     			"operator_67:67",
-    			"operator_9E:9E",
-    			"operator_9D:9D",
+    			"operator_9e:9e",
+    			"operator_9d:9d",
     			"operator_69:69",
-    			"operator_4A:4A",
-    			"operator_F8:F8",
-    			"operator_F9:F9",
-    			"operator_6A:6A",
-    			"operator_6B:6B",
-    			"operator_6C:6C",
-    			"operator_6D:6D",
-    			"operator_6F:6F",
+    			"operator_4a:4a",
+    			"operator_f8:f8",
+    			"operator_f9:f9",
+    			"operator_6a:6a",
+    			"operator_6b:6b",
+    			"operator_6c:6c",
+    			"operator_6d:6d",
+    			"operator_6f:6f",
     			"operator_47:47",
     			"operator_48:48",
     			"operator_49:49",
-    			"operator_4B:4B",
-    			"operator_4C:4C"};
+    			"operator_4b:4b",
+    			"operator_4c:4c"
+    			};
+    	
+    	//双向映射，方便根据数据
+    	String[] plc_req_ack = {
+    			"00:80", //控制码 ：应答码
+    			"01:80",
+    			"02:80",
+    			"03:80",
+    			"04:80",
+    			"80:80"
+    	};
+    	String[] plc_ack_req = {
+    			"80:00", //应答码:控制码  
+    			"80:01",
+    			"80:02",
+    			"80:03",
+    			"80:04",
+    			"80:80"
+    	};
     	
     	String[] plc_signls = {"offline:xxxxxxx"};
     	
     	allDevInfo.put(base_plc_port, plc_iotInfo_);
+    	 
     	//定义一个PLC
-    	String plc_sn = "000000000100";
+    	String plc_id = ""; //ID
+    	String plc_sn = "000000000100";  //集中器地址
+    	
+    	//这部分未来从DB中获取，现在配置在JSON文件
+    	String plc_cfg_step1_longitude = "3980"; //经度           N22°32′43.86\\″   转化成整形表示  
+    	String plc_cfg_step1_latitude = "-2546"; //维度     转化成整形表示
+    	String plc_cfg_step1_sq= "-8"; //时区        转化成整形表示
+    	String plc_cfg_step1_gksd_start= "8:10"; //光控时段-开始时分
+    	String plc_cfg_step1_gksd_end= "8:10"; //光控时段  结束时分
+    	
+    	String plc_cfg_step2_timestamp= String.valueOf(System.currentTimeMillis()); //时钟      时间戳
+    	String plc_cfg_step5_groupAtuo = "1";    //组网个数
+    	
+    	String  plc_node_devCode = ""; //设备码
+    	// 
     	//属性
-    	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_attribute", plc_attributers);//所有属性
-    	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_plc_plc_sn, plc_sn); //自定义属性给值 ,有的属性上报的时候就已经默认有值,通过手工配置默认值
-    	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_plc_dataaccess_key, dev_plc_dataaccess_value);//接入类型
-    	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_plc_devCode, ""); //设备码,属于什么设备码需要手工给值 ，看下王剑那有没有定义有从他那引用即可
+    	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_attribute", plc_attributers);//默认基本属性
+    	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_plc_plc_sn, plc_sn);
+    	//自定义属性-初始化给值
+    	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_defAttribute", new String[0]);
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_dataaccess_key, dev_plc_dataaccess_value);//接入类型
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_longitude, plc_cfg_step1_longitude); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_latitude, plc_cfg_step1_latitude); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_sq, plc_cfg_step1_sq); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_gksd_start, plc_cfg_step1_gksd_start); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_gksd_end, plc_cfg_step1_gksd_end); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_systime, plc_cfg_step2_timestamp); 
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_step5_groupAtuo, plc_cfg_step5_groupAtuo);  
+    	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_node_devCode, plc_node_devCode);  
+    	 
+
     	//方法
     	IotInfo.initMethod(plc_iotInfo_, plc_sn+"_method", plc_methods);
     	//命令码
     	IotInfo.initCmd(plc_iotInfo_, plc_sn+"_cmd", plc_methods);
     	//信号
     	IotInfo.initSignl(plc_iotInfo_, plc_sn+"_signl", plc_signls); 
-    	
+    	//控制码和应答码对应关系
+    	IotInfo.initMethod(plc_iotInfo_, plc_sn+"_req_ack", plc_req_ack);
+    	IotInfo.initMethod(plc_iotInfo_, plc_sn+"_ack_req", plc_ack_req);
     	 
-    	//实例化灯(节点)
-    	String plc_node_sn = "xxxx";
+    	//灯具1(节点)
+    	String plc_node_id = "1"; //ID
+    	String plc_node_sn = "0000020004ee"; //灯具地址
+    	String plc_node_type = "OL"; //jie点类型    单灯(OL)，双灯(TL)，HID ,LED
+    	//String plc_sn = "xxxx";    所属集中器
+    	String plc_node_productCode = "12H"; //设备码   ,设备码只和灯具有关 ，和产品类型对齐
+    	String plc_node_group = "0";   //组号   1~255
+    	
     	IotInfo.addNode(plc_iotInfo_, plc_sn, plc_node_sn, plc_node_attributers);
+    	plc_iotInfo_.get(plc_node_sn+"_attribute").put(dev_plc_productCode, plc_node_productCode); //设备码,属于什么设备码需要手工给值 ，看下王剑那有没有定义有从他那引用即可
+    	plc_iotInfo_.get(plc_node_sn+"_attribute").put(IotInfoConstant.dev_plc_dataaccess_key, IotInfoConstant.dev_plc_dataaccess_value);
+    	
+    	//灯具2(节点)  弄个假的验证看 自动配置集中器会出现啥状况
+    	//待...
     	
     }
   //=================接入PLC 初始化信息========end=========
-    
+    /*public static void main(String[] args){
+    	//设备列表
+    	for(String att_type : plc_iotInfo_.keySet()){
+    		System.out.println("======type :" + att_type);
+    		for(String key :plc_iotInfo_.get(att_type).keySet()){
+    			System.out.println("           -" + key + "/" +plc_iotInfo_.get(att_type).get(key));
+    		}
+    	}
+    }*/
 }

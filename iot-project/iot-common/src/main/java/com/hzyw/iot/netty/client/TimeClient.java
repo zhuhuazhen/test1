@@ -37,7 +37,7 @@ public class TimeClient {
             eventLoopGroup.shutdownGracefully();
         }
     }
-    public static void main(String[] args) throws Exception {
+   /* public static void main(String[] args) throws Exception {
        new TimeClient().connect(8085,"localhost");
-    }
+    }*/
 }

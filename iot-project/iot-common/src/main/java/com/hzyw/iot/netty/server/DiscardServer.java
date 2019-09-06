@@ -31,7 +31,7 @@ public class DiscardServer {
             bossGroup.shutdownGracefully();
         }
     }
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
         new DiscardServer().run(8085);
-    }
+    }*/
 }

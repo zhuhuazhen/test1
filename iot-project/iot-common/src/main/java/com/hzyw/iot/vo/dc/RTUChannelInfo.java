@@ -16,9 +16,10 @@ import io.netty.channel.ChannelId;
  */
 public class RTUChannelInfo {
     private ChannelId channelId;
-    private String sn;
+    private String sn;  //plc_sn  设备地址  
     //private IotInfo iotInfo;
-    Map<String, String> devInfo;
+    //Map<String, String> devInfo;
+    Map<String, Map<String,String>> devInfo;
     private Channel channel;
 
     public static RTUChannelInfo build(String sn, ChannelId channelId) {
@@ -57,11 +58,11 @@ public class RTUChannelInfo {
         return this;
     }
 
-	public Map<String, String> getDevInfo() {
+	public Map<String, Map<String,String>> getDevInfo() {
 		return devInfo;
 	}
 
-	public void setDevInfo(Map<String, String> devInfo) {
+	public void setDevInfo(Map<String, Map<String,String>> devInfo) {
 		this.devInfo = devInfo;
 	}
 
@@ -70,7 +71,7 @@ public class RTUChannelInfo {
         return "RTUChannelInfo{" +
                 "channelId=" + channelId +
                 ", sn='" + sn + '\'' +
-                ", iotInfo=" + devInfo +
+                //", iotInfo=" + devInfo +
                 ", channel=" + channel +
                 '}';
     }
