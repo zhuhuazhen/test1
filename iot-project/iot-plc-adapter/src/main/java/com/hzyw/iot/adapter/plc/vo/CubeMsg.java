@@ -16,8 +16,38 @@ public class CubeMsg implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private static final Logger LOG = Logger.getLogger(CubeMsg.class);
-	 
-    private byte[] data;
+ 
+    private int req;
+    private int ack;
+    private int step;
+    private String msg;
+	public int getReq() {
+		return req;
+	}
+	public void setReq(int req) {
+		this.req = req;
+	}
+	public int getAck() {
+		return ack;
+	}
+	public void setAck(int ack) {
+		this.ack = ack;
+	}
+	public int getStep() {
+		return step;
+	}
+	public void setStep(int step) {
+		this.step = step;
+	}
+	public String getMsg() {
+		return msg;
+	}
+	public void setMsg(String msg) {
+		this.msg = msg;
+	}
+     
+
+    
      
  
 

@@ -3,6 +3,7 @@ package com.hzyw.iot.utils;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -81,22 +82,21 @@ public class PlcProtocolsUtils {
 			logger.error(">>>PlcProtocolsUtils::ctxWriteStr(),byteMsg=" + ConverUtil.convertByteToHexString(msg) + ",异常 ", e1);
 		}
 	}
-	public static void ctxWriteByte_(Channel channel, byte[] msg, String type,final int step) throws Exception {
+	
+	
+	//直接定义在内存:<iot_init_Configkey,<field=initconfig+100+cmdCode,json>> 
+	public static final Map<String, Map<String, String>> iot_init_Config_chache = new HashMap<String, Map<String, String>>();
+	 
+	
+	public static void ctxWriteByte_ChannelFuture(Channel channel, byte[] msg, String type,final int step) throws Exception {
 		try {
 			logger.info(">>>响应设备,cmdCode="+type+",byteMsg=" + ConverUtil.convertByteToHexString(msg) );
-			//ctx.write(msg);
-			channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！
+			channel.writeAndFlush(msg).addListener((ChannelFutureListener) future -> { //监听执行结果！
                 if (future.isSuccess()) {
                 	logger.info("ok");
-                	//只要请求成功
-                	switch (step) {
-	                	case 2:
-	                		//login(null,null);
-	                	case 3:
-	                		//
-	                	default:
-	                		//
-                	}
+                	//如果成功，新增或更新操作步骤
+                	 Map<String, String> it = new HashMap<String, String>
+                	iot_init_Config_chache.put("iot_init_Configkey", value)
                 } else {
                 	logger.error("send data to client exception occur: {}", future.cause());
                 }
@@ -297,13 +297,46 @@ public class PlcProtocolsUtils {
 		}
 		plc_config_threadruning_flag.put(modbusInfo.getAddress_str(), true);//处理完毕后设置为false
 		
+		
+		//判断控制码，根据控制码来引导配置流程
+		if("8e".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())){
+			//init1 集中器配置参数
+			initX_config_jzq_response(ctx, modbusInfo);
+		}else if("8c".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())){
+			//init2  设置时钟
+			initX_config_jzq_response(ctx, modbusInfo);
+		}else if("99".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())){
+			//init3  删除所有节点
+			initX_config_jzq_response(ctx, modbusInfo);
+		}else if("8c".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())){
+			//init4  删除FLASH节点
+			initX_config_jzq_response(ctx, modbusInfo);
+		}else if("8c".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())){
+			//init5   开始组网
+			initX_config_jzq_response(ctx, modbusInfo);
+		}else{
+			//发起init1请求
+			init1_config_jzq(ctx,modbusInfo.getAddress_str());
+			//成功
+			//失败，退出
+		}
+		
 		// 已知入参：plc_sn 其他入参应该都是从设备信息里面关联得到
 		// 1 集中器配置：向集中器写入经纬度信息
-		init1_config_jzq(ctx,modbusInfo.getAddress_str()); 
+		//init1_config_jzq(ctx,modbusInfo.getAddress_str()); 
+		
 		// 2 设置集中器时间：手动同步集中器时间
 		//init2_setTime();
+		
 		//init3_cleanNode();
+		
 		//init4_delFlash();
+		
 		// init5_startGroupAtuo(ctx,modbusInfo);
 		 
 
@@ -313,16 +346,15 @@ public class PlcProtocolsUtils {
 
 	public static boolean init1_config_jzq(ChannelHandlerContext ctx, String plc_SN ) {
 		boolean excuSeccess = true;
-		//String cmdCode = "8E";
+		final ModbusInfo modbusInfo_8E_00 = new ModbusInfo(); //8e表示命令码 00表示请求  80表示响应
 		try {
 			//	获取设备信息   通过chennelID  ==> devinfo
 			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel())).get(plc_SN + "_defAttribute");//从自定义的字段里面获取值
 
-			logger.info("=====>>>集中器配置...===============");
-			ModbusInfo modbusInfo_8E = new ModbusInfo();
-			modbusInfo_8E.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
-			modbusInfo_8E.setcCode(ConverUtil.hexStrToByteArr("00"));  
-			modbusInfo_8E.setCmdCode(ConverUtil.hexStrToByteArr("8E")); 
+			logger.info("=====>>>initstep(" + plc_SN + ")集中器配置参数...===============");
+			modbusInfo_8E_00.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo_8E_00.setcCode(ConverUtil.hexStrToByteArr("00"));  
+			modbusInfo_8E_00.setCmdCode(ConverUtil.hexStrToByteArr("8e")); 
 			// 获取设备信息  构造PDT  
 			/*
 				 名称	说明                                                                                       	长度
@@ -330,17 +362,17 @@ public class PlcProtocolsUtils {
 				纬度	取小数后2位 (-90.00 - +90.00) 再*100整型	    2 Bs     如：-XXXX
 				时区	-11 - +12整型	                            1 B
 				短信中心号	如: +8613010888500 字符串型	14 Bs    --不考虑
-				管理员1	如:13812345678 字符串型	11 Bs     --不考虑
-				管理员2	如:13812345678 字符串型	11 Bs     --不考虑
-				操作员1	如:13812345678 字符串型	11 Bs     --不考虑
-				操作员2	如:13812345678 字符串型	11 Bs     --不考虑
-				操作员3	如:13812345678 字符串型	11 Bs     --不考虑
-				短信操作回复	0 否  1是	1 B     			  --不考虑
-				光控时段	前2Byte：开始 时分           2Bs                     
-				                     后2Byte：结束 时分 	2 Bs
+				管理员1	如:13812345678 字符串型	11 Bs        --不考虑
+				管理员2	如:13812345678 字符串型	11 Bs    	 --不考虑
+				操作员1	如:13812345678 字符串型	11 Bs     	 --不考虑
+				操作员2	如:13812345678 字符串型	11 Bs        --不考虑
+				操作员3	如:13812345678 字符串型	11 Bs        --不考虑
+				短信操作回复	0 否  1是			1 B     	 --不考虑
+				光控时段	前2Byte：开始 时分                    2Bs                     
+				                     后2Byte：结束 时分 	    2 Bs
 			*/
-	    	String plc_cfg_step1_longitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_longitude);  
-	    	String plc_cfg_step1_latitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_latitude);  
+	    	String plc_cfg_step1_longitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_longitude);  //经度
+	    	String plc_cfg_step1_latitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_latitude);  //纬度
 	    	String plc_cfg_step1_sq= def_attributers.get(IotInfoConstant.dev_plc_cfg_sq); //"-8"; //时区        转化成整形表示
 	    	String plc_cfg_step1_gksd_start= def_attributers.get(IotInfoConstant.dev_plc_cfg_gksd_start); //"8:10"; //光控时段-开始时分
 	    	int gksd_start_h = Integer.parseInt(plc_cfg_step1_gksd_start.split(":")[0]);
@@ -356,9 +388,9 @@ public class PlcProtocolsUtils {
 			byte[] temp3 = new byte[1];
 			temp3 = ByteUtils.varIntToByteArray(-10);  //时区
 			byte[] temp4_10 = new byte[14+11*5+1];
-			for(int p=0;p<temp4_10.length;p++){
-				//temp4_10[p]= 0;
-			}
+			/*for(int p=0;p<temp4_10.length;p++){ //不需要给值，报文的相应位置默认给0
+				temp4_10[p]= 0;
+			}*/
 			byte[] temp11_0 = new byte[1];
 			byte[] temp11_1 = new byte[1];
 			temp11_0 = ByteUtils.varIntToByteArray(gksd_start_h); //时
@@ -374,37 +406,189 @@ public class PlcProtocolsUtils {
 	         			.writeBytes(temp12_0).writeBytes(temp12_1); //CRC计算，根据CRC所在报文位置--》headStart所有的数据
 	        byte[] temp = byteBuf.array();
 	        if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
-			modbusInfo_8E.setPdt(temp);
+	        modbusInfo_8E_00.setPdt(temp);
  			//	响应
-			logger.info(">>>响应设备,cmdCode=8E  ,byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo_8E.getNewFullData()) );
-			logger.info(">>>响应设备,cmdCode=8E  ,byteMsg.len=" + modbusInfo_8E.getNewFullData().length );
+			logger.info(">>>请求设备,cmdCode=8e_00  ,byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo_8E_00.getNewFullData()) );
+			logger.info(">>>请求设备,cmdCode=8e_00  ,byteMsg.len=" + modbusInfo_8E_00.getNewFullData().length );
 			//ctxWriteByte(ctx, modbusInfo_8E.getNewFullData(),"8E");
+			ctx.channel().writeAndFlush(modbusInfo_8E_00.getNewFullDataWithByteBuf()).addListener((ChannelFutureListener) future -> {  
+                if (future.isSuccess()) {
+            		logger.info(">>>initstep("+modbusInfo_8E_00.getAddress_str()+")请求设备成功！,cmdCode=8e_00,byteMsg=" 
+							+ ConverUtil.convertByteToHexString(modbusInfo_8E_00.getNewFullData()));
+                } else {
+                	logger.info(">>>initstep("+modbusInfo_8E_00.getAddress_str()+")请求设备失败！,cmdCode=8e_00,byteMsg=" 
+							+ ConverUtil.convertByteToHexString(modbusInfo_8E_00.getNewFullData()));
+                }
+            });
 		} catch (Exception e) {
-			logger.error(">>>PlcProtocolsUtils::init()::init5_startGroupAtuo(),address=" + plc_SN + ",异常 ", e);
+			logger.error(">>>initstep(" + modbusInfo_8E_00.getAddress_str() + ")响应设备,cmdCode=8e_00,exception ！", e);
 			excuSeccess = false;
-			try {
-				// ctx.write(ConverUtil.hexStrToByteArr(rp));
-			//	ctxWriteStr(ctx, response);
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				logger.error(">>>PlcProtocolsUtils::init()::login::ctxWriteStr(),address=" + plc_SN + ",异常 ", e1);
-			} // 响应成功
+		}
+		return excuSeccess;
+	
+	}
+	
+	
+	public static boolean initX_config_jzq_response(ChannelHandlerContext ctx, ModbusInfo modbusInfo ) {
+		boolean excuSeccess = true;
+		//String cmdCode = "8E";
+		String cCode = modbusInfo.getcCode_str();
+		String cCmdCode = modbusInfo.getCmdCode_str();
+		
+		try {
+			logger.info("=====initstep(" + modbusInfo.getAddress_str() + ")>>>集中器配置响应...===============");
+			logger.info(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",byteMsg="
+					+ ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
+			//PDT  ack
+			/*
+				01H：集中器成功受理。
+				02H：命令或数据格式无效。 
+				03H：集中器忙。
+			*/
+	    	String hex_ptd = ConverUtil.convertByteToHexString(modbusInfo.getPdt());  //ack
+	    	if("01".equals(modbusInfo.getPdt())){
+				logger.info(">>>initstep("+modbusInfo.getAddress_str()+")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",集中器反馈：集中器成功受理!");
+				if("8e".equals(cCmdCode) && "80".equals(cCode)){
+					//请求设备 设置时间
+					init2_config_setTime(ctx,modbusInfo.getAddress_str());
+				}
+				if("8c".equals(cCmdCode) && "80".equals(cCode)){
+					//请求设备，删除所有节点
+					init3_config_cleanNode(ctx,modbusInfo.getAddress_str());
+				}
+				if("99".equals(cCmdCode) && "80".equals(cCode)){
+					//请求设备，删除所有节点
+					init4_config_delFlash(ctx,modbusInfo.getAddress_str());
+				}
+				if("69".equals(cCmdCode) && "80".equals(cCode)){
+					//请求设备，开始组网
+					init5_startGroupAtuo(ctx,modbusInfo.getAddress_str());
+				}
+				if("62".equals(cCmdCode) && "80".equals(cCode)){ //组网成功 ，直接停止组网 或者说失败的时候才需要手动的去停止？ 这个需要沟通下
+					//请求设备，开始组网
+					init6_stopGroupAtuo(ctx,modbusInfo.getAddress_str());
+				}
+				 
+				
+	    	}else if("02".equals(modbusInfo.getPdt())){
+	    		logger.info(">>>initstep("+modbusInfo.getAddress_str()+")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",集中器反馈：命令或数据格式无效");
+	    	}else if("03".equals(modbusInfo.getPdt())){
+	    		logger.info(">>>initstep("+modbusInfo.getAddress_str()+")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",集中器反馈：集中器忙！");
+	    	}else{
+				logger.info(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",集中器反馈：返回数据异常！");
+	    	}
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",exception1！", e);
+			excuSeccess = false;
 		}
 		return excuSeccess;
 	
 	}
 
-	public static void init2_setTime() {
+	public static boolean init2_config_setTime(ChannelHandlerContext ctx,String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo_8c_00 = new ModbusInfo();
+		try {
+			//	获取设备信息   通过chennelID  ==> devinfo
+			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel())).get(plc_SN + "_defAttribute");//从自定义的字段里面获取值
 
+			logger.info("=====>>>initstep(" + plc_SN+ ")集中器设置时钟...===============");
+			modbusInfo_8c_00.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo_8c_00.setcCode(ConverUtil.hexStrToByteArr("00"));  
+			modbusInfo_8c_00.setCmdCode(ConverUtil.hexStrToByteArr("8c")); 
+			//   构造PDT 7个字节 
+			/*
+				 年，月，日，周，时，分，秒
+			*/
+			long timestamp = System.currentTimeMillis();//输入定为时间戳
+			Calendar ca = Calendar.getInstance();
+			ca.setTimeInMillis(timestamp);
+			int hour = ca.get(Calendar.DATE);  //时
+			int min = ca.get(Calendar.MINUTE); //分
+			int sec = ca.get(Calendar.SECOND);//秒
+			int week = ca.get(Calendar.DAY_OF_WEEK);//周 默认从1开始  是否要-1？
+			int day = ca.get(Calendar.DAY_OF_MONTH);//日
+			int month = ca.get(Calendar.MONTH);//月   默认0开始  是否要 +1？
+			int year = ca.get(Calendar.YEAR);//年
+ 	    	
+			byte[] temp1 = new byte[7]; 
+			temp1[0] = (byte)year; 
+			temp1[1] = (byte)month; 
+			temp1[2] = (byte)day; 
+			temp1[3] = (byte)week; 
+			temp1[4] = (byte)hour; 
+			temp1[5] = (byte)min; 
+			temp1[6] = (byte)year; 
+			modbusInfo_8c_00.setPdt(temp1);
+
+			ctxWriteAndFlush(ctx,modbusInfo_8c_00);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo_8c_00.getAddress_str() + ")请求设备,,cmdCode="+modbusInfo_8c_00.getCmdCode_str()
+        				+"ccode="+modbusInfo_8c_00.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
 	}
 
-	public static void init3_cleanNode() {
+  
+	public static boolean init3_config_cleanNode(ChannelHandlerContext ctx, String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			//	删除所有节点，只需要指定集中器ID即可
 
+			logger.info("=====>>>initstep(" + plc_SN+ ")集中器设置时钟...===============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("03"));  //01删某个ID，02删除一组  03删除所有
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("99")); 
+			//   构造PDT 6个字节 
+			byte[] temp1 = new byte[6]; 
+			modbusInfo.setPdt(temp1);
+
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+	
+	}
+	
+	public static void ctxWriteAndFlush(ChannelHandlerContext ctx,  ModbusInfo modbusInfo) throws Exception{
+		ctx.channel().writeAndFlush(modbusInfo.getNewFullDataWithByteBuf()).addListener((ChannelFutureListener) future -> {  
+            if (future.isSuccess()) {
+        		logger.info(">>>initstep("+modbusInfo.getAddress_str()+")请求设备成功！,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
+            } else {
+            	logger.info(">>>initstep("+modbusInfo.getAddress_str()+")请求设备失败！,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
+            }
+        });
 	}
 
-	public static void init4_delFlash() {
+	public static boolean init4_config_delFlash(ChannelHandlerContext ctx, String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			//	删除所有节点，只需要指定集中器ID即可
+			logger.info("=====>>>initstep(" + plc_SN+ ")删除FLASH节点...===============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("69")); 
+			byte[] temp1 = new byte[0]; 
+			modbusInfo.setPdt(temp1);//注意这里，没有PDT的时候 是否需要给值0
 
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+	
 	}
+	 
 
 	/**
 	 * 
@@ -414,47 +598,115 @@ public class PlcProtocolsUtils {
 	 * @param modbusInfo
 	 * @return
 	 */
-	public static boolean init5_startGroupAtuo(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+	public static boolean init5_startGroupAtuo(ChannelHandlerContext ctx, String plc_SN) {
 		boolean excuSeccess = true;
-		String response = "";
+		final ModbusInfo modbusInfo = new ModbusInfo();
 		try {
 			//	获取设备信息
 			InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
 			int port = insocket.getPort();
 			Map<String, String> attributers = IotInfoConstant.allDevInfo.get(port).get(modbusInfo.getAddress_str() + "_defAttribute");
-
-			logger.info("=====>>>开始组网...===============");
-			ModbusInfo modbusInfo_62h = new ModbusInfo();
-			
+					
+			logger.info("=====>>>initstep(" + plc_SN+ ") 开始组网...===============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("62")); 
 			// PDT 组网个数
 			byte[] groupNum = new byte[1];
 			int x = Integer.parseInt(attributers.get(IotInfoConstant.dev_plc_cfg_step5_groupAtuo));
 			logger.info("     >>>组网个数 = " + x);
 			groupNum[0] = (byte) x;  
-			modbusInfo_62h.setPdt(groupNum);
-			// 控制码
-			modbusInfo_62h.setcCode(ConverUtil.hexStrToByteArr("00")); // 00H
-			// 操作码
-			modbusInfo_62h.setCmdCode(ConverUtil.hexStrToByteArr("62"));// 62H
-			// CRC校验码
-			modbusInfo_62h.resetCrc();
-			// 重新计算长度
-			modbusInfo_62h.resetLength();
- 			//	响应
-			ctxWriteByte(ctx, modbusInfo_62h.getNewFullData(),"62");
+			modbusInfo.setPdt(groupNum);
+			  
+			ctxWriteAndFlush(ctx,modbusInfo);
 		} catch (Exception e) {
-			logger.error(">>>PlcProtocolsUtils::init()::init5_startGroupAtuo(),msg=" + response + ",异常 ", e);
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
 			excuSeccess = false;
-			response = "68" + modbusInfo.getAddress_str() + "688002f0024416";
-			try {
-				// ctx.write(ConverUtil.hexStrToByteArr(rp));
-				ctxWriteStr(ctx, response ,"62");
-			} catch (Exception e1) {
-				// TODO Auto-generated catch block
-				logger.error(">>>PlcProtocolsUtils::init()::login::ctxWriteStr(),msg=" + response + ",异常 ", e1);
-			} // 响应成功
 		}
 		return excuSeccess;
+		
+	}
+	
+	public static boolean init6_stopGroupAtuo(ChannelHandlerContext ctx, String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>initstep(" + plc_SN+ ") 停止组网...==63,00=============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("63")); 
+			// PDT 
+			byte[] temp1 = new byte[0]; 
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+		
+	}
+	public static boolean init7_saveNode(ChannelHandlerContext ctx, String plc_SN) {  //未完成。。。。。
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>initstep(" + plc_SN+ ") 存储节点...==66,00=============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("66")); 
+			// PDT 
+			byte[] temp1 = new byte[0]; 
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+		
+	}
+	public static boolean init8_sendDownNode(ChannelHandlerContext ctx, String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>initstep(" + plc_SN+ ") 下发节点...==96,00=============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("96")); 
+			// PDT 
+			byte[] temp1 = new byte[0]; 
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+		
+	}
+	public static boolean ini9_configNode(ChannelHandlerContext ctx, String plc_SN) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>initstep(" + plc_SN+ ") 配置节点...==98,00=============");
+			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00")); 
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("98")); 
+			// PDT 
+			byte[] temp1 = new byte[0]; 
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(ctx,modbusInfo);
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")请求设备,cmdCode="+modbusInfo.getCmdCode_str()
+        				+"ccode="+modbusInfo.getcCode_str()+",exception1！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+		
 	}
 
 }

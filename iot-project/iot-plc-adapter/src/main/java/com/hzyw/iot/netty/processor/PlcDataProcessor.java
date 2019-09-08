@@ -162,7 +162,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 			source.resetReaderIndex();
 			//---end test
 			
-			/*ModbusInfo modbusInfo = new ModbusInfo(source); //其实读取的指针已经到最后了，格式也是符合要求的 数据对不对是另一码事
+			ModbusInfo modbusInfo = new ModbusInfo(source); //其实读取的指针已经到最后了，格式也是符合要求的 数据对不对是另一码事
 			if(modbusInfo == null){
                 return; 
 			}
@@ -205,7 +205,9 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
             	if(!seccess)return;//通知登陆失败，直接退出
             	//登陆成功，如果是第一次登陆，则自动进入配置设备流程
             	 if(!isConfig){
-            		//初始化配置流程
+            		//进入初始化配置流程
+            		 //modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00"));
+            		 //modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("8e"));
             		 PlcProtocolsUtils.init1(ctx, modbusInfo);
             		 return;
             	 }else{
@@ -219,7 +221,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
             if(!isConfig){
             	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未配置，请检查自动配置过程中失败原因!!" );
             	return;
-            }*/
+            }
             // ====登陆、设备配置过程=======end >>===
             
             //（集中器-》主机）其他协议处理  ,如果想直接调试其他的控灯协议，把上面的'登陆、设备配置过程'注释掉即可
