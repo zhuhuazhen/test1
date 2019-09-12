@@ -1,0 +1,219 @@
+大屏上线(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"devOnline",
+	"timestamp":	1568082710,
+	"msgId":	"77ab5190-22da-4289-a0c9-770e42a30fcf",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"status":	"online",
+		"tags":	{
+	}
+	}
+}
+
+大屏下线(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"devOnline",
+	"timestamp":	1568082609,
+	"msgId":	"19f1cd8b-b18c-4868-aa73-7b8fbbebe8ce",
+	"gwId":	"",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"status":	"offline",
+		"tags":	{
+	}
+	}
+}
+
+大屏属性上报(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"devInfoResponse",
+	"timestamp":	1568082713,
+	"msgId":	"d58eaf1a-2fb3-419b-8632-c9072ac8fe78",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"attributers":	[{
+				"uuid":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+				"sn":	"CLCC40002B8A",
+				"device_type_name":	"LED screen",
+				"device_type_code":	4144,
+				"vendor_name":	"Colorlight interconnection",
+				"vendor_code":	8205,
+				"model":	"c4",
+				"version_software":	"1.52.6",
+				"version_hardware":	"c4-1.52.6",
+				"date_of_production":	"2019-08-27",
+				"up_time":	0,
+				"ipaddr_v4":	"192.168.3.161",
+				"ipaddr_v6":	"2001:0db8:85a3:08d3:1319:8a2e:0370:7344",
+				"mac_addr":	"C1:B2:B2:C2:0B:0A",
+				"malfunction":	0
+			}],
+		"methods":	["reboot", "set_time", "set_brightness", "set_onoff", "set_screenshot", "set_clean_program", "set_download_program", "set_switch_program"],
+		"definedAttributers":	[{
+				"type":	"on_play",
+				"value":	"1",
+				"company":	""
+			}, {
+				"type":	"on_off",
+				"value":	"1",
+				"company":	""
+			}, {
+				"type":	"brightness",
+				"value":	"26",
+				"company":	"cd"
+			}, {
+				"type":	"screen_width",
+				"value":	"192",
+				"company":	"pix"
+			}, {
+				"type":	"screen_height",
+				"value":	"320",
+				"company":	"pix"
+			}, {
+				"type":	"uptime",
+				"value":	"417765",
+				"company":	"ms"
+			}, {
+				"type":	"mem_total",
+				"value":	"1073741824",
+				"company":	"byte"
+			}, {
+				"type":	"mem_free",
+				"value":	"800419840",
+				"company":	"byte"
+			}, {
+				"type":	"storage_total",
+				"value":	"5878841344",
+				"company":	"byte"
+			}, {
+				"type":	"storage_free",
+				"value":	"800419840",
+				"company":	"byte"
+			}, {
+				"type":	"colortemp",
+				"value":	"4100",
+				"company":	"k"
+			}, {
+				"type":	"volume",
+				"value":	"14",
+				"company":	""
+			}, {
+				"type":	"fps",
+				"value":	"60",
+				"company":	"frame"
+			}, {
+				"type":	"hsync",
+				"value":	"10",
+				"company":	"pclk"
+			}, {
+				"type":	"dclk",
+				"value":	"4682926",
+				"company":	"hz"
+			}],
+		"definedMethods":	[],
+		"signals":	[{
+				"screen_offline":	1060865
+			}],
+		"tags":	{
+	}
+	}
+}
+
+大屏状态上报(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"metricInfoResponse",
+	"timestamp":	1568082724,
+	"msgId":	"b368808c-fe04-4ee6-8f57-73b35f051fad",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"attributers":	[],
+		"definedAttributers":	[{
+				"type":	"uptime",
+				"value":	"429377",
+				"company":	"ms"
+			}, {
+				"type":	"mem_free",
+				"value":	"801198080",
+				"company":	"byte"
+			}],
+		"tags":	{
+	}
+	}
+}
+
+大屏信号上报(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"devSignalResponse",
+	"timestamp":	1568082743,
+	"msgId":	"6a71c8e8-081d-4117-9fad-31ff895fe3d3",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"signals":	[{
+				"signal_code":	1060865
+			}],
+		"tags":	{
+	}
+	}
+}
+
+控制命令下发到大屏(真实报文): 
+topic : hzyw/001/gateway/1000-f82d132f9bb018ca-2001-ffff-d28b
+message : 
+{
+	"type":	"request",
+	"timestamp":	"1568082747",
+	"msgId":	"53cf79f0-9c06-4b33-8743-afba418e9c99",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"messageCode":	0,
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"attributers":	[],
+		"methods":	[{
+				"method":	"set_reboot",
+				"in":	[],
+				"out":	[]
+			}],
+		"definedAttributers":	[],
+		"definedMethods":	[],
+		"signals":	[],
+		"tags":	{
+	}
+	}
+}
+
+大屏控制命令回复(真实报文): 
+topic : hzyw/001/device/1030-3c474cf77e1a0376-200d-ffff-74a8
+message : 
+{
+	"type":	"response",
+	"timestamp":	1568082757,
+	"msgId":	"53cf79f0-9c06-4b33-8743-afba418e9c99",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"messageCode":	0,
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"methods":	[{
+				"method":	"set_reboot",
+				"out":	[]
+			}],
+		"tags":	{
+	}
+	}
+}
+
+
