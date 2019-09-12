@@ -12,13 +12,7 @@ public class MetricInfoResponseDataVO extends DataVO implements Serializable {
 	private List<Map> definedAttributers; // 详细属性
 	
 
-	public List<Map> getAttributers() {
-		return attributers;
-	}
-
-	public void setAttributers(List<Map> attributers) {
-		this.attributers = attributers;
-	}
+	
 
 	public String getId() {
 		return id;
@@ -34,5 +28,13 @@ public class MetricInfoResponseDataVO extends DataVO implements Serializable {
 
 	public void setDefinedAttributers(List<Map> definedAttributers) {
 		this.definedAttributers = definedAttributers;
+	}
+
+	public List<Map> getAttributers() {
+		return attributers;
+	}
+
+	public void setAttributers(List<Map> attributers) {
+		this.attributers = attributers;
 	}
 }

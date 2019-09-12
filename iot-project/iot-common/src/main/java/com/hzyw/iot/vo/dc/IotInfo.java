@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.hzyw.iot.util.constant.IotInfoConstant;
 import com.hzyw.iot.vo.dataaccess.DevInfoDataVO;
 
 /**
@@ -76,11 +75,18 @@ public class IotInfo {
 	}
 	
 	public static void initDevAttribute(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_attributers) {
-		Map<String,String> init_value = new HashMap<String,String>();
-        for(String attr : plc_attributers){
-        	init_value.put(attr, "");//没指定则默认空
+        if(plc_iotInfo_.containsKey(atrType)){
+        	for(String attr : plc_attributers){
+        		plc_iotInfo_.get(atrType).put(attr, "");
+            }
+        }else{
+        	Map<String,String> init_value = new HashMap<String,String>();
+            for(String attr : plc_attributers){
+            	init_value.put(attr, "");//没指定则默认空
+            }
+        	plc_iotInfo_.put(atrType, init_value);
         }
-    	plc_iotInfo_.put(atrType, init_value);
+    	
 	}
 	public static void initMethod(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_methods) {
 		Map<String,String> init_value = new HashMap<String,String>();
@@ -101,26 +107,7 @@ public class IotInfo {
 	public static void initSignl(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_Signl) {
 		initCmd( plc_iotInfo_, atrType, plc_Signl);
 	}
-	
-	
-	/**
-	 * 定义一个灯(节点)
-	 * 
-	 * @param plc_iotInfo_  
-	 * @param SN1  集中器地址
-	 * @param SN2 节点地址
-	 * @param plc_node_attributers  节点参数
-	 */
-	public static void addNode(Map<String, Map<String, String>> plc_iotInfo_,String SN1,String SN2,String... plc_node_attributers) {
-		Map<String,String> init_value = new HashMap<String,String>();
-        for(String attr : plc_node_attributers){
-        	init_value.put(attr, "");
-        }
-        init_value.put(IotInfoConstant.dev_plc_plc_sn, SN1);
-		init_value.put(IotInfoConstant.dev_plc_node_sn, SN2);
-    	plc_iotInfo_.put(SN2+"_attribute", init_value);
-	}
-	 
+ 	 
 
 	@Override
     public String toString() {

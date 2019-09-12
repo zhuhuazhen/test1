@@ -82,7 +82,7 @@ public enum HEAD_TEMPLATE {
     HEAD_TEMPLATE(String value) {
         this.value = value;
     }
-    public static void main(String[] args){
+    /*public static void main(String[] args){
         System.out.println(HEAD_TEMPLATE.T.toString());
-    }
+    }*/
 }

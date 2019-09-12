@@ -36,7 +36,7 @@ public class IotDCApplication {
     //@RequestMapping(value = "/xf")
 	public Map<String, Object> getThisMap(String msg) {
     	System.out.println("---------准备下发指令---------");
-    	String _16str = "68 00 00 00 00 00 01 68 00 02 70 03 46 16";
+    	String _16str = "68 00 00 00 00 01 00 68 00 02 70 03 46 16";
 		CommandHandler.writeCommand("sn1", _16str, 2);  //2表示入参 是16进制字符串
 		Map<String, Object> map = new HashMap<>();
 		map.put("Name", "LYW");

@@ -59,10 +59,6 @@ public class Handler {
 		JSONObject jsonObject =null;
 		try{
 			 jsonObject = JSONUtil.parseObj(message);//messageVO
-		    //yes, it is
-		}catch(Exception e){
-			log.error("json数据解析错误",e);
-		}
 		
 		JSONObject data = JSONUtil.parseObj(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data));
 		// 判断type类型
@@ -89,7 +85,7 @@ public class Handler {
 			devInfoDataVo.setMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_methods));
 			devInfoDataVo.setDefinedAttributers((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedAttributers) );
 			devInfoDataVo.setDefinedMethods((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_definedMethods) );
-			//devInfoDataVo.setSignals((List<String>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
+			devInfoDataVo.setSignals((List<Map>)data.get(GatewayMqttUtil.dataModel_messageVO_data_signals));
 			devInfoDataVo.setTags((Map)data.get(GatewayMqttUtil.dataModel_messageVO_data_tags));
 			/*//消息结构
 			messageVo.setType(type);
@@ -123,9 +119,20 @@ public class Handler {
 			
 			//消息结构
 			messageVo= getMessageVO(metricInfoResponseDataVO,type,Convert.toLong(jsonObject.get(GatewayMqttUtil.dataModel_messageVO_timestamp)),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_msgId).toString(),jsonObject.get(GatewayMqttUtil.dataModel_messageVO_data_gatewayId).toString());
+			/*
 			//kafka处理
-			sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDataAcessTopic());
-			//sendKafka(JSON.toJSONString(messageVo),applicationConfig.getDatasendTopic());//测试
+			Producer<String, String> producer1;
+			try {
+				producer1 = kafkaCommon.getKafkaProducer();
+				producer1.send(new ProducerRecord<>("iot_topic_dataAcess", "test"));
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+			//String test = JSON.parseObject(JSON.toJSONString(messageVo)).toString();
+			String test1 = JSON.toJSONString(messageVo);
+			//System.out.println("xxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+			sendKafka(test1,applicationConfig.getDataAcessTopic());
 			break;
 		case DevSignalResponse://设备信号上报
 			DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
@@ -158,6 +165,11 @@ public class Handler {
             System.out.println("未知消息类型");
             break;
 		}
+	    //yes, it is
+			}catch(Exception e){
+				log.error("报错",e);
+			}
+			
 
 	}
 	
@@ -209,6 +221,7 @@ public class Handler {
 		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
 		        Producer<String, String> producer = new KafkaProducer<>(props);
+		        
 			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
 			producer.send(new ProducerRecord<>(topic, messageVo));
 			redisService.hmSet(GatewayMqttUtil.rediskey_iot_cache_dataAccess, applicationConfig.getServiceId(), GatewayMqttUtil.onLine);

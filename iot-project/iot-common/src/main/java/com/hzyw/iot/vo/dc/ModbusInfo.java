@@ -122,7 +122,7 @@ public class ModbusInfo {
     public ModbusInfo(ByteBuf source) { //上报场景
     	try{
     		this.source = source; 
-            //这种数据 貌似报文  地址 | 命令 | 长度 |数据| CRC检验码
+            //=pdt+cmdcode
             this.data = new byte[this.source.readableBytes()- headStart.length - address.length - headEnd.length  
                                  - cCode.length  - length.length - crc.length - end.length];
             this.fullData = new byte[this.source.readableBytes() - crc.length - end.length];
@@ -143,7 +143,7 @@ public class ModbusInfo {
             byte[] cmd = new byte[1];
             cmd[0] = data[0];
             this.setCmdCode(cmd);
-            if(data.length > 2){
+            if(data.length >= 2){
             	byte[] pdt = new byte[data.length -1];
             	int i=0;
             	for(int p=1;p<data.length;p++){
@@ -158,14 +158,14 @@ public class ModbusInfo {
              
             //打印hex串
             String bw ="ModbusInfo{" +
-    					        "headStart=" + ConverUtil.convertByteToHexString(headStart) +
-    					        "address=" + ConverUtil.convertByteToHexString(address) +
-    					        "headEnd=" + ConverUtil.convertByteToHexString(headEnd) +
-    					        "cCode=" + ConverUtil.convertByteToHexString(cCode) +
-    					        "length=" + ConverUtil.convertByteToHexString(length) + "/" + new String(length)+
-    					        "cmdCode=" + ConverUtil.convertByteToHexString(cmdCode) +
-    					        "pdt=" + (pdt.length>0?ConverUtil.convertByteToHexString(pdt):" ") +  "/" + (pdt.length>0?new String(pdt):"")+
-    					        "crc=" + ConverUtil.convertByteToHexString(crc) +
+    					        "headStart=" + ConverUtil.convertByteToHexString(headStart) +","+
+    					        "address=" + ConverUtil.convertByteToHexString(address) + ","+
+    					        "headEnd=" + ConverUtil.convertByteToHexString(headEnd) +", "+
+    					        "cCode=" + ConverUtil.convertByteToHexString(cCode) +" ,"+
+    					        "length=" + ConverUtil.convertByteToHexString(length) + ", "+
+    					        "cmdCode=" + ConverUtil.convertByteToHexString(cmdCode) +" ,"+
+    					        "pdt=" + (pdt.length>0?ConverUtil.convertByteToHexString(pdt):" ") + ","+
+    					        "crc=" + ConverUtil.convertByteToHexString(crc) +","+
     					        "end=" + ConverUtil.convertByteToHexString(end) +
     					        '}';
             System.out.println("====>>>init ModbusInfo :====");

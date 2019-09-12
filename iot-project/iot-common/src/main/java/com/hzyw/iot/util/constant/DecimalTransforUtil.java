@@ -162,8 +162,9 @@ public class DecimalTransforUtil {
         int i = Integer.parseInt(hex, 16);
         String str2 = Integer.toBinaryString(i);
         if(bitNum>0){
-            for (int j = 0; j < bitNum - str2.length(); j++) {
-                str2 = "0" + str2;
+            int lengthNum= bitNum - str2.length();
+            for (int j = 0; j <lengthNum; j++) {
+                str2 = "0".concat(str2);
             }
         }
         return str2;

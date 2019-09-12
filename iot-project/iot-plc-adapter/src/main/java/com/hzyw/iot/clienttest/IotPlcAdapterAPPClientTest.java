@@ -27,7 +27,7 @@ public class IotPlcAdapterAPPClientTest {
 	static IotPlcAdapterAPPClientTestHandler client = new IotPlcAdapterAPPClientTestHandler();//读写
 	
 	public static void main(String[] args) {
-		String _16str = "68 00 00 00 00 00 01 68 00 02 70 03 46 16";
+		String _16str = "68 00 00 00 00 01 00 68 00 02 70 03 46 16";
 		CommandHandler.writeCommand("sn1", _16str, 2);  //2表示入参 是16进制字符串
 		    String host = "127.0.0.1"; 
 		    int port = 9090; 

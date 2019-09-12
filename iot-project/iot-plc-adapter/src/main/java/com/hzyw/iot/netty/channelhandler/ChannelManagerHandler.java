@@ -12,7 +12,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.hzyw.iot.util.constant.IotInfoConstant;
+import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.RTUChannelInfo;
 
@@ -41,6 +41,7 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
         RTUChannelInfo channelInfo = GlobalInfo.CHANNEL_INFO_MAP.getOrDefault(channelId, RTUChannelInfo.build("unknownSN", channelId));
         GlobalInfo.CHANNEL_INFO_MAP.put(channelId, channelInfo);//设备建立连接的时候，实际上是没有交互过消息的，所以不可能知道当前是什么设备ID建立的连接
         ctx.fireChannelRegistered();
+        System.out.println(GlobalInfo.CHANNEL_INFO_MAP.get(channelId));
     }
 
     /*@Override
@@ -82,6 +83,7 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
             rTUChannelInfo.setChannel(ctx.channel());
             rTUChannelInfo.setDevInfo(devInfo_new);//设备信息挂到SN_CHANNEL_INFO_MAP
             GlobalInfo.SN_CHANNEL_INFO_MAP.put(insocket.getPort()+plc_sn, rTUChannelInfo); 
+            System.out.println(insocket.getPort()+plc_sn);
             LOGGER.info(">>> sn: {} in the house.", plc_sn);
             seccess = true;
     	}catch(Exception e){

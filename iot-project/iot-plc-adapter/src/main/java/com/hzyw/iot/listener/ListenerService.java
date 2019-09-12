@@ -50,6 +50,9 @@ public class ListenerService implements CommandLineRunner {
 				}
 			}
         );
+        
+        //new Thread(new DataSendDownConsumer(kafkaCommon,applicationConfig,commPubHandler,this),"数据下发::消费KAFKA").start();
+        
         /*singleThreadExecutor.submit( 
             new Runnable() {
 				@Override

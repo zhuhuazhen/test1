@@ -24,6 +24,10 @@ public class ApplicationConfig {
 	//下发列队
 	@Value(value = "${iot.mqtt.adapter.topic.consumer.datasend.groupid}")
 	private String  datasendTopicGroup;
+	
+	//下发指令到PLC
+	@Value(value = "${iot.plc.adapter.topic.producer.plcOrder}")
+	private String  plcOrder;
 	 
 	public String getDataAcessTopic() {
 		return dataAcessTopic;
@@ -72,6 +76,14 @@ public class ApplicationConfig {
 
 	public void setServiceId(String serviceId) {
 		this.serviceId = serviceId;
+	}
+
+	public String getPlcOrder() {
+		return plcOrder;
+	}
+
+	public void setPlcOrder(String plcOrder) {
+		this.plcOrder = plcOrder;
 	}
 	 
 	

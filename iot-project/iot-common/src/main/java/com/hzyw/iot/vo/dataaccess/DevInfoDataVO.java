@@ -15,6 +15,7 @@ public class DevInfoDataVO extends DataVO implements Serializable {
 	private List<Map> attributers; // 基本属性
 	private List<String> methods; // 操作方法
 	private List<Map> definedAttributers; // 自定义属性
+	private List<Map> signals;
 	private List<String> definedMethods; // []
 	
 	public String getStatus() {
@@ -55,6 +56,12 @@ public class DevInfoDataVO extends DataVO implements Serializable {
 	}
 	public void setDefinedAttributers(List<Map> definedAttributers) {
 		this.definedAttributers = definedAttributers;
+	}
+	public List<Map> getSignals() {
+		return signals;
+	}
+	public void setSignals(List<Map> signals) {
+		this.signals = signals;
 	}
 	 
 

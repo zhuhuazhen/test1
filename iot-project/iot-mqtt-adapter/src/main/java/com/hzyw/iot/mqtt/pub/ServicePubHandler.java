@@ -73,9 +73,9 @@ public class ServicePubHandler  extends AbstractPubHandler  {
 			logger.info("==============ServicePubHandler平台上线,连接中==============================");
 			////NEW一个客户端连接对象
 			this.setMqttClient(new MqttClient(this.getUrl(), this.getClientId(), new MemoryPersistence()));
-			// 遗愿处理
+			/*// 遗愿处理
 			String failoverTopic = this.getTopic();//下线主题
-			this.getOptions().setWill(failoverTopic, content[1].getBytes(), this.getQos(), true);
+			this.getOptions().setWill(failoverTopic, content[1].getBytes(), this.getQos(), true);*/
 			// 建立连接
 			this.getMqttClient().connect(getOptions());
 			// 创建消息

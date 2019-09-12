@@ -1,13 +1,11 @@
 package com.hzyw.iot.util.constant;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * 指令参数（PDT）协议 解析
@@ -39,6 +37,8 @@ public class PDTAdapter {
 		List<Object> paramList=JSONArray.parseArray(pdt);
 		for(int j=0; j<paramList.size();j++) { //遍历多条记录的参数（如：多节点，多任务）
 			JSONArray paramValArray=JSONArray.parseArray(JSONArray.toJSONString(paramList.get(j)));
+			System.out.println(lenArr.length);
+			System.out.println(paramValArray.size());
 			if(lenArr.length!=paramValArray.size()) throw new Exception("解析请求的PDT报文错误！定义的字节长度模板与参数结构不一致!");
 			for (int h = 0; h < paramValArray.size(); h++) {
                 System.out.print("Array:" + paramValArray.getString(h) + "====");
@@ -76,15 +76,43 @@ public class PDTAdapter {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String pdtResposeParser(int [][] lenArr,String[] paramNameTemp,String pdt) throws Exception{
+	public static LinkedHashMap<String,Object> pdtResposeParser(int [][] lenArr,String[] paramNameTemp,String pdt) throws Exception{
+        //ArrayUtils.remove(bytePdtArrs,0);
 		String pdtParam="",byteBit="",itemVal="";
-		Integer fromNum=0,toNum=0,itemStart=0,itemEnd=0,lenNum=0;
+		Integer fromNum=0,toNum=0,itemStart=0,itemEnd=0,lenNum=0,pageAttr=0;
 		List<Map<String,String>>resultList=new ArrayList<Map<String,String>>();
-		Map<String,String>paramMap=new HashMap<String, String>();
+        LinkedHashMap<String,Object>resultMap=new LinkedHashMap<String,Object>();
+		LinkedHashMap<String, String> paramMap = new LinkedHashMap<String, String>();
 		int lenCount=calcByteCount(lenArr);
 		byte[]pdtByteBuf; 
 		byte[]itemByteBuf= new byte[lenCount];
 		byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(pdt);
+
+        System.out.println("=============过滤 统计类值前，字节数组长度:"+bytePdtArrs.length);
+        //提取统计类属性字段的解析
+        for(int h=0;h<lenArr.length;h++) {
+            pageAttr=lenArr[h][3];  // 是否 统计类属性字段 标识（1:是,0:否）
+            System.out.println("====["+h+"]===是否 统计类属性字段(1:是,0:否) pageAttr:"+pageAttr);
+
+            if(pageAttr!=1) continue;
+            if(lenArr[h][1]==1) {//十进制转
+                itemVal=ConverUtil.valueFormatUnit(pdtParam,lenArr[h][2]);
+            }else if(lenArr[h][1]==2) {//二进制转
+                byteBit=DecimalTransforUtil.hexStringToByte(pdtParam,lenArr[h][2]);
+                itemVal=byteBit;
+            }else if(lenArr[h][1]==3) {//码映射
+                itemVal=ConverUtil.MappCODE(pdtParam);
+            }
+            resultMap.put(paramNameTemp[h],itemVal);
+            paramNameTemp=ArrayUtils.remove(paramNameTemp,h); //删除属性名模板中 统计类的属性名
+            lenArr=ArrayUtils.remove(lenArr,h); //删除字节长度模板中，相应统计类的属性字节长度值
+            for(int k=0; k<lenNum;k++){
+                bytePdtArrs=ArrayUtils.remove(bytePdtArrs,0);  //注： 这里删除起始位置不合理灵活，但目录需求不影响，后面优化修改。
+            }
+            h=0;
+        }
+        System.out.println("=============过滤 统计类值后，字节数组长度:"+bytePdtArrs.length);
+
 		if(bytePdtArrs.length%lenCount==0) {
 			int loopNum=bytePdtArrs.length/lenCount; //遍历解析响应的多条记录
 			System.out.println("===pdtResposeParser==PDT 参数响应条数:"+loopNum);
@@ -120,14 +148,15 @@ public class PDTAdapter {
 			}
 			 resultList.add(paramMap);
 		}else {
-			throw new Exception("解析 响应的PDT报文错误！‘字节长度模板’定义的字节长度 与 实际 报文字节长度不匹配!");
+			throw new Exception("解析 响应的PDT报文错误！‘字节长度模板’定义的字节长度 与 实际PDT参数报文的字节长度不匹配!");
 		}
-		Object resultJSON=JSONArray.toJSON(resultList);
-		System.out.println("===pdtResposeParser==响应 解析PDT VO后 的json结构:"+JSONObject.toJSONString(resultJSON));
-		return JSONObject.toJSONString(resultJSON);
+        resultMap.put("pdtList",resultList);
+		Object resultJSON=JSONArray.toJSON(resultMap);
+		//System.out.println("===pdtResposeParser==响应 解析PDT VO后 的json结构:"+JSONObject.toJSONString(resultJSON));
+		return resultMap;
 	}
-	
-	
+
+
 	/**
 	 *   二进制位值转 char[]数组形式 JSON串 返回
 	 * @param byteBit
@@ -160,21 +189,4 @@ public class PDTAdapter {
 		System.out.println("======长度字节数组(入参) 的 总字节数:" +sumNum);
 		return sumNum;
 	}
-	
-	//******************所在 PDT 参数的校验 方法定义  START**********************
-	public static boolean validateT82HPdt(String cmdParam) {
-		return true;
-		
-	}
-	public static boolean validateResT73HPdt(String cmdParam) throws Exception {
-		byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
-		if(bytePdtArrs.length>33) throw new Exception(" 解析 '查询集中器状态'(73H)响应的PDT报文错误！字节长度超过33个字节!");
-		return true;
-	}
-	
-	
-	//******************所在 PDT 参数的校验 方法定义  END**********************
-	
-	
-	
 }

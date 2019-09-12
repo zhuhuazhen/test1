@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSON;
-import com.hzyw.iot.util.constant.IotInfoConstant;
+import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 
 /**

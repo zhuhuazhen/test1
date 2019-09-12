@@ -1,7 +1,9 @@
 package com.hzyw.iot.netty.channelhandler;
 
 import com.hzyw.iot.util.ByteUtils;
+import com.hzyw.iot.util.constant.ConverUtil;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
+import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.RTUCommandInfo;
 
@@ -34,10 +36,7 @@ public class CommandHandler extends MessageToByteEncoder<ByteBuf> {
     }
     
     public static void writeCommand(String sn, String command, int commandType) {
-        if (CollectionUtils.isEmpty(GlobalInfo.SN_CHANNEL_INFO_MAP)) {
-            LOGGER.warn("global snChannelInfo is empty.");
-            return;
-        }
+       
         if (GlobalInfo.SN_CHANNEL_INFO_MAP.containsKey(sn)) {
             Channel channel = GlobalInfo.SN_CHANNEL_INFO_MAP.get(sn).getChannel();//获取要下发的sn设备对应的channel
             LOGGER.info("\n command: ({}) \n type: ({}) \n sn: ({})", command, commandType, sn);
@@ -48,21 +47,50 @@ public class CommandHandler extends MessageToByteEncoder<ByteBuf> {
             } else if (commandType == 2) {
                 try {
                     //byteBuf.writeBytes(ByteUtils.hex2byte(command));
-                    com.hzyw.iot.util.constant.ConverUtil.hexStrToByteArr(command);
+                	byteBuf.writeBytes(com.hzyw.iot.util.constant.ConverUtil.hexStrToByteArr(command));
                 } catch (Exception e) {
                     LOGGER.error("bad command to hex: {} ", command,e);
                     return;
                 }
             }
-            channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！(执行结果，不是响应)
+            
+            
+            System.out.println("下发报文:"+command);
+            System.out.println("下发channel:"+channel);
+            try {
+				//channel.write(ConverUtil.hexStrToByteArr(command));
+				channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！
+	                if (future.isSuccess()) {
+	                	System.out.println("-----------seccess!!!------");
+	                	 
+	                } else {
+	                	System.out.println("send data to client exception occur: {}"+future.cause());
+	                }
+	            });
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+            /*channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！(执行结果，不是响应)
                 if (future.isSuccess()) {
                     LOGGER.info("ok");
                 } else {
                     LOGGER.error("send data to client exception occur: {}", future.cause());
                 }
-            });
+            });*/
         } else {
             LOGGER.warn("no channel in global channelInfo by this sn:{}", sn);
         }
+    }
+    
+    
+    /**
+     * 
+     * request下发
+     * @param messageVOjson
+     */
+    public static void writeCommandByRequestMessageVO(String messageVOjson) {
+    	//根据下发的消息进入协议处理
+    	PlcProtocolsBusiness.protocals_process( messageVOjson);
     }
 }

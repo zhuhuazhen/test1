@@ -116,6 +116,28 @@ public class ConverUtil {
 	 * @param hexdata
 	 * @return
 	 */
+	public static String makeChecksumTest(StringBuffer hexdata) {
+		if (hexdata == null || hexdata.equals("")) {
+			return "00";
+		}
+		//hexdata = hexdata.replaceAll(" ", "");
+		int total = 0;
+		int len = hexdata.length();
+		if (len % 2 != 0) {
+			return "00";
+		}
+		int num = 0;
+		while (num < len) {
+			String s = hexdata.substring(num, num + 2);
+			total += Integer.parseInt(s, 16);
+			num = num + 2;
+		}
+		String data = hexInt(total);
+		if (data.length() > 2) {
+			data = data.substring(data.length() - 2, data.length());
+		}
+		return data;
+	}
 	public static String makeChecksum(String hexdata) {
 		if (hexdata == null || hexdata.equals("")) {
 			return "00";
@@ -238,9 +260,10 @@ public class ConverUtil {
 	 * 映射 码的16进制值（00H~FFH） 如：00H->00
 	 * 
 	 * @param code
+	 * @param flag (true:标记 非映射码,不做16进制转换)
 	 * @return
 	 */
-	public static String MappCODEVal(String code) throws Exception {
+	public static String MappCODEVal(String code,Boolean flag) throws Exception {
 		if (StringUtils.isEmpty(code) || StringUtils.isBlank(code))
 			return "";
 		if (code.endsWith("H")) {
@@ -250,13 +273,16 @@ public class ConverUtil {
 			byte[] codeByte = hexStrToByteArr(code); // 转换时 验证值是否在16进制范围内
 			if (codeByte.length > 1)
 				throw new Exception("PDT协议 解析失败！映射码值超过一个1B长度");
-			;
 			return convertByteToHexString(codeByte);
 		} else {
 			String hexStr = toHex(Integer.parseInt(code));
 			System.out.println("====非 映射 码的16进制值， 转16进制值：" + hexStr);
-			return toHex(Integer.parseInt(code));
+			return flag?code:toHex(Integer.parseInt(code));
 		}
+	}
+
+	public static String MappCODEVal(String code) throws Exception{
+		return MappCODEVal(code,false);
 	}
 
 	/**
@@ -287,18 +313,19 @@ public class ConverUtil {
 	 * 参数值 格式，单位映射转化
 	 * 16进制->10进制
 	 * 1、相电压(例:220V),2、相电流(例:9.8A,10A),3、相功率(例:2156W),4、相功率因数(例:98%),5、电能(例:1579.5kWh),6、AD输入电压(例:3.75V)
+	 * 7、毫安电流(mA),8、温度单位(.C),9、小时(h)
 	 * @param val
 	 * @param type
 	 */
 	public static String valueFormatUnit(String val,Integer type) {
 		Long decimalVal=0L;
 		String numVal="";
-		if(type==1) {
+		if(type==1) {//相电压
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			numVal= new DecimalFormat("###").format(decimalVal);
 			numVal=numVal.length()>=3?numVal.substring(0,3).concat("V"):numVal.concat("V");
 			System.out.println("====相电压值:"+numVal);
-		}else if(type==2) {
+		}else if(type==2) {//相电流
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
 			BigDecimal bi2 = new BigDecimal("1000");
@@ -307,16 +334,16 @@ public class ConverUtil {
 			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("##").format(divide):divide.toString();
 			numVal=numVal.concat("A");
 			System.out.println("====相电流值:"+numVal);
-		}else if(type==3) {
+		}else if(type==3) {//相功率
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			numVal= new DecimalFormat("####").format(decimalVal);
 			numVal+="W";
 			System.out.println("====相功率值:"+numVal);
-		}else if(type==4) {
+		}else if(type==4) {//相功率因数
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			numVal=String.format("%d%%", decimalVal);
 			System.out.println("====相功率因数值:"+numVal);
-		}else if(type==5) {
+		}else if(type==5) {//电能
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
 			BigDecimal bi2 = new BigDecimal("10");
@@ -324,7 +351,7 @@ public class ConverUtil {
 			BigDecimal divide = bi1.divide(bi2, 5, RoundingMode.HALF_UP);
 			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("####.#").format(divide):divide.toString();
 			numVal=numVal.concat("kWh");
-		}else if(type==6) {
+		}else if(type==6) {//AD输入电压
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
 			BigDecimal bi2 = new BigDecimal("1000");
@@ -332,47 +359,37 @@ public class ConverUtil {
 			BigDecimal divide = bi1.divide(bi2, 2, RoundingMode.HALF_UP);
 			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("###.#").format(divide):divide.toString();
 			numVal=numVal.concat("V");
+		}else if(type==7){ //毫安电流(mA) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
+			BigDecimal bi2 = new BigDecimal("1000");
+			BigDecimal bi3 = new BigDecimal("10");
+			BigDecimal divide = bi1.divide(bi2, 1, RoundingMode.HALF_UP);
+			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("##").format(divide):divide.toString();
+			numVal=numVal.concat("mA");
+			System.out.println("====相电流值:"+numVal);
+		}else if(type==8){//温度单位(.C) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("###").format(decimalVal);
+			numVal=numVal.length()>=3?numVal.substring(0,3).concat("。C"):numVal.concat("。C");
+			System.out.println("====相电压值:"+numVal);
+		}else if(type==9){//小时(h) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("##").format(decimalVal);
+			numVal=numVal.length()>=3?numVal.substring(0,2).concat("小时"):numVal.concat("小时");
+			System.out.println("====相电压值:"+numVal);
+		}else{
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal=decimalVal.toString();
 		}
 		return numVal;
 	}
 
-	public static void main(String[] s) {
-		/*
-		 * List<String[]> aa=new ArrayList<String[]>(); String[] hh=new
-		 * String[]{"aa","11","22"}; aa.add(hh); aa.add(new String[]{"ee","hh","kk"});
-		 * aa.add(new String[]{"1e","h1","k1"});
-		 * 
-		 * String a11=JSONArray.toJSONString(aa); //JSONObject.toJSONString(aa);
-		 * List<Object> bb=JSONArray.parseArray(a11); for(int i=0; i<bb.size();i++) {
-		 * System.out.println("======第"+i+"条，数据记录值："+JSONArray.toJSONString(bb.get(i)));
-		 * JSONArray
-		 * transitListArray=JSONArray.parseArray(JSONArray.toJSONString(bb.get(i)));
-		 * 
-		 * for (int h = 0; h < transitListArray.size(); h++) {
-		 * System.out.println("Array:" + transitListArray.getString(h) + " "); }
-		 * 
-		 * 
-		 * String[]ab=(String[]) bb.get(i); for(int j=0; j<ab.length;j++) {
-		 * System.out.println("======第"+i+"条，数据记录值："+ab[j]); }
-		 * 
-		 * }
-		 * 
-		 * 
-		 * 
-		 * //System.out.println("jsonObject2：" + JSONObject.toJSON.toJSONString(aa));
-		 * 
-		 * System.out.println("jsonArray FROM HASHMAP：" + JSONArray.toJSONString(aa));
-		 */
-
-		//System.out.println("===result：" + valueFormatUnit("0EA6",6));
+	/*public static void main(String[] s) {
+		String aa="68000000000100680414F7010000000000000A01092D0040001E13000000";
+		//String aa=        //68000000000100680441f7010000000000000a01092d0040001e13000000
+				System.out.println("=====:"+makeChecksum(aa));
 		
-		/*
-		 *  int [] data = new int[]{1,2,3,4,5,6,7,8,9};
-		 *  int [] newData= Arrays.copyOfRange(data,2,7);  for(int i:newData){
-		 *  System.out.print(i+" "); }
-		 */
-		
-		
-	}
+	}*/
 
 }

@@ -19,7 +19,7 @@ import cn.hutool.json.JSONUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 
-public class KafkaProducerExample {
+public class KafkaProducerExampleByzhu {
 	//盒子
 	 public static void main(String[] args) {
 	        Properties props = new Properties();
@@ -33,54 +33,67 @@ public class KafkaProducerExample {
 	        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
 	        Producer<String, String> producer = new KafkaProducer<>(props);
-
+	         
 	        Map<String,Object> setListMap =new HashMap<String,Object>();
 	        List<Map> inList = new ArrayList<Map>();
 	        Map<String,Object> inMap =new HashMap<String,Object>();
 	        //inMap.put("program", "pictrue_and_multy_text.vsn");
 	        //inMap.put("src", "lan");
-	        inMap.put("onoff", 0);
-	        inMap.put("level", 0);
+	        //plc_node_a_onoff
+	        //plc_node_a_brightness
+	        //plc_node_cCode
+	        //plc_node_type
+
+	        //test关灯
+	        inMap.put("plc_node_a_onoff", 0); //调光值
+	        inMap.put("plc_node_a_brightness", 50);
+	        inMap.put("plc_node_cCode", "03");  //01：点控制 ，02：组控制。03：广播控制，   单灯控制给01
+	        inMap.put("plc_node_type", "03");   //01：控制A灯， 02：控制B灯  ,  XX:其他灯，单灯控制给值01
+	        
+	        //test开灯
+	       // inMap.put("plc_node_a_onoff", 1); //调光值
+	      //  inMap.put("plc_node_a_brightness", 50);
+	      //  inMap.put("plc_node_cCode", "03");  //01：点控制 ，02：组控制。03：广播控制，   单灯控制给01
+	      //  inMap.put("plc_node_type", "03");   //01：控制A灯， 02：控制B灯  ,  XX:其他灯，单灯控制给值01
+	        
 	        inList.add(inMap);
-	        
-	        
-	        
-	       Map<String,Object> tags =new HashMap<String,Object>();
-	       tags.put("agreement", "plc");
+	        //test结果： cCode的时候  根据节点ID来调灯是不成功的，通过广播的方式是可以的 
+	         
+	        Map<String,Object> tags =new HashMap<String,Object>();
+	        tags.put("agreement", "plc");
 	        
 	        List listMethods = new ArrayList();
 	        Map<String,Object> methods =new HashMap<String,Object>();
 	        methods.put("method", "set_onoff");
 	        methods.put("in", inList);
 	        listMethods.add(methods);
-	        setListMap.put("id", "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7");
+	        setListMap.put("id", "1010-3f7b3eb6bffe6fb1-2009-ffff-be7"); //plc_node_ID
 	        setListMap.put("methods", listMethods);
 	        
 	        List list = new ArrayList();
 	        setListMap.put("attributer", list);
 	        setListMap.put("definedAttributer", list);
 	        setListMap.put("definedMethod", list);
-	       // setListMap.put("tags", tags);
+	        setListMap.put("tags", tags);
 	        
 	        Map<String,Object> map =new HashMap<String,Object>();
 	        map.put("type", "request");
 	        map.put("timestamp",1566205651);
 	        map.put("msgId", "1db179ce-c81e-4499-bff2-29e8a954af97");
-	        map.put("gwId", "000000000100");//1000-f82d132f9bb018ca-2001-ffff-d28a
+	        map.put("gwId", "1000-f82d132f9bb018ca-2001-ffff-d28a"); //PLC_id
 	        map.put("data", setListMap);
 	        
-	       
 	        JSONObject jsonObject = JSONUtil.parseObj(map);
 	        System.out.println(jsonObject.toString());
-	        producer.send(new ProducerRecord<>("iot_topic_dataAcess_request", jsonObject.toString()));
+	        producer.send(new ProducerRecord<>("testbyzhu", jsonObject.toString()));
 
 	        producer.close();
 	    }
 	
 	
-	/*
+	
 	 //PLC
-	 public static void main(String[] args) throws Exception {
+	/* public static void main(String[] args) throws Exception {
 	        Properties props = new Properties();
 	        props.put("bootstrap.servers", "47.106.189.255:9092");
 	        props.put("acks", "all");

@@ -2,14 +2,15 @@ package com.hzyw.iot.netty.processor;
 
 import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
+import com.hzyw.iot.netty.channelhandler.CommandHandler;
 import com.hzyw.iot.netty.processor.Impl.IDataProcessor;
 import com.hzyw.iot.netty.processor.Impl.IplcDataProcessor;
 import com.hzyw.iot.netty.processor.Impl.ProcessorAbstract;
 import com.hzyw.iot.util.ByteUtils;
 import com.hzyw.iot.util.constant.ConverUtil;
-import com.hzyw.iot.util.constant.IotInfoConstant;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.utils.CRCUtils;
+import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ModbusInfo;
@@ -27,6 +28,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.ws.Response;
 
 /**
  * ===PLC设备接入的消息处理：==== 1，协议报文 转化成 ModbusInfo 2，CRC校验数据 3，把modbusInfo.getData
@@ -155,89 +158,126 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 		System.out.println("------PlcDataProcessor---------type=----"+this.type);
 		if (checkAndToProcess(this.type))
 		{  
-			//test
-			byte[] req = new byte[source.readableBytes()]; //
-			source.readBytes(req);
-			System.out.println("///////////////上报数据 :" + ByteUtils.bytesToHexString(req));
-			source.resetReaderIndex();
-			//---end test
-			
-			ModbusInfo modbusInfo = new ModbusInfo(source); //其实读取的指针已经到最后了，格式也是符合要求的 数据对不对是另一码事
-			if(modbusInfo == null){
-                return; 
-			}
-			String serverPort = String.valueOf(PlcProtocolsUtils.getPort(ctx.channel()));
-			Map<String, Map<String, String>> Alldevinfo = IotInfoConstant.allDevInfo.get(serverPort);
-            // 判断此设备是否已经在平台注册
-			if(Alldevinfo==null || Alldevinfo.get(modbusInfo.getAddress_str()+"_attribute") == null){
-				LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】设备未注册到平台!" );
-                return;
-			}
-            // CRC校验
-            if (!CRCUtils.checkCRC(modbusInfo.getFullData(), modbusInfo.getCrc())) {
-                LOGGER.warn("plc bad data: {}", ConverUtil.convertUUIDByteToHexString(modbusInfo.getFullData()));
-                return;
-            }
-            // 头部、尾部校验
-            if(!"68".equals(modbusInfo.getHeadStart_str()) && !"68".equals(modbusInfo.getHeadEnd_str()) && !"16".equals(modbusInfo.getEnd_str())){
-            	//取命令码、应答码、然后响应
-            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
-            	return;
-            }
-            // 验证当前命令码、控制码是否存在，不存在直接响应失败
-            if(!IotInfoConstant.allDevInfo.get(serverPort).get(modbusInfo.getAddress_str()+"_cmd").containsKey(modbusInfo.getCmdCode_str())){
-            	//取命令码、应答码、然后响应
-            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
-            	return;
-            }
-            if(IotInfoConstant.allDevInfo.get(serverPort).get(modbusInfo.getAddress_str()+"_req_ack").get(modbusInfo.getcCode_str())==null){
-            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】控制码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
-            	return;
-            }
-            
-            // ====登陆、设备配置过程=======start >>===
-            boolean isLogin = PlcProtocolsUtils.isLogin(modbusInfo);   //是否已登陆
-            boolean isConfig =true; //PlcProtocolsUtils.isConfig(modbusInfo); //是否已配置设备
-            if(!isLogin && "f0".equals(modbusInfo.getCmdCode_str().toLowerCase())){
-            	isLogin = true;
-            	//gloable.put(modbusInfo.getAddress_str()+"_login", "1");//设置登陆成功
-            	boolean seccess = PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
-            	if(!seccess)return;//通知登陆失败，直接退出
-            	//登陆成功，如果是第一次登陆，则自动进入配置设备流程
-            	 if(!isConfig){
-            		//进入初始化配置流程
-            		 //modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00"));
-            		 //modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("8e"));
-            		 PlcProtocolsUtils.init1(ctx, modbusInfo);
-            		 return;
-            	 }else{
-                 	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】已配置!");
-            	 }
-            }
-            if(!isLogin){
-            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未登陆，请检查登陆报文是否符合规范!" );
-            	return;
-            }
-            if(!isConfig){
-            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未配置，请检查自动配置过程中失败原因!!" );
-            	return;
-            }
-            // ====登陆、设备配置过程=======end >>===
-            
-            //（集中器-》主机）其他协议处理  ,如果想直接调试其他的控灯协议，把上面的'登陆、设备配置过程'注释掉即可
+			try{
+				//test
+				byte[] req = new byte[source.readableBytes()]; //
+				source.readBytes(req);
+				String reqs= ByteUtils.bytesToHexString(req);
+				System.out.println("///////////////上报数据 :" + reqs);
+				source.resetReaderIndex();
+				//ModbusInfo modbusInfo = new ModbusInfo(source);
+				//PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
+				/*//响应处理
+				ProtocalAdapter protocalAdapter = new ProtocalAdapter();
+				String response = protocalAdapter.testResponseCode(reqs);
+				if(response!=null&!response.equals("")) {
+					//响应数据到PLC
+					CommandHandler.writeCommand("12345000000000100", response, 2);
+				}*/
 				
-			//1,校验报文格式合理性    比较简单,上面已经做了校验了，这里不需要这个步骤
-			//2,处理（集中器-》主机）的请求
-			//3,响应（集中器）请求
-			//4,组装要上报到KAFKA的消息
-			//5,上报消息到KAFKA ,类型如下
-				/*
-				    response	           上报下发请求结果       ResultMessageVO<ResponseDataVO>
-					devInfoResponse	 属性上报   		  ResultMessageVO<MetricInfoResponseDataVO>
-					metricInfoResponse	设备状态数据上报  ResultMessageVO<MetricInfoResponseDataVO>
-					devSignlResponse	设备信号上报   ResultMessageVO<DevSignlResponseDataVO>
-				*/
-			
+				
+				//---end test
+				
+				ModbusInfo modbusInfo = new ModbusInfo(source);  
+				if(modbusInfo == null){
+	                return; 
+				}
+				String serverPort = String.valueOf(PlcProtocolsUtils.getPort(ctx.channel()));
+				Map<String, Map<String, String>> Alldevinfo = IotInfoConstant.allDevInfo.get(serverPort);
+	            // 判断此设备是否已经在平台注册
+				if(Alldevinfo==null || Alldevinfo.get(modbusInfo.getAddress_str()+"_attribute") == null){
+					LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】设备未注册到平台!" );
+	                return;
+				}
+	            // CRC校验
+	            if (!CRCUtils.checkCRC(modbusInfo.getFullData(), modbusInfo.getCrc())) {
+	                LOGGER.warn("plc bad data: {}", ConverUtil.convertUUIDByteToHexString(modbusInfo.getFullData()));
+	                return;
+	            }
+	            // 头部、尾部校验
+	            if(!"68".equals(modbusInfo.getHeadStart_str()) && !"68".equals(modbusInfo.getHeadEnd_str()) && !"16".equals(modbusInfo.getEnd_str())){
+	            	//取命令码、应答码、然后响应
+	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
+	            	return;
+	            }
+	            // 验证当前命令码、控制码是否存在，不存在直接响应失败
+	            if(!IotInfoConstant.allDevInfo.get(serverPort).get(modbusInfo.getAddress_str()+"_cmd").containsKey(modbusInfo.getCmdCode_str())){
+	            	//取命令码、应答码、然后响应
+	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
+	            	return;
+	            }
+	            if(IotInfoConstant.allDevInfo.get(serverPort).get(modbusInfo.getAddress_str()+"_req_ack").get(modbusInfo.getcCode_str())==null){
+	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】控制码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
+	            	return;
+	            }
+	             
+	            // ====登陆、设备配置过程=======start >>===
+	            boolean isLogin = PlcProtocolsUtils.isLogin(modbusInfo);   //是否已登陆
+	            boolean isConfig =PlcProtocolsUtils.isConfig(modbusInfo); //PlcProtocolsUtils.isConfig(modbusInfo); //是否已配置设备
+	            if(!isLogin && "f0".equals(modbusInfo.getCmdCode_str().toLowerCase())){
+	            	isLogin = true;
+	            	boolean seccess = PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
+	            	if(!seccess)return;//通知登陆失败，直接退出
+	            	//登陆成功，如果是第一次登陆，则自动进入配置设备流程
+	            	 if(!isConfig){
+	            		//发起初始化配置流程
+	            		 PlcProtocolsUtils.init_1(ctx, modbusInfo);
+	            		 return;
+	            	 }else{
+	                 	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】已配置!");
+	            	 }
+	            }else if(isLogin && "f0".equals(modbusInfo.getCmdCode_str().toLowerCase())){
+	            	//登陆成功后，是否还会一直发登陆？和客户沟通下
+	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】，====已登陆  ===为什么还一直请求登陆？===" );
+	            }
+	            if(!isLogin){
+	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未登陆，请检查登陆报文是否符合规范!" );
+	            	return;
+	            }
+	            //心跳
+	            PlcProtocolsUtils.heartBeat(ctx, modbusInfo);
+	            if(!isConfig){
+	            	PlcProtocolsUtils.init_2_9(ctx, modbusInfo);
+	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未配置，请检查自动配置过程日志，定位失败原因!!" );
+	            	return;
+	            }
+	            if(isConfig && isLogin){
+	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】已登陆 ，已配置!!" );
+	            }
+	            if("f7".equals(modbusInfo.getCmdCode_str().toLowerCase())){
+	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码= "+modbusInfo.getCmdCode_str() + " ,cCode=" +modbusInfo.getcCode_str()+" 已过滤!!!!  !"  );
+	            	return;
+	            }
+	            
+	            // ====登陆、设备配置过程=======end >>===
+	            
+	            //（集中器-》主机）其他协议处理  ,如果想直接调试其他的控灯协议，把上面的'登陆、设备配置过程'注释掉即可
+					
+				//1,校验报文格式合理性    比较简单,上面已经做了校验了，这里不需要这个步骤
+				//2,处理（集中器-》主机）的请求
+				//3,响应（集中器）请求
+				//4,组装要上报到KAFKA的消息
+				//5,上报消息到KAFKA ,类型如下
+					/*
+					设备->主机
+					    response	           上报下发请求结果       ResultMessageVO<ResponseDataVO>
+						devInfoResponse	 属性上报   		  ResultMessageVO<MetricInfoResponseDataVO>    
+						metricInfoResponse	设备状态数据上报  ResultMessageVO<MetricInfoResponseDataVO>
+						devSignlResponse	设备信号上报   ResultMessageVO<DevSignlResponseDataVO>
+					*/
+
+            	
+
+	            if(!("f0".equals(modbusInfo.getCmdCode_str().toLowerCase()) //忽略指令
+	            		|| "f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()))){ 
+	            	System.out.println(" ----------------------------------" +modbusInfo.getCmdCode_str().toLowerCase() );
+	            	System.out.println(" ----------------------------------" + !"f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()) );
+	            	ProtocalAdapter.messageRespose(req);  
+	            } 
+	            
+			}catch(Exception e){
+				LOGGER.error("translate exception,",e); 
+			}
 		} else {
 			if (super.getNextProcessor() != null)
 				super.getNextProcessor().translate(ctx, source, rtuInfo);
