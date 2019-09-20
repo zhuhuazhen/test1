@@ -1,7 +1,5 @@
 package com.hzyw.iot.netty.client;
 
-import com.hzyw.iot.util.constant.ProtocalAdapter;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;

@@ -85,6 +85,32 @@ public class IotInfoMethod {
 			"80:80"
 	};
 	
-    public static final String[] plc_signls = {"offline:xxxxxxx"};
+    public static final String[] plc_signls = {
+    		"current_source_bit8:109001",//温度过高报警位
+    		"current_source_bit7:109002",//温度过低报警位
+    		"current_source_bit6:109003",//无法启动报警位
+    		"current_source_bit5:109004",//输出短路报警位
+    		"current_source_bit4:109005",//输出开路报警位
+    		"current_source_bit3:109006",//功率过高报警位
+    		"current_source_bit2:109007",//输入电压过高报警位
+    		"current_source_bit1:109008",//输入电压过低报警位
+    		"current_source_bit0:109009",//电源状态位；0：电源关，1：电源开
+    		"controller_bit0:109010",//A 继电器状态位；0表示关，1表示开
+    		"controller_bit1:109011",//欠流报警位
+    		"controller_bit2:109012",//过流报警位
+    		"controller_bit3:109013",//欠压报警位
+    		"controller_bit4:109014",//过压警位
+    		"controller_bit5:109015",//欠载报警位
+    		"controller_bit6:109016",//过载报警位
+    		"controller_bit7:109017",//继电器失效报警位
+    		"controller_bit8:109018",//B 继电器状态位；0表示关，1表示开    
+    		"controller_bit9:109019",//欠流报警位 
+    		"controller_bit10:109020",//过流报警位
+    		"controller_bit11:109021",//欠压报警位
+    		"controller_bit12:109022",//过压警位
+    		"controller_bit13:109023",//欠载报警位
+    		"controller_bit14:109024",//过载报警位
+    		"controller_bit15:109025",//继电器失效报警位     
+    };
     
 }

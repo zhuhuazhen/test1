@@ -1,17 +1,13 @@
 package com.hzyw.iot.utils;
 
-import com.hzyw.iot.vo.dataaccess.DevInfoDataVO;
-import com.hzyw.iot.vo.dataaccess.DevOnOffline;
-import com.hzyw.iot.vo.dataaccess.MessageVO;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import com.hzyw.iot.kafka.config.ApplicationConfig;
+import com.hzyw.iot.util.constant.T_ResponseResult;
+import com.hzyw.iot.vo.dataaccess.*;
 
+import java.net.InetSocketAddress;
+import java.util.*;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
@@ -23,17 +19,14 @@ import com.hzyw.iot.kafka.KafkaCommon;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.util.ByteUtils;
 import com.hzyw.iot.util.constant.ConverUtil;
-import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ModbusInfo;
 
-import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelId;
 import io.netty.util.ReferenceCountUtil;
 
 /**
@@ -50,6 +43,8 @@ public class PlcProtocolsUtils {
 	@Autowired
 	private static KafkaCommon kafkaCommon;
 
+    @Autowired
+    private ApplicationConfig applicationConfig;
 	/**
 	 * 设备是否已登陆成功
 	 * 
@@ -79,7 +74,7 @@ public class PlcProtocolsUtils {
 		if (flag != null && flag.equals("1")) {
 			return true;
 		}
-		return false;
+		return true;
 	}
 
 	/**
@@ -138,12 +133,11 @@ public class PlcProtocolsUtils {
 	private static final String logger_type_request = "request";
 	private static final String logger_type_response = "response";
 
-	/**
-	 * @param plc_sn
-	 * @param cmdCode
-	 * @param hexMsg
-	 *            报文
-	 */
+    /**
+     * 报文
+     * @param modbusInfo
+     * @return
+     */
 	public static String loggerBaseInfo(ModbusInfo modbusInfo) {
 		return ("plc_sn/cCode/cmdCode/hexMsg = /" + modbusInfo.getAddress_str() + "/" + modbusInfo.getcCode_str() + "/"
 				+ modbusInfo.getCmdCode_str() + "/" + modbusInfo.toStringBW());
@@ -179,12 +173,14 @@ public class PlcProtocolsUtils {
 									+ ",登陆成功，并已成功响应到设备! ");
 							// 获取节点ID(设备ID)
 							InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
-							String devcdId = IotInfoConstant.allDevInfo.get(insocket.getPort() + "")
+							String devcdId = IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
 									.get(plc_sn + "_defAttribute").get(IotInfoConstant.dev_plc_plc_id);
+
 							// 上线成功需要上报消息到KAFKA
 							devOnline(plc_sn, devcdId);
 							// 设备属性与控制方法上报
 							devInfoResponse(plc_sn, devcdId);
+							
 							// todo
 							gloable_dev_status.put(modbusInfo.getAddress_str() + "_login", "1"); // 设置设备上线状态 1-上线 0-下线
 							ChannelManagerHandler.setRTUChannelInfo(ctx, plc_sn); // 登陆成功，建立设备和通道的全局映射关系
@@ -225,16 +221,19 @@ public class PlcProtocolsUtils {
 	}
 
 	/**
-	 * 设备上下线通知
+	 * 设备上线通知
 	 */
 	public static void devOnline(String plc_sn, String devcdId) {
 		// 设备上下VO
 		DevOnOffline devOnline = new DevOnOffline();
 		// 初始化设备属性
 		IotInfoConstant iotInfoConstant = new IotInfoConstant();
+		Map<String,Object> tags =new HashMap<String,Object>();//tags
+		tags.put("agreement", "plc");
+		
 		devOnline.setId(devcdId);
 		devOnline.setStatus("online");
-
+		devOnline.setTags(tags);
 		// 消息结构
 		MessageVO messageVo = new MessageVO<>();
 		messageVo.setType("devOnline");
@@ -242,10 +241,23 @@ public class PlcProtocolsUtils {
 		messageVo.setMsgId(UUID.randomUUID().toString());
 		messageVo.setData(devOnline);
 		messageVo.setGwId(plc_sn);
+		
+		System.out.println(JSON.toJSONString(messageVo));
 		// kafka处理
 		try {
-			Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord("iot_topic_dataAcess", messageVo));
+			 Properties props = new Properties();
+		        props.put("bootstrap.servers", "47.106.189.255:9092");
+		        props.put("acks", "all");
+		        props.put("retries", 0);
+		        props.put("batch.size", 16384);
+		        props.put("linger.ms", 1);
+		        props.put("buffer.memory", 33554432);
+		        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+		        Producer<String, String> producer = new KafkaProducer<>(props);
+			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
+			producer.send(new ProducerRecord("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -259,37 +271,36 @@ public class PlcProtocolsUtils {
 	public static void devInfoResponse(String plc_sn, String devcdId) {
 		DevInfoDataVO devInfoDataVo = new DevInfoDataVO();//设备属性和控制方法VO
 		IotInfoConstant iotInfoConstant = new IotInfoConstant();// 初始化设备属性
+
 		List<Map> attributers = new ArrayList<Map>();//基本属性
 		Map<String,Object> attributersMap =new HashMap<String,Object>();
-		attributersMap.put(iotInfoConstant.dev_base_uuid, devcdId);
-		attributersMap.put(iotInfoConstant.dev_base_sn, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_device_type_name, "");
-		attributersMap.put(iotInfoConstant.dev_base_device_type_code, null);
-		attributersMap.put(iotInfoConstant.dev_base_model, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_version_software, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_version_hardware, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_date_of_production, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_up_time, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_ipaddr_v4, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_ipaddr_v6, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_mac_addr, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_online, plc_sn);
-		attributersMap.put(iotInfoConstant.dev_base_malfunction, plc_sn);
+		Map<String,String> attribute =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_attribute");
+        attributers.add(attribute);
+		
+		List<String> methods = new ArrayList<String>();//方法名
+		Map<String,String> method =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_method");
+		String methodStr = method.keySet().toString().substring(1,method.keySet().toString().length()-1);
+		methods.add(methodStr);
+		
+		List<Map> definedAttributers = new ArrayList<Map>();//自定义属性
+		Map<String,String> defAttribute =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_defAttribute");
+		definedAttributers.add(defAttribute);
 		
 		
+		List<Map> signals = new ArrayList<Map>();//信号
+		Map<String,String> signalsMap =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_signl");
+		signals.add(signalsMap);
+		
+		Map<String,Object> tags =new HashMap<String,Object>();//tags
+		tags.put("agreement", "plc");
 		
 		
 		devInfoDataVo.setId(devcdId);
 		devInfoDataVo.setAttributers(attributers); 
-		
-		/*
-		  devInfoDataVo.setAttributers(); 
-		  devInfoDataVo.setMethods();
-		  devInfoDataVo.setDefinedAttributers( ); 
-		  devInfoDataVo.setDefinedMethods( );
-		  devInfoDataVo.setSignals(); 
-		  devInfoDataVo.setTags();
-		 */
+		devInfoDataVo.setMethods(methods);
+		devInfoDataVo.setDefinedAttributers(definedAttributers);
+		devInfoDataVo.setSignals(signals); 
+		devInfoDataVo.setTags(tags);
 
 		// 消息结构
 		MessageVO messageVo = new MessageVO<>();
@@ -298,15 +309,110 @@ public class PlcProtocolsUtils {
 		messageVo.setMsgId(UUID.randomUUID().toString());
 		messageVo.setData(devInfoDataVo);
 		messageVo.setGwId(plc_sn);
+		
+		System.out.println(JSON.toJSONString(messageVo));
 		// kafka处理
 		try {
-			Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord("iot_topic_dataAcess_devInfoResponse", messageVo));
+			 Properties props = new Properties();
+		        props.put("bootstrap.servers", "47.106.189.255:9092");
+		        props.put("acks", "all");
+		        props.put("retries", 0);
+		        props.put("batch.size", 16384);
+		        props.put("linger.ms", 1);
+		        props.put("buffer.memory", 33554432);
+		        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+		        Producer<String, String> producer = new KafkaProducer<>(props);
+			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
+			producer.send(new ProducerRecord("iot_topic_dataAcess_devInfoResponse", JSON.toJSONString(messageVo)));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
+
+    /**
+     * PLC 响应 设备实时状态数据上报 发kafka
+     * @param plc_sn 集中器地址
+     * @param definedAttrMap
+     * @throws Exception
+     */
+    public static void plcStateResponseSend(String plc_sn, Map<String,String> definedAttrMap,ChannelHandlerContext ctx) throws Exception {
+		// 获取基本属性
+		List<Map> attributers = new ArrayList<Map>();//基本属性
+		InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
+		Map<String,String> attribute= IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
+				.get(plc_sn + "_defAttribute");//.get(IotInfoConstant.base_attributers);
+		attributers.add(attribute);
+
+        List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
+        definedAttrList.add(definedAttrMap);
+
+        Map<String,String>tags=new HashMap<String,String>(); //tags 标识属性
+        tags.put("agreement","plc");
+
+        MetricInfoResponseDataVO  metricInfoResponseDataVO = new MetricInfoResponseDataVO();
+        metricInfoResponseDataVO.setId(definedAttrMap.get("节点ID"));
+        metricInfoResponseDataVO.setAttributers(attributers);
+        metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
+        metricInfoResponseDataVO.setTags(tags);
+
+        //消息结构
+        MessageVO<MetricInfoResponseDataVO> messageVo= T_ResponseResult.getResponseVO(ctx,plc_sn,"metricInfoResponse",metricInfoResponseDataVO);
+
+        //kafka处理
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "47.106.189.255:9092");
+        props.put("acks", "all");
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("linger.ms", 1);
+        props.put("buffer.memory", 33554432);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        Producer<String, String> producer = new KafkaProducer<>(props);
+        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+    }
+
+    /**
+     * PLC 响应 设备信号上报 发kafka
+     * @param plc_sn 集中器地址
+     * @param nodeID 节点ID
+     * @param definedAttrMap
+     * @throws Exception
+     */
+    public static void plcSignlResponseSend(String plc_sn, String nodeID,Map<String,Object> definedAttrMap) throws Exception{
+        List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
+        definedAttrList.add(definedAttrMap);
+
+        Map<String,String>tags=new HashMap<String,String>(); //tags 标识属性
+        tags.put("agreement","plc");
+
+        DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
+        devSignlResponseDataVO.setId(nodeID);
+        devSignlResponseDataVO.setSignals(definedAttrList);
+        devSignlResponseDataVO.setTags(tags);
+
+        ChannelHandlerContext ctx=null;
+        //消息结构
+        MessageVO<DevSignlResponseDataVO> messageVo= T_ResponseResult.getResponseVO(ctx,plc_sn,"devSignalResponse",devSignlResponseDataVO);
+
+        //kafka处理
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "47.106.189.255:9092");
+        props.put("acks", "all");
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("linger.ms", 1);
+        props.put("buffer.memory", 33554432);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        Producer<String, String> producer = new KafkaProducer<>(props);
+        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+    }
 
 	/**
 	 * @param modbusInfo
@@ -680,14 +786,12 @@ public class PlcProtocolsUtils {
 
 	}
 
-	/**
-	 * 
-	 * 68 00 00 00 00 00 01 68 00 02 62 02 37 16
-	 * 
-	 * @param ctx
-	 * @param modbusInfo
-	 * @return
-	 */
+    /**
+     * 68 00 00 00 00 00 01 68 00 02 62 02 37 16
+     * @param ctx
+     * @param plc_SN
+     * @return
+     */
 	public static boolean init5_CfgNetwork(ChannelHandlerContext ctx, String plc_SN) {
 		boolean excuSeccess = true;
 		final ModbusInfo modbusInfo = new ModbusInfo();
@@ -770,7 +874,7 @@ public class PlcProtocolsUtils {
 		boolean excuSeccess = true;
 		final ModbusInfo modbusInfo = new ModbusInfo();
 		try {
-			logger.info("=====>>>initstep(" + plc_SN + ") 下发节点...==96,03=============");
+			logger.info("=====>>>initstep8(" + plc_SN + ") 下发节点...==96,03=============");
 			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
 			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("03"));
 			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("96"));

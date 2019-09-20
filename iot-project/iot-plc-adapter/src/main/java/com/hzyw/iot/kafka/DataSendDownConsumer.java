@@ -84,9 +84,17 @@ public class DataSendDownConsumer implements Runnable {
 		for (ConsumerRecord<String, String> record : records) {
 			value = record.value();
 			if(ObjectUtil.isNotNull(value)) {
-				//CommandHandler.writeCommand("12345000000000100", value, 2); 
+				//CommandHandler.writeCommand("12345000000000100", value, 2);
+				ProtocalAdapter protocalAdapter = new ProtocalAdapter();
+				try {
+					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(JSON.toJSONString(value)));
+					CommandHandler.writeCommandByRequestMessageVO(plcTest);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				System.out.println("=========================进入下发流程==========================================");
-				CommandHandler.writeCommandByRequestMessageVO(value);//已验证成功开关灯   可以通过测试类KafkaProducerExampleByzhu发起调试即可
+				//已验证成功开关灯   可以通过测试类KafkaProducerExampleByzhu发起调试即可
 			}
 		}
 		

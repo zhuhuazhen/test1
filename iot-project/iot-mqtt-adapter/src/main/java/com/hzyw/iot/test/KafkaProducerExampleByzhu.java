@@ -11,7 +11,6 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 
 import com.alibaba.fastjson.JSON;
-import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 
 import cn.hutool.json.JSONObject;

@@ -11,6 +11,7 @@ import com.hzyw.iot.util.constant.ConverUtil;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.utils.CRCUtils;
 import com.hzyw.iot.utils.IotInfoConstant;
+import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ModbusInfo;
@@ -24,6 +25,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -160,13 +163,13 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 		{  
 			try{
 				//test
-				byte[] req = new byte[source.readableBytes()]; //
-				source.readBytes(req);
-				String reqs= ByteUtils.bytesToHexString(req);
-				System.out.println("///////////////上报数据 :" + reqs);
-				source.resetReaderIndex();
-				//ModbusInfo modbusInfo = new ModbusInfo(source);
-				//PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
+				//byte[] req = new byte[source.readableBytes()]; 
+				//source.readBytes(req);
+				//String reqs= ByteUtils.bytesToHexString(req);
+				//System.out.println("///////////////上报数据 :" + reqs);
+				//source.resetReaderIndex();
+				/*ModbusInfo modbusInfo = new ModbusInfo(source);
+				PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆*/				
 				/*//响应处理
 				ProtocalAdapter protocalAdapter = new ProtocalAdapter();
 				String response = protocalAdapter.testResponseCode(reqs);
@@ -174,7 +177,6 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 					//响应数据到PLC
 					CommandHandler.writeCommand("12345000000000100", response, 2);
 				}*/
-				
 				
 				//---end test
 				
@@ -234,8 +236,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未登陆，请检查登陆报文是否符合规范!" );
 	            	return;
 	            }
-	            //心跳
-	            PlcProtocolsUtils.heartBeat(ctx, modbusInfo);
+	            
 	            if(!isConfig){
 	            	PlcProtocolsUtils.init_2_9(ctx, modbusInfo);
 	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】未配置，请检查自动配置过程日志，定位失败原因!!" );
@@ -244,10 +245,14 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	            if(isConfig && isLogin){
 	            	LOGGER.warn("设备【" + modbusInfo.getAddress_str()+"】已登陆 ，已配置!!" );
 	            }
-	            if("f7".equals(modbusInfo.getCmdCode_str().toLowerCase())){
-	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码= "+modbusInfo.getCmdCode_str() + " ,cCode=" +modbusInfo.getcCode_str()+" 已过滤!!!!  !"  );
+	            //心跳
+	            PlcProtocolsUtils.heartBeat(ctx, modbusInfo);
+	            
+	            /*if("f7".equals(modbusInfo.getCmdCode_str().toLowerCase())){
+	            	//LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码= "+modbusInfo.getCmdCode_str() + " ,cCode=" +modbusInfo.getcCode_str()+" 已过滤!!!!  !"  );
+	            	PlcProtocolsBusiness.protocals_process_Response(ctx, modbusInfo);
 	            	return;
-	            }
+	            }*/
 	            
 	            // ====登陆、设备配置过程=======end >>===
 	            
@@ -262,17 +267,22 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 					设备->主机
 					    response	           上报下发请求结果       ResultMessageVO<ResponseDataVO>
 						devInfoResponse	 属性上报   		  ResultMessageVO<MetricInfoResponseDataVO>    
-						metricInfoResponse	设备状态数据上报  ResultMessageVO<MetricInfoResponseDataVO>
-						devSignlResponse	设备信号上报   ResultMessageVO<DevSignlResponseDataVO>
+						metricInfoResponse	设备状态数据上报          ResultMessageVO<MetricInfoResponseDataVO>
+						devSignlResponse	设备信号上报                    ResultMessageVO<DevSignlResponseDataVO>
 					*/
-
-            	
-
+ 
 	            if(!("f0".equals(modbusInfo.getCmdCode_str().toLowerCase()) //忽略指令
 	            		|| "f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()))){ 
 	            	System.out.println(" ----------------------------------" +modbusInfo.getCmdCode_str().toLowerCase() );
 	            	System.out.println(" ----------------------------------" + !"f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()) );
-	            	ProtocalAdapter.messageRespose(req);  
+	            	source.resetReaderIndex();
+	            	byte[] req = new byte[source.readableBytes()]; 
+					source.readBytes(req);
+					String reqs= ByteUtils.bytesToHexString(req);
+					System.out.println("///////////////上报数据 :" + reqs);
+	            	//byte[] req = new byte[source.readableBytes()];
+	            	//String sourceStr=ByteUtils.bytesToHexString(req);
+	            	ProtocalAdapter.messageRespose(req,ctx);
 	            } 
 	            
 			}catch(Exception e){
@@ -282,5 +292,29 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 			if (super.getNextProcessor() != null)
 				super.getNextProcessor().translate(ctx, source, rtuInfo);
 		}
+	}
+	
+	//ByteBuffer 转换 String：
+	public static String decode(ByteBuffer bb){ 
+		Charset charset = Charset.forName("ISO8859-1");
+	    return charset.decode(bb).toString();
+	}
+	
+	public static String convertByteBufToString(ByteBuf buf) {
+		String str;
+		if(buf.hasArray()) { // 处理堆缓冲区
+			str = new String(buf.array(), buf.arrayOffset() + buf.readerIndex(), buf.readableBytes());
+		} else { // 处理直接缓冲区以及复合缓冲区
+			byte[] bytes = new byte[buf.readableBytes()];
+			buf.getBytes(buf.readerIndex(), bytes);
+			str = new String(bytes, 0, buf.readableBytes());
+		}
+		
+		/*ByteBuf bf =req.content();
+        byte[] byteArray = new byte[bf.capacity()];  
+        bf.readBytes(byteArray);  
+        String result = new String(byteArray);*/
+        
+			return str;
 	}
 }

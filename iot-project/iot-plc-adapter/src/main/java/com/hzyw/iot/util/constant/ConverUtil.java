@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
+
 public class ConverUtil {
 	/**
 	 * 将表示16进制值的字符串转换为byte数组， 和public static String byteArr2HexStr(byte[] arrB)
@@ -30,7 +31,7 @@ public class ConverUtil {
 
 	/**
 	 * 将byte数组转化为16进制输出
-	 * 
+	 *
 	 * @param bytes
 	 * @return
 	 */
@@ -85,7 +86,7 @@ public class ConverUtil {
 
 	/**
 	 * 将byte转化为16进制输出
-	 * 
+	 *
 	 * @param bytes
 	 * @return
 	 */
@@ -104,7 +105,7 @@ public class ConverUtil {
 	/**
 	 *
 	 * 获取16进制累加和 如：hexstr = "68 00 00 00 00 00 01 68 00 01 73"
-	 * 
+	 *
 	 * @param hexdata
 	 * @return
 	 */
@@ -149,7 +150,7 @@ public class ConverUtil {
 		}
 		return result.toString().substring(0, result.length() - 1);
 	}
-	
+
 	public static String byteArrToBinString(byte[] b) {
 		StringBuffer result = new StringBuffer();
 		for (int i = 0; i < b.length; i++) {
@@ -228,7 +229,7 @@ public class ConverUtil {
 
 	/**
 	 * 映射 码的16进制值（00H~FFH） 如：00H->00
-	 * 
+	 *
 	 * @param code
 	 * @param flag (true:标记 非映射码,不做16进制转换)
 	 * @return
@@ -257,7 +258,7 @@ public class ConverUtil {
 
 	/**
 	 * 映射 16进制值转码 如：00->00H
-	 * 
+	 *
 	 * @param code
 	 * @return
 	 * @throws Exception
@@ -277,23 +278,108 @@ public class ConverUtil {
 		else
 			return false;
 	}
-	
 
 
-	/*public static void reverseString(char[] s) {
+	/**
+	 * 参数值 格式，单位映射转化
+	 * 16进制->10进制
+	 * 1、相电压(例:220V),2、相电流(例:9.8A,10A),3、相功率(例:2156W),4、相功率因数(例:98%),5、电能(例:1579.5kWh),6、AD输入电压(例:3.75V)
+	 * 7、毫安电流(mA),8、温度单位(.C),9、小时(h)
+	 * @param val
+	 * @param type
+	 */
+	public static String valueFormatUnit(String val,Integer type) {
+		Long decimalVal=0L;
+		String numVal="";
+		if(type==1) {//相电压
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("###").format(decimalVal);
+			numVal=numVal.length()>=3?numVal.substring(0,3).concat("V"):numVal.concat("V");
+			System.out.println("====相电压值:"+numVal);
+		}else if(type==2) {//相电流
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
+			BigDecimal bi2 = new BigDecimal("1000");
+			BigDecimal bi3 = new BigDecimal("10");
+			BigDecimal divide = bi1.divide(bi2, 1, RoundingMode.HALF_UP);
+			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("##").format(divide):divide.toString();
+			numVal=numVal.concat("A");
+			System.out.println("====相电流值:"+numVal);
+		}else if(type==3) {//相功率
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("####").format(decimalVal);
+			numVal+="W";
+			System.out.println("====相功率值:"+numVal);
+		}else if(type==4 || type==41) {//4:相功率因数、41:AB路亮度
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			switch (type){
+				case 41:{//AB路亮度
+					numVal=String.format("%d%%", decimalVal/2);
+					System.out.println("====AB路亮度:"+numVal);
+				}
+				default:{//相功率因数
+					numVal=String.format("%d%%", decimalVal);
+					System.out.println("====相功率因数值:"+numVal);
+				}
+			}
+		}else if(type==5) {//电能
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
+			BigDecimal bi2 = new BigDecimal("10");
+			BigDecimal bi3 = new BigDecimal("10");
+			BigDecimal divide = bi1.divide(bi2, 5, RoundingMode.HALF_UP);
+			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("####.#").format(divide):divide.toString();
+			numVal=numVal.concat("kWh");
+		}else if(type==6) {//AD输入电压
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
+			BigDecimal bi2 = new BigDecimal("1000");
+			BigDecimal bi3 = new BigDecimal("10");
+			BigDecimal divide = bi1.divide(bi2, 2, RoundingMode.HALF_UP);
+			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("###.#").format(divide):divide.toString();
+			numVal=numVal.concat("V");
+		}else if(type==7){ //毫安电流(mA) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
+			BigDecimal bi2 = new BigDecimal("1000");
+			BigDecimal bi3 = new BigDecimal("10");
+			BigDecimal divide = bi1.divide(bi2, 1, RoundingMode.HALF_UP);
+			numVal=divide.compareTo(bi3)>-1? numVal= new DecimalFormat("##").format(divide):divide.toString();
+			numVal=numVal.concat("mA");
+			System.out.println("====毫安电流值:"+numVal);
+		}else if(type==8){//温度单位(.C) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("###").format(decimalVal);
+			numVal=numVal.length()>=3?numVal.substring(0,3).concat("℃"):numVal.concat("℃");
+			System.out.println("====温度值:"+numVal);
+		}else if(type==9){//小时(h) 要优化
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal= new DecimalFormat("##").format(decimalVal);
+			numVal=numVal.length()>=3?numVal.substring(0,2).concat("h"):numVal.concat("h");
+			System.out.println("====小时值:"+numVal);
+		}else{
+			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
+			numVal=decimalVal.toString();
+		}
+		return numVal;
+	}
+
+	public static void reverseString(char[] s) {
 		for (int i = 0; i < s.length / 2; i++) {
 			char temp = s[i];
 			s[i] = s[s.length - 1 - i];
 			s[s.length - 1 - i] = temp;
 		}
-	}*/
+	}
 
 	public static void main(String[] args) {
 		String aa="1000100111111";
-		//char[] a=aa.toCharArray();
+		char[] a=aa.toCharArray();
 		//reverseString(a);
+        for (int i=0;i<a.length;i++){
+			System.out.println("=====:"+a[i]);
+		}
 
-		System.out.println("=====:"+aa);
 	}
 
 }

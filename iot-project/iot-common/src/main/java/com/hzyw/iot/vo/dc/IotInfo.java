@@ -105,7 +105,7 @@ public class IotInfo {
     	plc_iotInfo_.put(atrType, init_value);
 	}
 	public static void initSignl(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_Signl) {
-		initCmd( plc_iotInfo_, atrType, plc_Signl);
+		initMethod( plc_iotInfo_, atrType, plc_Signl);
 	}
  	 
 

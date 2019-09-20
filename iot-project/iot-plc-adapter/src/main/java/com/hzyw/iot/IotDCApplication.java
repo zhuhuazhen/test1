@@ -11,6 +11,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 //import org.springframework.web.bind.annotation.RestController;
 
  import com.hzyw.iot.netty.channelhandler.CommandHandler;
+import com.hzyw.iot.utils.IotInfoConstant;
 
 /**
  * @author TheEmbers Guo
@@ -31,6 +32,7 @@ public class IotDCApplication {
         SpringApplication application = new SpringApplication(IotDCApplication.class);
 		//application.addInitializers(new ApplicationStartedListener());
 		SpringApplication.run(IotDCApplication.class, args);
+		
     }
     
     //@RequestMapping(value = "/xf")

@@ -19,7 +19,6 @@ import com.hzyw.iot.mqtt.callback.MqttCallbackImpl;
 import com.hzyw.iot.mqtt.pub.CommPubHandler;
 import com.hzyw.iot.service.GateWayService;
 import com.hzyw.iot.util.GatewayMqttUtil;
-import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
@@ -119,13 +118,14 @@ public class DataSendDownConsumer implements Runnable {
 						logger.info(">>>DataSendDownConsumer::consumerProcess; type/gatewayId/deviceId/isOnline=" + type +"/"+ gatewayId +"/"+ deviceId +"/"+ isOnline);
 						//判断是否PLC指令
 						if(tags!=null&& tags.get("agreement")!=null&&tags.get("agreement").equals("plc")) {
-							ProtocalAdapter protocalAdapter = new ProtocalAdapter();
+							//ProtocalAdapter protocalAdapter = new ProtocalAdapter();
 							
 							/*MAP.PUT(PLC_SN+CMDCODE+"MSGID",MSGID)
 							MAP.PUT(PLC_SN+CMDCODE+"GWGID",gwId)
 							MAP.PUT(PLC_SN+CMDCODE+"NODEID",ID)*/
 							
-							String plcTest = protocalAdapter.messageRequest(JSON.parseObject(JSON.toJSONString(messageVo)));
+							//String plcTest = protocalAdapter.messageRequest(JSON.parseObject(JSON.toJSONString(messageVo)));
+							
 							//System.out.println(plcTest);
 							/* 
 							String test = protocalAdapter.testRequestCode("03H", "42H");
@@ -134,7 +134,7 @@ public class DataSendDownConsumer implements Runnable {
 							String test = protocalAdapter.testRequestCode("03H", "42H");*/
 							//下发到PLC
 							Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-							producer.send(new ProducerRecord<>(applicationConfig.getPlcOrder(), plcTest));
+							producer.send(new ProducerRecord<>(applicationConfig.getPlcOrder(), JSON.toJSONString(messageVo)));
 							break;
 						}
 						//推送到MQTT
