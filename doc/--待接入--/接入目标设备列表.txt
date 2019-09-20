@@ -1,0 +1,27 @@
+DEVICE("IoT设备", 4096),
+
+POLE("灯杆", 1),
+
+EDGE_BOX("盒子", 2),
+
+LAMP("路灯", 4112),
+
+SCREEN("大屏", 4144),
+
+CAMERA("摄像头", 4128),
+
+WIFI("公共WIFI", 4160),
+
+ENV_SENSOR("环境传感器", 4176),
+
+CHARGING_PILE("充电桩", 8),
+
+LOCK("智能锁", 9),
+
+SOS_ALARM("一键呼叫", 10),
+
+WATER_GAUGE("智能水尺", 11),
+
+FLOOD_SENSOR("水浸传感器", 12),
+
+SEWER_COVER("智能井盖", 13);
