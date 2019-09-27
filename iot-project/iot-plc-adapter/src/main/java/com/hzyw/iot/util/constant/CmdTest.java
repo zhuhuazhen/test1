@@ -1,6 +1,8 @@
 package com.hzyw.iot.util.constant;
 
 
+import com.alibaba.fastjson.JSONObject;
+
 /**
  *  PLC 协义接口
  * 测试类 main
@@ -19,12 +21,17 @@ public class CmdTest {
 
 //            System.out.println("========清除定时任务（84H）请求测试 结果: "+ProtocalAdapter.testRequestCode("00H","84H"));
 //            System.out.println("========设置集中器时间（8CH）请求测试 结果: "+ProtocalAdapter.testRequestCode("00H","8CH"));
-            //System.out.println("========节点调光(42H)请求测试 结果: "+ProtocalAdapter.testRequestCode("03H","42H"));
+
+            JSONObject jsonObject=RequestVO.getReqVO();
+            System.out.println("========节点调光(42H)请求测试 结果: "+ProtocalAdapter.messageRequest(jsonObject));
 
             //System.out.println("========查询节点详细数据(45H) 请求测试 结果: "+ProtocalAdapter.testRequestCode("01H","45H"));
 
-            // 5.4.26查询集中器远程更新IP和端口(FDH)
+            /*JSONObject jsonObject=RequestVO.getReqVO();
+            System.out.println("========查询节点详细数据(45H) 请求测试 结果: "+ProtocalAdapter.messageRequest(jsonObject));*/
+
             // 68000000000001680001fdcf16
+            // 5.4.26查询集中器远程更新IP和端口(FDH)
             // System.out.println("========集中器继电器开（FDH）请求测试 结果:
             // "+ProtocalAdapter.testRequestCode("00H","FDH")); //ok
 
@@ -49,14 +56,15 @@ public class CmdTest {
             System.out.println("========集中器继电器关（71H）响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
             //查询集中器状态(73H)   ok  // 成功： 返回VO, 02H:失败
-          /*responseParam="6800000000000168802273089808B608FC27102648251C086C085D0873193C62626362003DB3010EA622BA02E316";
+        /*  responseParam="6800000000000168802273089808B608FC27102648251C086C085D0873193C62626362003DB3010EA622BA02E316";
             System.out.println("========查询集中器状态（73H）响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
             //主动上报节点数据(F7H)   ok  // 成功： 返回VO, 02H:失败
             //1、路灯电源（设备码：00H~6FH）    2、路灯控制器（设备码：70H~7FH）
-            responseParam="6800000000010068044af7040000020004ee0a010933003f001e140000000000100014d10000000000000000000000000000100200b6000000000000000000000000000010020148000000000000000000000000de16";
-            //responseParam="6800000000010068044af7040000020004ee71010933003f001e140000000000100014d10000000000000000000000000000100200b60000000000000000000000000000100201480000000000000000000000004516";
-            System.out.println("========主动上报节点数据(F7H) 响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));
+            //responseParam="6800000000010068044af7040000020004ee0a010933003f001e140000000000100014d10000000000000000000000000000100200b6000000000000000000000000000010020148000000000000000000000000de16";
+            //responseParam="68000000000100680414f701000000000000000000000000000000000000e116";
+           /* responseParam="6800000000010068044af7040000020004ee71010933003f001e140000000000100014d10000000000000000000000000000100200b60000000000000000000000000000100201480000000000000000000000004516";
+            System.out.println("========主动上报节点数据(F7H) 响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
 
             //集中器登录(F0H)   ok  // 成功： 返回状态码报文, 01:成功 02:失败
@@ -64,12 +72,11 @@ public class CmdTest {
             System.out.println("========集中器登录(F0H)响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
              //节点调光(42H)     // 成功： 返回VO, 02H:失败
-            /*responseParam="6800000000000168800242019616";
-             System.out.println("========节点调光(42H)响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));
-            */
- 
+        /*    responseParam="6800000000000168800242019616";
+             System.out.println("========节点调光(42H)响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
+
             //查询节点详细数据(45H)     // 成功： 返回状态码报文, 01:成功 02:失败
-           /* responseParam="6800000000000168802345000001000156271b08a203b602f8062c065e61c800017016";
+          /*  responseParam="6800000000000168802345000001000156271b08a203b602f8062c065e61c800017016";
             System.out.println("========查询节点详细数据(45H) 响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
 
@@ -89,7 +96,7 @@ public class CmdTest {
         	
         	//-----------42H发送和响应
         	//节点调光(42H) ok
-        	//System.out.println("========节点调光(42H)请求测试 结果:"+ProtocalAdapter.testRequestCode("02H","42H"));
+//        	System.out.println("========节点调光(42H)请求测试 结果:"+ProtocalAdapter.testRequestCode("02H","42H"));
         	
         	//节点调光(42H)   ok
 //           responseParam="6800000000000168800242019616";

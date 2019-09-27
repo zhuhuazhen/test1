@@ -1,5 +1,6 @@
 package com.hzyw.iot.netty.processor.Impl;
 
+import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.vo.dc.RTUInfo;
 
 import io.netty.buffer.ByteBuf;
@@ -17,7 +18,7 @@ public interface IDataProcessor {
 
     void setNextProcessor(IDataProcessor nextProcessor);
     
-    void setType(int type);
+    void setType(int type,RedisService redisService);
 
     void translate(ChannelHandlerContext ctx, ByteBuf source, RTUInfo rtuInfo) throws Exception;
 }

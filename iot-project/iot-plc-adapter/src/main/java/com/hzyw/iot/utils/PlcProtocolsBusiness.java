@@ -13,6 +13,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
@@ -67,11 +68,13 @@ public class PlcProtocolsBusiness {
 	}
 	 
 	public static String getPlcNodeSnByPlcNodeID(String plc_node_id) throws Exception {
-		return IotInfoConstant.plc_relation_deviceToSn.get(plc_node_id);
+		Map<String, String> plc_relation_deviceToSn = IotInfoConstant.plc_relation_deviceToSn;
+		return plc_relation_deviceToSn.get(plc_node_id);
 	}
 	
-	public static void protocals_process(String requestMessageVOJSON){
+	public static JSONObject protocals_process(String requestMessageVOJSON){
 		final ModbusInfo modbusInfo = new ModbusInfo();
+		JSONObject result = new JSONObject();
 		try {
 			 
 			logger.info("\n mssageVO: ({}) ", requestMessageVOJSON );
@@ -80,21 +83,29 @@ public class PlcProtocolsBusiness {
 			String jsonStr=((JSONObject) jsonObject.get("data")).toJSONString();
 			RequestDataVO requestVO = JSONObject.parseObject(jsonStr,RequestDataVO.class);
             Map<String,Object> methodMap =(Map<String, Object>)requestVO.getMethods().get(0);   
-            List<Map<String,Object>> inList=(List<Map<String,Object>>) methodMap.get("in"); //上报参数属性集合
+            //List<Map<String,Object>> inList=(List<Map<String,Object>>) methodMap.get("in"); //上报参数属性集合
             String method = methodMap.get("method").toString(); //方法(物联网平台侧)            
             String plc_id = jsonObject.getString("gwId");       //集中器id(物联网平台侧)
-            String plc_sn = getPlcSnByPlcID(plc_id);//集中器地址(边缘设备侧)
+            String plc_sn = getPlcSnByPlcID(plc_id);            //集中器地址(边缘设备侧)
             
             if(GlobalInfo.SN_CHANNEL_INFO_MAP.get(getPortByPlcID(plc_id)+plc_sn) == null
             		|| GlobalInfo.SN_CHANNEL_INFO_MAP.get(getPortByPlcID(plc_id)+plc_sn).getChannel() == null){
-            	logger.warn("request请求,无法下发，没有找到 sn:{} 下的channel !!!", plc_sn);
-            	return;
+            	logger.warn("request请求,无法下发，没有找到 sn:{} 下的channel/请检查此PLC是否已经连接并登陆 !!!", plc_sn);
+            	result.put("msg", "fail!");
+            	result.put("data", "request请求,无法下发，没有找到 sn:{} 下的channel/请检查此PLC是否已经连接并登陆 !!! sn/"+plc_sn);
+            	return result;
             }
             Channel channel = GlobalInfo.SN_CHANNEL_INFO_MAP.get(getPortByPlcID(plc_id)+plc_sn).getChannel();//获取要下发的sn设备对应的channel
-            String cmdCode = IotInfoConstant.allDevInfo.get(PlcProtocolsUtils.getPort(channel)).get(plc_sn+"_method").get(method);
+            String cmdCode = (String)IotInfoConstant.allDevInfo.get(PlcProtocolsUtils.getPort(channel)).get(plc_sn+"_method").get(method);
             //根据方法找到相应的指令码，调用相应指令码对应的协议报文API
             if("42".equals(cmdCode)){
-            	protocols_API_Request_42(channel, jsonObject, requestVO, plc_sn);
+            	protocols_API_42_Request(channel, jsonObject, requestVO, plc_sn);
+            }else if("9a".equals(cmdCode)){//查询组网个数
+            	protocols_API_9a_Request(channel, jsonObject, requestVO, plc_sn,result);
+            }else if("97".equals(cmdCode)){//查询节点列表
+            	protocols_API_97_Request(channel, jsonObject, requestVO, plc_sn,result);
+            }else{
+            	logger.info("----------此指令协议未实现 !------------" );
             }
             //其他报文下发...
              
@@ -102,6 +113,7 @@ public class PlcProtocolsBusiness {
 			logger.error(">>>request(" + modbusInfo.getAddress_str() + ")request下发,,cmdCode="+modbusInfo.getCmdCode_str()
         				+",ccode="+modbusInfo.getcCode_str()+",exception1！", e);
 		}
+		return result;
 	}
 	
 	 
@@ -114,7 +126,7 @@ public class PlcProtocolsBusiness {
 	 * @param requestVO
 	 * @return
 	 */
-	public static boolean  protocols_API_Request_42(Channel channel, JSONObject jsonObject,RequestDataVO requestVO, String plc_SN) {
+	public static boolean  protocols_API_42_Request(Channel channel, JSONObject jsonObject,RequestDataVO requestVO, String plc_SN) {
 		boolean excuSeccess = true;
 		final ModbusInfo modbusInfo = new ModbusInfo();
 		try {
@@ -163,6 +175,57 @@ public class PlcProtocolsBusiness {
 		return excuSeccess;
 	}
 	
+	public static boolean  protocols_API_9a_Request(Channel channel, JSONObject jsonObject,RequestDataVO requestVO, String plc_SN,JSONObject result) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>protocols_9a    查询组网...===============");
+			//不需要入参PDT，只需要提供SN地址即可
+            Map<String,Object> methodMap =(Map<String, Object>)requestVO.getMethods().get(0);   
+            modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("00"));  
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("9a")); 
+			// 构造PDT 
+			byte[] temp1 = new byte[0];
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(channel,modbusInfo,"查询组网" ,0);
+			result.put("msg", "seccess");
+			result.put("data", "执行指令,请求发送完毕 ");
+		} catch (Exception e) {
+			logger.error(">>>request(" + modbusInfo.getAddress_str() + ")请求设备,,cmdCode=" + modbusInfo.getCmdCode_str()
+        				+",ccode=" + modbusInfo.getcCode_str() + ",exception1！", e);
+			excuSeccess = false;
+			result.put("msg", "fail");
+			result.put("data", e.getMessage());
+		}
+		return excuSeccess;
+	}
+	public static boolean  protocols_API_97_Request(Channel channel, JSONObject jsonObject,RequestDataVO requestVO, String plc_SN,JSONObject result) {
+		boolean excuSeccess = true;
+		final ModbusInfo modbusInfo = new ModbusInfo();
+		try {
+			logger.info("=====>>>protocols_97    查询节点列表...===============");
+			//不需要入参PDT，只需要提供SN地址即可
+            Map<String,Object> methodMap =(Map<String, Object>)requestVO.getMethods().get(0);   
+            modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("03"));  
+			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("97")); 
+			// 构造PDT 
+			byte[] temp1 = new byte[0];
+			modbusInfo.setPdt(temp1);
+			ctxWriteAndFlush(channel,modbusInfo,"查询节点列表" ,0);
+			result.put("msg", "seccess");
+			result.put("data", "执行指令,请求发送完毕 ");
+		} catch (Exception e) {
+			logger.error(">>>request(" + modbusInfo.getAddress_str() + ")请求设备,,cmdCode=" + modbusInfo.getCmdCode_str()
+        				+",ccode=" + modbusInfo.getcCode_str() + ",exception1！", e);
+			excuSeccess = false;
+			result.put("msg", "fail");
+			result.put("data", e.getMessage());
+		}
+		return excuSeccess;
+	}
+	
 	 
 	public static void ctxWriteAndFlush(Channel channel,  ModbusInfo modbusInfo,String logmsg,int step) throws Exception{
 		channel.writeAndFlush(modbusInfo.getNewFullDataWithByteBuf()).addListener((ChannelFutureListener) future -> {  
@@ -174,6 +237,28 @@ public class PlcProtocolsBusiness {
         				+",ccode="+modbusInfo.getcCode_str()+",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
             }
         });
+	}
+	
+	/**
+	 * 
+	 * true - 进入ModbusInfo模板处理报文
+	 * false- 进入ProtocalAdapter.messageRespose模板处理报文
+	 * @param ctx
+	 * @param modbusInfo
+	 * @return
+	 */
+	public static boolean transformTemplateSelect(ChannelHandlerContext ctx, ModbusInfo modbusInfo){
+		boolean flag = false;
+		String cCmdCode = modbusInfo.getCmdCode_str()!=null?modbusInfo.getCmdCode_str():"";
+		if(!("f0".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
+	            		|| "f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()))){
+			return true; //忽略f0登陆指令，f1心跳指令
+		}
+		if ("9a".equals(cCmdCode)  		//查询组网个数
+			|| "97".equals(cCmdCode)) {	//查询节点列表	
+			 flag = true;
+		}
+		return flag;
 	}
 	
 	/**
@@ -194,7 +279,13 @@ public class PlcProtocolsBusiness {
 			logger.info(">>>response(" + modbusInfo.getAddress_str() + "-上报)设备返回,cmdCode=" + cCmdCode + ",cCode="
 					+ cCode + ",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
 			if ("f7".equals(cCmdCode) && "04".equals(cCode)) { 	//节点数据上报协议处理
-				protocols_API_Response_F7(ctx, modbusInfo);
+				//protocols_API_F7_Response(ctx, modbusInfo);
+			}
+			if ("9a".equals(cCmdCode) && "80".equals(cCode)) { 	//查询组网个数
+				protocols_API_9a_Response(ctx, modbusInfo);
+			}
+			if ("97".equals(cCmdCode) && "80".equals(cCode)) { 	//查询节点列表
+				protocols_API_97_Response(ctx, modbusInfo);
 			}
 			//其他报文转化可以继续添加
 			//...
@@ -206,11 +297,160 @@ public class PlcProtocolsBusiness {
 
 	}
 	
+	public static Map<String,Map<Integer,String>> all = new HashMap<String,Map<Integer,String>>();
+	/**
+	 *设备上报 - 查询组网个数
+	 */
+	public static boolean protocols_API_9a_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+		boolean excuSeccess = true;
+		String cCode = modbusInfo.getcCode_str()!=null?modbusInfo.getcCode_str().trim():"";
+		String cCmdCode = modbusInfo.getCmdCode_str()!=null?modbusInfo.getCmdCode_str():"";
+		String plcsn = modbusInfo.getAddress_str();
+		try {
+			
+			logger.info("=====>>>protocols_9a  返回查询组网个数    ...===============");
+			byte[] allpdt = modbusInfo.getPdt();
+		 
+			//解析PDT
+			/*  帧总数	帧总数				1 B
+				帧数		当前帧是第几个帧		1 B
+				节点1	节点ID				6 Bs
+						上级ID	            6 Bs
+				 …	…	…
+				节点n	同上		12 			Bs
+            */
+			byte[] total_frame_bytes = {allpdt[0]}; 
+		    long total_frame = ByteUtils.byteArrayToLong(total_frame_bytes);      //帧总数
+		    byte[] current_frame_bytes = {allpdt[2]};
+		    long current_frame = ByteUtils.byteArrayToLong(current_frame_bytes); //第几个帧
+		    if(current_frame == total_frame-1){
+	    		all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
+		    }
+		    
+		    Map<Integer,String> nodeTreeMap = new TreeMap<Integer,String>();
+		    int p=0,index=1;
+	    	byte[] x = new byte[6];
+	    	for(int i=2;i < allpdt.length; i++){
+	    		if(p%6==0){//每6个字节重新取一次代表一个节点
+	    			p=0;
+	    			x = new byte[6];
+	    		} 
+	    		x[p] = allpdt[i];
+	    		if(p==5){
+	    			nodeTreeMap.put(index, ConverUtil.convertByteToHexString(x));
+	    			index++;
+	    		}
+	    		p++;
+	    	}
+	    	System.out.println(">>>已组网节点：" +current_frame+"/"+total_frame +" "+JSON.toJSONString(nodeTreeMap));
+	    	
+	    	if(all.get(plcsn+"_"+cCmdCode+"_"+cCode)!=null){
+	    		all.get(plcsn+"_"+cCmdCode+"_"+cCode).putAll(nodeTreeMap);//累积
+	    	}else{
+	    		all.put(plcsn+"_"+cCmdCode+"_"+cCode, nodeTreeMap);
+	    	}
+	    	
+	    	String resultjson = "";
+	    	if(total_frame == current_frame){
+		    	//最后一帧
+	    		resultjson = JSON.toJSONString(all);
+	    		//all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
+	    		System.out.println(">>>已组网节点："+JSON.toJSONString(nodeTreeMap));
+		    }
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode=F7,exception ！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+
+	}
+	
+	public static boolean protocols_API_97_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+		boolean excuSeccess = true;
+		String cCode = modbusInfo.getcCode_str()!=null?modbusInfo.getcCode_str().trim():"";
+		String cCmdCode = modbusInfo.getCmdCode_str()!=null?modbusInfo.getCmdCode_str():"";
+		String plcsn = modbusInfo.getAddress_str();
+		try {
+			
+			logger.info("=====>>>protocols_97  返回节点列表    ...===============");
+			byte[] allpdt = modbusInfo.getPdt();
+		 
+			//解析PDT
+			/*帧总数			帧总数				1B
+			     帧数			当前帧是第几个帧		1B
+			     节点1			节点UID				    6 Bs
+			      节点的组号： 1~255；注意：组号不能为0	1 B
+			      设备类型(见附录A)						1B
+			   …	…	…
+			      节点n									同上	8 Bs */
+			byte[] total_frame_bytes = {allpdt[0]}; 
+		    long total_frame = ByteUtils.byteArrayToLong(total_frame_bytes);      //帧总数
+		    byte[] current_frame_bytes = {allpdt[2]};
+		    long current_frame = ByteUtils.byteArrayToLong(current_frame_bytes); //第几个帧
+		    if(current_frame == total_frame-1){
+	    		all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
+		    }
+		     
+		    //循环获取8个字节表示一个节点
+		    Map<Integer,String> nodeTreeMap = new TreeMap<Integer,String>();
+		    int p=0,index=1;
+	    	byte[] a = new byte[6]; //节点ID
+	    	byte[] b = new byte[1]; //组号
+	    	byte[] c = new byte[1]; //设备类型
+	    	for(int i=2;i < allpdt.length; i++){
+	    		if(p%8==0){//每8个字节重新取一次代表一个节点
+	    			p=0;
+	    			a = new byte[6];
+	    			b = new byte[1];
+	    			c = new byte[1];
+	    		} 
+	    		
+	    		if(p < 6){
+	    			a[p] = allpdt[i];
+	    		}
+	    		if(p == 6){
+	    			b[0] = allpdt[i];
+	    		}
+	    		if(p == 7){
+	    			c[0] = allpdt[i];
+	    		}
+	    		 
+	    		if(p==7){
+	    			nodeTreeMap.put(index, ConverUtil.convertByteToHexString(a)
+	    					+"/"+ConverUtil.convertByteToHexString(b)
+	    					+"/"+ConverUtil.convertByteToHexString(c));
+	    			index++;
+	    		}
+	    		p++;
+	    	}
+	    	System.out.println(">>>返回节点列表：" +current_frame+"/"+total_frame +" "+JSON.toJSONString(nodeTreeMap));
+	    	
+	    	if(all.get(plcsn+"_"+cCmdCode+"_"+cCode)!=null){
+	    		all.get(plcsn+"_"+cCmdCode+"_"+cCode).putAll(nodeTreeMap);//累积
+	    	}else{
+	    		all.put(plcsn+"_"+cCmdCode+"_"+cCode, nodeTreeMap);
+	    	}
+	    	
+	    	String resultjson = "";
+	    	if(total_frame == current_frame){
+		    	//最后一帧
+	    		resultjson = JSON.toJSONString(all);
+	    		//all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
+	    		System.out.println(">>>返回节点列表："+JSON.toJSONString(nodeTreeMap));
+		    }
+		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode="+cCmdCode+",cCode="+cCode+",exception ！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+
+	}
+	
 	
 	/**
 	 *F7指令解析
 	 */
-	public static boolean protocols_API_Response_F7(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+	public static boolean protocols_API_F7_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
 		boolean excuSeccess = true;
 		//final ModbusInfo modbusInfo = new ModbusInfo(); 
 		try {
@@ -218,6 +458,16 @@ public class PlcProtocolsBusiness {
 			logger.info("=====>>>protocols_F7  节点数据上报   ...===============");
 			byte[] allpdt = modbusInfo.getPdt();
 			ByteBuf byteBuf = Unpooled.wrappedBuffer(allpdt);
+			
+			//判断是新设备还是老设备 
+			if(allpdt.length%19 == 0){
+				//说明是新设备
+			}
+			if(allpdt.length%28 == 0){
+				//说明是老设备
+			}
+			
+			
 			//解析PDT
 			//需要定义14个临时变量  27个字节
 			byte[] temp1 = new byte[6]; //节点ID
@@ -290,7 +540,7 @@ public class PlcProtocolsBusiness {
 			
 			// 获取设备信息 通过chennelID ==> devinfo
 			String plc_nodde_SN = "";
-			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(PlcProtocolsUtils.getPort(ctx.channel()))
+			Map<String, Object> def_attributers = IotInfoConstant.allDevInfo.get(PlcProtocolsUtils.getPort(ctx.channel()))
 					.get(plc_nodde_SN + "_defAttribute");// 从自定义的字段里面获取值
   
 

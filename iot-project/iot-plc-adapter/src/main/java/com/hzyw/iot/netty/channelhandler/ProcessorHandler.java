@@ -2,6 +2,7 @@ package com.hzyw.iot.netty.channelhandler;
 
 import com.hzyw.iot.netty.processor.*;
 import com.hzyw.iot.netty.processor.Impl.IDataProcessor;
+import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ItemInfo;
 import com.hzyw.iot.vo.dc.RTUChannelInfo;
@@ -31,24 +32,26 @@ import java.util.Map;
 public class ProcessorHandler extends ChannelInboundHandlerAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessorHandler.class);
     private final IDataProcessor sysDataProcessor = new WiffDataProcessor(); //wiff  Processor
-    private final IDataProcessor plcDataProcessor = new PlcDataProcessor(); //PLC  Processor
+    private final IDataProcessor plcDataProcessor = new PlcDataProcessor();  //PLC   Processor
+    private RedisService redisService;
     boolean flag = false;
     int type;
     
     public ProcessorHandler() {
     }
     
-    public ProcessorHandler(int type) {
-    	init(type);
+    public ProcessorHandler(int type,RedisService redis) {
+    	init(type,redis);
     	plcDataProcessor.setNextProcessor(sysDataProcessor);
     	//sysDataProcessor.setNextProcessor(xxProcessor);
     	//传感器 Processor
     }
     
-    public void init(int type){
+    public void init(int type,RedisService redisService){
     	this.type = type;
-    	sysDataProcessor.setType(this.type);
-    	plcDataProcessor.setType(this.type);
+    	this.redisService = redisService;
+    	sysDataProcessor.setType(this.type,redisService);
+    	plcDataProcessor.setType(this.type,redisService);
     }
 
     @Override

@@ -37,9 +37,11 @@ public class KafkaProducerExample {
 	        List<Map> inList = new ArrayList<Map>();
 	        Map<String,Object> inMap =new HashMap<String,Object>();
 	        //inMap.put("program", "pictrue_and_multy_text.vsn");
-	        //inMap.put("src", "lan");
-	        inMap.put("onoff", 0);
-	        inMap.put("level", 0);
+	        inMap.put("level", "100");
+	        inMap.put("ab", "03H");
+	        inMap.put("code", "01H");
+	        inMap.put("onoff", "0");
+	        //inMap.put("zoom_speed", 0.01);
 	        inList.add(inMap);
 	        
 	        
@@ -52,14 +54,14 @@ public class KafkaProducerExample {
 	        methods.put("method", "set_onoff");
 	        methods.put("in", inList);
 	        listMethods.add(methods);
-	        setListMap.put("id", "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7");
+	        setListMap.put("id", "00000200053a");//0000020004ee    00000200053a
 	        setListMap.put("methods", listMethods);
 	        
 	        List list = new ArrayList();
 	        setListMap.put("attributer", list);
 	        setListMap.put("definedAttributer", list);
 	        setListMap.put("definedMethod", list);
-	        //setListMap.put("tags", tags);
+	        setListMap.put("tags", tags);
 	        
 	        Map<String,Object> map =new HashMap<String,Object>();
 	        map.put("type", "request");

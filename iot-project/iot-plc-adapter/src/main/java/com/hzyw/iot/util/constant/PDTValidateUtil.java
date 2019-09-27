@@ -1,8 +1,11 @@
 package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONArray;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * pdt 指令参数校验
@@ -48,16 +51,89 @@ public class PDTValidateUtil {
      * @return
      * @throws Exception
      */
-    public static boolean validateResF7HPdt(String cmdParam) throws Exception {
+    public static boolean validateResF7HPdt(String cmdParam, AtomicInteger indexNum) throws Exception {
         boolean resBoolean=true;
         if ("02".equals(cmdParam) || "03".equals(cmdParam)) return false; //02 (02H) 表示报文校验有错误，返回错误码:02; 03: 系统忙
         byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
-        if(bytePdtArrs.length>250) {
+        if(bytePdtArrs.length>250 || bytePdtArrs.length==0 || bytePdtArrs==null) {
+            resBoolean = false;
+            System.out.println("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节 或指令参数为空!");
+        }
+        String code=ConverUtil.convertByteToHexStr(bytePdtArrs[8])+"H"; //设备码
+        System.out.println("============主动上报节点数据(F7H)=路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
+        Long codeValue=DecimalTransforUtil.hexToLong(D_CODE_VAL.DValueMethod(code),true);
+        System.out.println("============主动上报节点数据(F7H)=路灯控制器】(设备码:112~127)===【路灯电源】(设备码:0~111)===新老程序对应=10进制设备码值:"+codeValue);
+        if(PLCValidateUtil.rangeInDefined(codeValue.intValue(),112,127)) {//路灯控制器（设备码：70H~7FH）
+                indexNum.set(0);
+        }else{//非路灯控制器设备【路灯电源】 00H~6FH
+            byte[] byteState=Arrays.copyOfRange(bytePdtArrs,15,17); //截取 状态位 属性值(2字节)
+            String state=ConverUtil.convertByteToHexString(byteState);//状态位
+            String sitemVal=DecimalTransforUtil.hexStringToByte(state,16); //16进制转2进制
+            char[] bitChar=sitemVal.toCharArray(); //倒序排列
+            ConverUtil.reverseString(bitChar);
+            if(bitChar.length!=16) throw new Exception("PDT 区分新老设备(路灯电源设备) 截取 bit15~bit9时, 状态位不够16位!");
+            if(bitChar.length==16){
+                bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
+            }
+            String hh = new String(bitChar); //ISO8859-1
+            String newDevCode=DecimalTransforUtil.BinaryString2hexString("0".concat(hh));//二进制数据转化为16进制字符串
+            System.out.println("========主动上报节点数据(F7H)==区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(88为新程序):"+newDevCode);
+            if(StringUtils.isNumeric(newDevCode)){
+                if(Integer.valueOf(newDevCode)==88){
+                    indexNum.set(1); //bit15~bit9:0Xf0，则为新程序(1)
+                }else{
+                    indexNum.set(0); //bit15~bit9:0x00,为老程序(0)
+                }
+            }
+        }
+        return resBoolean;
+    }
+
+    /**
+     * 查询节点详细数据 (45H)响应报文校验
+     * @param cmdParam
+     * @param indexNum
+     * @return
+     * @throws Exception
+     */
+    public static boolean validateResT45HPdt(String cmdParam, AtomicInteger indexNum) throws Exception {
+        boolean resBoolean=true;
+        if ("02".equals(cmdParam) || "03".equals(cmdParam)) return false; //02 (02H) 表示报文校验有错误，返回错误码:02; 03: 系统忙
+        byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
+        if(bytePdtArrs.length>250 || bytePdtArrs.length==0 || bytePdtArrs==null) {
             resBoolean = false;
             System.out.println("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节!");
         }
-
-
+        String code=ConverUtil.convertByteToHexStr(bytePdtArrs[7])+"H"; //设备码
+        System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
+        Long codeValue=DecimalTransforUtil.hexToLong(D_CODE_VAL.DValueMethod(code),true);
+        System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:112~127)===【路灯电源】(设备码:0~111)===新老程序对应=10进制设备码值:"+codeValue);
+        if(PLCValidateUtil.rangeInDefined(codeValue.intValue(),112,127)) {//路灯控制器（设备码：70H~7FH）
+            //单灯控制器设备(2)  73H  ---115; 双灯控制器设备(3) 7AH  ---122
+            if(codeValue.intValue()==122){//双灯控制器设备
+                indexNum.set(3);
+            }else{//其它 默认 单灯控制器设备
+                indexNum.set(2);
+            }
+        }else{//非路灯控制器设备【路灯电源】 00H~6FH
+            byte[] byteState=Arrays.copyOfRange(bytePdtArrs,21,23);
+            String state=ConverUtil.convertByteToHexString(byteState);//状态位
+            String sitemVal=DecimalTransforUtil.hexStringToByte(state,16); //16进制转2进制
+            char[] bitChar=sitemVal.toCharArray(); //倒序排列
+            ConverUtil.reverseString(bitChar);
+            if(bitChar.length!=16) throw new Exception("PDT 区分新老设备(路灯电源设备) 截取 bit15~bit9时, 状态位不够16位!");
+            if(bitChar.length==16){
+                bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
+            }
+            String hh = new String(bitChar); //ISO8859-1
+            String newDevCode=DecimalTransforUtil.BinaryString2hexString("0".concat(hh));//二进制数据转化为16进制字符串
+            System.out.println("========查询节点详细数据(45H)=区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(f0为新程序):"+newDevCode);
+            if(StringUtils.isNumeric(newDevCode)){
+                indexNum.set(0); //bit15~bit9:0x00,为老程序(0)
+            }else if("f0".equals(newDevCode.toLowerCase())){
+                indexNum.set(1); //bit15~bit9:0Xf0，则为新程序(1)
+            }
+        }
         return resBoolean;
     }
 
@@ -69,7 +145,6 @@ public class PDTValidateUtil {
      * @throws Exception
      */
     public static boolean validateReqT45HPdt(String cmdParam) throws Exception {
-
         return true;
     }
 
@@ -168,7 +243,8 @@ public class PDTValidateUtil {
                 System.out.println("======解析'节点调光(42H)'请求的PDT报文长度有错误！字节长度范围：2~8字节!");
                 return false;
             }
-            paramValArray.set(0,validateNodeID(c,bytePdtArrs));
+            byte[] byteNodeID=Arrays.copyOfRange(bytePdtArrs,0,pdtLen-2); //截取节点ID 参数值
+            paramValArray.set(0,validateNodeID(c,byteNodeID));
             paramList=new JSONArray();
             paramList.add(paramValArray);
             cmdParam.replace(0,cmdParam.length(),JSONArray.toJSONString(paramList));
@@ -210,24 +286,27 @@ public class PDTValidateUtil {
         return true;
     }
 
+    /**
+     * 验证指令参数 节点ID
+     * C = 01H:ID = 节点PHYID
+     * C = 02H:6个Byte的最低Byte表示组号。(例如，控制第2组节点,ID=000000000002)
+     * C = 03H:ID为全0 即 ID = 000000000000）
+     * @param c 控制码
+     * @param bytePdtArrs 节点ID 的指令参数
+     * @return
+     * @throws Exception
+     */
     private static String validateNodeID(String c,byte[] bytePdtArrs)throws Exception{
         String phyID="";
-        byte[]byteAB,byteDIM,itemByteBuf;
-        int itemStart=0,itemEnd=0;
         int pdtLen=bytePdtArrs.length;
-        //C=01H: ID=节点PHYID
-        //C=02H: 6个Byte的最低Byte表示组号(例如:控制第2组节点,ID=000000000002)
         if("01H".equals(c) || "02H".equals(c)){
-            itemEnd=pdtLen-2;
-            if(itemEnd<=0) throw new Exception("节点调光(42H)请求报文校验: 当C=01H或02H时,ID节点入参不能为空！");
-            System.out.println("======节点调光(42H)请求报文校验 ==itemEnd:"+itemEnd);
-            itemByteBuf= Arrays.copyOfRange(bytePdtArrs,itemStart,itemEnd);
-            String ID=ConverUtil.convertByteToHexString(itemByteBuf);
+            if(pdtLen==0) throw new Exception("节点调光(42H)请求报文校验: 当C=01H或02H时,ID节点入参不能为空！");
+            String ID=ConverUtil.convertByteToHexString(bytePdtArrs);
             System.out.println("======节点调光(42H)请求报文校验 ===控制码(C):"+c+", ===获取入参节点或组ID:"+ID);
             phyID=PLCValidateUtil.checkDeviceUID(ID);
             System.out.println("======节点调光(42H)请求报文校验 ====控制码(C):"+c+",===拼6个字节后的入参节点或组ID:"+phyID);
         }else if("03H".equals(c)){ //C=03H: ID为全0（即 ID = 000000000000）
-            itemByteBuf=ConverUtil.hexStrToByteArr("000000000000");
+            byte[] itemByteBuf=ConverUtil.hexStrToByteArr("000000000000");
             phyID=ConverUtil.convertByteToHexString(itemByteBuf);
             System.out.println("======节点调光(42H)请求报文校验 ==C=03H: ID为全0====控制码(C):"+c+",===:"+phyID);
         }

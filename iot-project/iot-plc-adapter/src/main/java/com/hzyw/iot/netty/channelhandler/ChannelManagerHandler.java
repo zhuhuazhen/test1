@@ -44,15 +44,16 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
         System.out.println(GlobalInfo.CHANNEL_INFO_MAP.get(channelId));
     }
 
-    /*@Override
+    @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        LOGGER.info("channel out! ----> {}", ctx.channel());
+        LOGGER.info("channel out! ---离线拉-> {}", ctx.channel());
         ChannelId channelId = ctx.channel().id();
+        InetSocketAddress insocket = (InetSocketAddress)ctx.channel().localAddress();
         RTUChannelInfo channelInfo = GlobalInfo.CHANNEL_INFO_MAP.remove(channelId);
-        GlobalInfo.SN_CHANNEL_INFO_MAP.remove(channelInfo.getSn());
+        GlobalInfo.SN_CHANNEL_INFO_MAP.remove(insocket.getPort()+ channelInfo.getSn());
         LOGGER.info("remove channel: {}", channelInfo);
         ctx.fireChannelUnregistered();
-    }*/
+    }
 
     /**
      * 
@@ -68,20 +69,21 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
     	ChannelId channelId = ctx.channel().id();
     	InetSocketAddress insocket = (InetSocketAddress)ctx.channel().localAddress();
     	try{
-            Map<String, Map<String, String>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
+            Map<String, Map<String, Object>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
             if(Alldevinfo.get(plc_sn+"_attribute") == null){
             	LOGGER.error("--------- channelId ="+channelId+"---/Port= "+insocket.getPort() + " /plc_sn="+plc_sn + "---初始化RTUChannelInfo ,没有找到此设备的设备信息---");
             	return seccess;
             }
             
             //获取设备信息
-            Map<String, Map<String,String>> devInfo_new = getGloableDevInfo(Alldevinfo,plc_sn);
+            Map<String, Map<String,Object>> devInfo_new = getGloableDevInfo(Alldevinfo,plc_sn);
             GlobalInfo.CHANNEL_INFO_MAP.get(channelId).setSn(plc_sn).setChannel(ctx.channel());
             GlobalInfo.CHANNEL_INFO_MAP.get(channelId).setDevInfo(devInfo_new);//设备信息挂到CHANNEL_INFO_MAP   后面用不到可以考虑取消这个全局的变量
 
             RTUChannelInfo rTUChannelInfo = GlobalInfo.SN_CHANNEL_INFO_MAP.getOrDefault(insocket.getPort()+plc_sn, RTUChannelInfo.build(plc_sn, channelId));
             rTUChannelInfo.setChannel(ctx.channel());
             rTUChannelInfo.setDevInfo(devInfo_new);//设备信息挂到SN_CHANNEL_INFO_MAP
+            rTUChannelInfo.setCtx(ctx);
             GlobalInfo.SN_CHANNEL_INFO_MAP.put(insocket.getPort()+plc_sn, rTUChannelInfo); 
             System.out.println(insocket.getPort()+plc_sn);
             LOGGER.info(">>> sn: {} in the house.", plc_sn);
@@ -94,8 +96,8 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
     	return seccess;
     }
     
-    private static Map<String, Map<String,String>> getGloableDevInfo(Map<String, Map<String, String>> devinfos,String plc_sn){
-    	Map<String, Map<String,String>> devInfo_new = new HashMap<String, Map<String,String>>();
+    private static Map<String, Map<String,Object>> getGloableDevInfo(Map<String, Map<String, Object>> devinfos,String plc_sn){
+    	Map<String, Map<String,Object>> devInfo_new = new HashMap<String, Map<String,Object>>();
         devInfo_new.put(plc_sn+"_attribute", devinfos.get(plc_sn+"_attribute"));
         devInfo_new.put(plc_sn+"_defAttribute", devinfos.get(plc_sn+"_defAttribute"));
         devInfo_new.put(plc_sn+"_method", devinfos.get(plc_sn+"_method"));
@@ -116,14 +118,14 @@ public class ChannelManagerHandler extends ChannelInboundHandlerAdapter {
             String plc_sn = rTUChannelInfo.getSn();  
             //channelInfo.setIotInfo(GlobalInfo.iotMapper.get(sn));
             InetSocketAddress insocket = (InetSocketAddress)rTUChannelInfo.getChannel().localAddress();
-            Map<String, Map<String, String>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
+            Map<String, Map<String, Object>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
             rTUChannelInfo.setDevInfo(getGloableDevInfo(Alldevinfo,plc_sn));//设置设备信息
         });
         
         GlobalInfo.SN_CHANNEL_INFO_MAP.forEach((sn, rTUChannelInfo) ->{ 
         	// 这里sn=port+plc_sn
         	InetSocketAddress insocket = (InetSocketAddress)rTUChannelInfo.getChannel().localAddress();
-        	Map<String, Map<String, String>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
+        	Map<String, Map<String, Object>> Alldevinfo = IotInfoConstant.allDevInfo.get(insocket.getPort()+"");
         	rTUChannelInfo.setDevInfo(getGloableDevInfo(Alldevinfo,rTUChannelInfo.getSn()));//设置设备信息
         });
     }

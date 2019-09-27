@@ -1,7 +1,7 @@
 package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONArray;
-//import com.hzyw.iot.utils.PlcProtocolsUtils;
+import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.ArrayUtils;
@@ -80,69 +80,44 @@ public class PDTAdapter {
 		List<Map<String,Object>>resultList=new ArrayList<Map<String,Object>>();
         LinkedHashMap<String,Object>resultMap=new LinkedHashMap<String,Object>();
 		LinkedHashMap<String, Object> paramMap = new LinkedHashMap<String, Object>();
-		LinkedHashMap<String,String>metricInfoMap=null;  //设备状态上报的数据
+		//LinkedHashMap<String,String>metricInfoMap=null;  //设备状态上报的数据
 		byte[]pdtByteBuf;
 		byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(pdt);
 
-		System.out.println("=============过滤 统计类值前，paramNameTemp 字节数组长度:"+paramNameTemp.length);
-		System.out.println("=============过滤 统计类值前，lenArr 字节数组长度:"+lenArr.length);
-        System.out.println("=============过滤 统计类值前，bytePdtArrs 字节数组长度:"+bytePdtArrs.length);
-        //提取统计类属性字段的解析
-        for(int h=0;h<lenArr.length;h++) {
-            pageAttr=lenArr[h][3];  // 是否 统计类属性字段 标识（1:是,0:否）
-            System.out.println("====["+h+"]===是否 统计类属性字段(1:是,0:否) pageAttr:"+pageAttr);
-			lenNum=lenArr[h][0];
-            if(pageAttr!=1) {
-				fromNum+=lenNum;
-				continue;
-			}
-			itemVal="";
-            pdtByteBuf=Arrays.copyOfRange(bytePdtArrs,fromNum,fromNum+lenNum);
-            pdtParam=ConverUtil.convertByteToHexString(pdtByteBuf);
+        List<Map>devStateList=null; //设备状态上报的数据LIST
+        Map<String,Object>devStateMap=null;  //设备状态上报的数据MAP
 
-            if(lenArr[h][1]==1) {//十进制转
-                itemVal=ConverUtil.valueFormatUnit(pdtParam,lenArr[h][2]);
-            }/*else if(lenArr[h][1]==2) {//二进制转
-				if(lenArr[h][2] == 0){
-					itemVal=DecimalTransforUtil.hexStringToByte(pdtParam,(pdtParam.length()*8));
-				}else{
-					itemVal=DecimalTransforUtil.hexStringToByte(pdtParam,lenArr[h][2]);
-				}
-            }else if(lenArr[h][1]==3) {//码映射
-                itemVal=ConverUtil.MappCODE(pdtParam);
-            }*/
-			if(!"".equals(itemVal)) resultMap.put(paramNameTemp[h],itemVal);
-            paramNameTemp=ArrayUtils.remove(paramNameTemp,h); //删除属性名模板中 统计类的属性名
-            lenArr=ArrayUtils.remove(lenArr,h); //删除字节长度模板中，相应统计类的属性字节长度值
-            for(int k=0; k<lenNum;k++){
-                bytePdtArrs=ArrayUtils.remove(bytePdtArrs,fromNum);
-            }
-            h=0;
-        }
-        System.out.println("=============过滤 统计类值后，paramNameTemp 字节数组长度:"+paramNameTemp.length);
-        System.out.println("=============过滤 统计类值后，lenArr 字节数组长度:"+lenArr.length);
-        System.out.println("=============过滤 统计类值后，bytePdtArrs 字节数组长度:"+bytePdtArrs.length);
+		System.out.println("=============过滤 统计类值前，入参 属性名模板 Length:"+paramNameTemp.length);
+		System.out.println("=============过滤 统计类值前，入参 属性字节长度模板 Length:"+lenArr.length);
+        System.out.println("=============过滤 统计类值前，PDT属性值 Length:"+bytePdtArrs.length);
+        UnpackPageTotalAttr unpackPageTotalAttr = new UnpackPageTotalAttr(lenArr, paramNameTemp, resultMap, bytePdtArrs).invoke();
+        lenArr = unpackPageTotalAttr.getLenArr();
+        paramNameTemp = unpackPageTotalAttr.getParamNameTemp();
+        bytePdtArrs = unpackPageTotalAttr.getBytePdtArrs();
+        System.out.println("=============过滤 统计类值后，入参 属性名模板 Length:"+paramNameTemp.length);
+        System.out.println("=============过滤 统计类值后，入参 属性字节长度模板 Length:"+lenArr.length);
+        System.out.println("=============过滤 统计类值后，PDT属性值 Length:"+bytePdtArrs.length);
 
 		int lenCount=calcByteCount(lenArr);
-		//byte[]itemByteBuf= new byte[lenCount];
-		System.out.println("=============过滤 统计类值后，bytePdtArrs.length :"+bytePdtArrs.length);
-		//System.out.println("=============过滤 统计类值后，lenCount :"+lenCount);
 		if(bytePdtArrs.length%lenCount==0) {
 			int loopNum=bytePdtArrs.length/lenCount; //遍历解析响应的多条记录
             byte[]itemByteBuf= new byte[bytePdtArrs.length/loopNum];
+            String[] itemUnitData=null;
             System.out.println("=============过滤 统计类值后，bytePdtArrs.length :"+bytePdtArrs.length);
             System.out.println("=============过滤 统计类值后，lenCount :"+lenCount);
 
 			System.out.println("===pdtResposeParser==PDT 参数响应条数:"+loopNum);
 			for(int k=0;k<loopNum;k++) {
+                devStateList=new ArrayList<Map>();  //设备状态上报的数据
                 paramMap = new LinkedHashMap<String, Object>();
-				metricInfoMap=new LinkedHashMap<String, String>();
+				//metricInfoMap=new LinkedHashMap<String, String>();
 				if(k>0)itemStart=itemEnd;
 				itemEnd=itemEnd+lenCount;
 				itemByteBuf=Arrays.copyOfRange(bytePdtArrs,itemStart,itemEnd);
 				fromNum=0;
 				toNum=0;
 				for(int i=0;i<lenArr.length;i++) {
+                    devStateMap=new HashMap<String,Object>();  //设备状态上报的数据
 					lenNum=lenArr[i][0];
 					if(i>0)fromNum=toNum;//fromNum+lenNum;
 					toNum=toNum+lenNum; //对应每个参数的字节长度
@@ -156,7 +131,12 @@ public class PDTAdapter {
 				    System.out.println("===pdtResposeParser==PDT 每个字节长度("+lenNum+") 对应 10进制值:"+DecimalTransforUtil.hexToLong(pdtParam,true));
 					if(lenArr[i][1]==1) {//十进制转
 						itemVal=ConverUtil.valueFormatUnit(pdtParam,lenArr[i][2]);
-						metricInfoMap.put(paramNameTemp[i], itemVal);
+						//metricInfoMap.put(paramNameTemp[i], itemVal);
+                        itemUnitData=itemVal.split("@@");
+                        devStateMap.put("type",paramNameTemp[i]);
+                        devStateMap.put("value",itemUnitData[0]);
+                        devStateMap.put("company",itemUnitData.length>1?itemUnitData[1]:"");
+                        devStateList.add(devStateMap);
 					}else if(lenArr[i][1]==2) {//二进制转
 					    int len=0;
 						if(lenArr[i][2] == 0){
@@ -166,23 +146,30 @@ public class PDTAdapter {
 						}
 					}else if(lenArr[i][1]==3) {//码映射
 						itemVal=ConverUtil.MappCODE(pdtParam);
-						metricInfoMap.put(paramNameTemp[i], itemVal);
+						//metricInfoMap.put(paramNameTemp[i], itemVal);
+
+                        devStateMap.put("type",paramNameTemp[i]);
+                        devStateMap.put("value",itemVal);
+                        devStateMap.put("company","");
+                        devStateList.add(devStateMap);
 					}
 					if(!"".equals(itemVal)) paramMap.put(paramNameTemp[i], itemVal);
 				}
 				//kafka  发送 设备状态上报的数据
-				if(metricInfoMap.size()>0){
+				if(devStateList.size()>0){
 					System.out.println("===============kafka 发送设备状态上报数据 操作...");
-					PlcProtocolsUtils.plcStateResponseSend(HEAD_TEMPLATE.getUID(),metricInfoMap,ctx);
+					Object resultStateJSON=JSONArray.toJSON(devStateList);
+					System.out.println("===pdtResposeParser==发送设备状态上报数据 的json结构:"+ JSONObject.toJSONString(resultStateJSON));
+					PlcProtocolsUtils.plcStateResponseSend(HEAD_TEMPLATE.getUID(),devStateList,ctx);
 				}
                 resultList.add(paramMap);
-			}
+		}
 		}else {
 			throw new Exception("解析 响应的PDT报文错误！‘字节长度模板’定义的字节长度 与 实际PDT参数报文的字节长度不匹配!");
 		}
         resultMap.put("pdtList",resultList);
 		Object resultJSON=JSONArray.toJSON(resultMap);
-		//System.out.println("===pdtResposeParser==响应 解析PDT VO后 的json结构:"+JSONObject.toJSONString(resultJSON));
+		System.out.println("===pdtResposeParser==响应 解析PDT VO后 的json结构:"+ JSONObject.toJSONString(resultJSON));
 		return resultMap;
 	}
 
@@ -219,4 +206,76 @@ public class PDTAdapter {
 		System.out.println("======长度字节数组(入参) 的 总字节数:" +sumNum);
 		return sumNum;
 	}
+
+    /**
+     * 从响应报文中 提取 统计或分页类属性
+     */
+    private static class UnpackPageTotalAttr {
+        private int[][] lenArr;
+        private String[] paramNameTemp;
+        //private Integer fromNum;
+        private LinkedHashMap<String, Object> resultMap;
+        private byte[] bytePdtArrs;
+
+        public UnpackPageTotalAttr(int[][] lenArr, String[] paramNameTemp, LinkedHashMap<String, Object> resultMap, byte... bytePdtArrs) {
+            this.lenArr = lenArr;
+            this.paramNameTemp = paramNameTemp;
+            //this.fromNum = fromNum;
+            this.resultMap = resultMap;
+            this.bytePdtArrs = bytePdtArrs;
+        }
+
+        public int[][] getLenArr() {
+            return lenArr;
+        }
+
+        public String[] getParamNameTemp() {
+            return paramNameTemp;
+        }
+
+        public byte[] getBytePdtArrs() {
+            return bytePdtArrs;
+        }
+
+        public UnpackPageTotalAttr invoke() {
+            Integer fromNum=0;
+            Integer pageAttr;
+            Integer lenNum;
+            String itemVal;
+            byte[] pdtByteBuf;
+            String pdtParam;//提取统计类属性字段的解析
+            for(int h=0;h<lenArr.length;h++) {
+                pageAttr=lenArr[h][3];  // 是否 统计类属性字段 标识（1:是,0:否）
+                System.out.println("====["+h+"]===是否 统计类属性字段(1:是,0:否) pageAttr:"+pageAttr);
+                lenNum=lenArr[h][0];
+                if(pageAttr!=1) {
+                    fromNum+=lenNum;
+                    continue;
+                }
+                itemVal="";
+                pdtByteBuf= Arrays.copyOfRange(bytePdtArrs,fromNum,fromNum+lenNum);
+                pdtParam= ConverUtil.convertByteToHexString(pdtByteBuf);
+
+                if(lenArr[h][1]==1) {//十进制转
+                    itemVal=ConverUtil.valueFormatUnit(pdtParam,lenArr[h][2]);
+                }/*else if(lenArr[h][1]==2) {//二进制转
+                    if(lenArr[h][2] == 0){
+                        itemVal=DecimalTransforUtil.hexStringToByte(pdtParam,(pdtParam.length()*8));
+                    }else{
+                        itemVal=DecimalTransforUtil.hexStringToByte(pdtParam,lenArr[h][2]);
+                    }
+                }else if(lenArr[h][1]==3) {//码映射
+                    itemVal=ConverUtil.MappCODE(pdtParam);
+                }*/
+                if(!"".equals(itemVal)) resultMap.put(paramNameTemp[h],itemVal);
+                paramNameTemp= ArrayUtils.remove(paramNameTemp,h); //删除属性名模板中 统计类的属性名
+                lenArr=ArrayUtils.remove(lenArr,h); //删除字节长度模板中，相应统计类的属性字节长度值
+                for(int k=0; k<lenNum;k++){
+                    bytePdtArrs=ArrayUtils.remove(bytePdtArrs,fromNum);
+                }
+                h=0;
+            }
+            return this;
+        }
+    }
 }

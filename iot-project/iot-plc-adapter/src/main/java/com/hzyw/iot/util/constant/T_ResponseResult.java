@@ -1,13 +1,11 @@
 package com.hzyw.iot.util.constant;
 
-//import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.net.InetSocketAddress;
-//import java.net.InetSocketAddress;
 
 /**
  * PLC 响应 消息头
@@ -40,7 +38,7 @@ public class T_ResponseResult {
         if("".equals(typee)) throw new Exception("PLC响应 上报 消息类型 :"+type+", 没在配置文件中定义!");
         // 获取节点ID(设备ID)
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
-        String devcdId = IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
+        String devcdId = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
                 .get(plc_sn + "_defAttribute").get(IotInfoConstant.dev_plc_plc_id);
 
         mesVO.setType(typee);

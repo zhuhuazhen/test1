@@ -1,14 +1,20 @@
 package com.hzyw.iot.util.constant;
 
+import com.alibaba.fastjson.JSONObject;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 测试类
  * 指令测试参数封装
  */
 public class T_ParamTest {
-    public static List getPdtParams(String cmd){
+    public static List getPdtParams(String cmd, Map<String,Object> pdtMap){
         List pdtList=new ArrayList<>();
         switch(cmd){
             case "70H": //集中器继电器开
@@ -70,17 +76,29 @@ public class T_ParamTest {
                 break;
             case "F6H": //报警能使查询
                 break;
-            case "42H": //节点调光
-                /*C = 01H：ID = 节点PHYID
-                C = 02H:  6个Byte的最低Byte表示组号。(例如，控制第2组节点，ID = 00 00 00 00 00 02)
-                C = 03H:  ID为全0。（即 ID = 00 00 00 00 00 00）*/
-                pdtList.add(new String[]{"","03H","8CH"});
+            case "42H": {//节点调光
+                String onoff= StringUtils.trimToNull(pdtMap.get("onoff")+"");  //0:关灯; 1: 开灯
+                String dim=StringUtils.trimToNull(pdtMap.get("level")+"");
+                dim="0".equals(onoff)? "0":("".equals(dim) || dim==null)? "100":dim;
+
+                int dimNum=Integer.parseInt(dim)*2;
+                dim=DecimalTransforUtil.toHexStr(String.valueOf(dimNum),1);
+                pdtMap.put("level",dim+"H");
+
+                String[] paramTemp=new String[]{"ID","ab","level"};
+                paramTemp=getPdtParamVal(paramTemp,pdtMap);
+                pdtList.add(paramTemp);
+                //pdtList.add(new String[]{"","03H","8CH"});
                 break;
+            }
             case "45H": //查询节点详细数据
-                pdtList.add(new String[]{"000001000156"});
+                String[] paramTemp=new String[]{"ID"};
+                paramTemp=getPdtParamVal(paramTemp,pdtMap);
+                pdtList.add(paramTemp);
+                //pdtList.add(new String[]{"000001000156"});
                 break;
             case "F7H": //主动上报节点数据
-                pdtList.add(new String[]{"03"});
+                //pdtList.add(new String[]{"03"});
                 break;
             case "FBH": //查询和上传历史数据
                 pdtList.add(new String[]{"01"});
@@ -163,5 +181,23 @@ public class T_ParamTest {
                 break;
         }
         return pdtList;
+    }
+
+    /**
+     * 组装 下发请求的 指令入参
+     * @param paramTemp
+     * @param pdtMap
+     * @return
+     */
+    private static String[] getPdtParamVal(String[] paramTemp,Map<String,Object> pdtMap){
+        for(int i=0;i<paramTemp.length; i++){
+            if(pdtMap.containsKey(paramTemp[i])){
+                Arrays.fill(paramTemp,i,i+1,pdtMap.get(paramTemp[i]));
+            }else{
+                Arrays.fill(paramTemp,i,i+1,"");
+            }
+        }
+        System.out.println("==========getPdtParamVal==PLC 下发请求 组装后的 指令入参:"+ JSONObject.toJSONString(paramTemp));
+        return paramTemp;
     }
 }

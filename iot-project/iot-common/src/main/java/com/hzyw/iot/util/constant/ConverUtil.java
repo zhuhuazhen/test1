@@ -288,12 +288,12 @@ public class ConverUtil {
 		}
 	}*/
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		String aa="1000100111111";
 		//char[] a=aa.toCharArray();
 		//reverseString(a);
 
 		System.out.println("=====:"+aa);
-	}
+	}*/
 
 }

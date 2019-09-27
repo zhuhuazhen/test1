@@ -65,12 +65,13 @@ public class PlcProtocolsUtilsTest {
 	}
 	public static void main(String[] a) {
 		//testOpenLight();
-		//testSendDown(new MessageVO()); //下发例子
-		testGetBW(); //手工构造一条没有PDT的报文
+		//testGetBW();  //PDT为空
+		testSendDown(new MessageVO()); //构造带PDT内容的报文
+		/*testGetBW(); //手工构造一条没有PDT的报文
 		init1_config_jzq(null,"000000000100");
 		init8_sendNode();//下发节点
 		ini9_configNode(null,"000000000100"); //配置节点
-		getSplSTR();
+		getSplSTR();*/
 	}
 
 	 
@@ -86,18 +87,18 @@ public class PlcProtocolsUtilsTest {
 		String response = "";
 		ByteBuf byteBuf = null;
 		try {
-			System.out.println("=====>>> 构造 关灯 报文...===============");
+			System.out.println("=====>>> 构造 开灯 报文...===============");
 			 
 			//680000000000016803094200000000000001002016
 			ModbusInfo modbusInfo_42h = new ModbusInfo();
 			// 1,devId,cCode,cmdCode
-			modbusInfo_42h.setAddress(ConverUtil.hexStrToByteArr("000000000001"));//设备ID
-			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("03"));// 广播
+			modbusInfo_42h.setAddress(ConverUtil.hexStrToByteArr("000000000100"));//设备ID
+			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("01"));// 广播  01单点      02 组      03广播
 			modbusInfo_42h.setCmdCode(ConverUtil.hexStrToByteArr("42"));
 			
 			// 2,Pdt部分
-			String nodeID = "000000000001"; //无节点？
-			String operator_AB = "01"; 		// 01H-a灯 02H -B灯 03H -A,B灯
+			String nodeID = "000002000533"; //无节点？   0000020004ee     000002000001   000000000001
+			String operator_AB = "03"; 		// 01H-a灯           02H -B灯                   03H -A,B灯
 			int light_value = 0;       		// 范围00H~C8H(十进制：0~200)，对应亮度为0~100%
 			byteBuf = Unpooled.buffer(8); 	// 必须等于要拼接的内容的长度，否则byteBuf.array()得到的长度就不准确
 			byteBuf.writeBytes(ConverUtil.hexStrToByteArr(nodeID));
@@ -120,7 +121,20 @@ public class PlcProtocolsUtilsTest {
 			System.out.println("====>>>init ModbusInfo :====");
 			System.out.println(modbusInfo_42h.toString());
 			System.out.println("====<<<===");
-			  
+			
+			String temp = ConverUtil.convertByteToHexString(modbusInfo_42h.getNewFullData());
+			StringBuffer sb = new StringBuffer();
+			int p=0;
+			for(int i=0;i<temp.length();i++){
+				if(i%2 == 0){
+					sb.append(","+temp.charAt(i));
+				}else{
+					sb.append(temp.charAt(i));
+				}
+				p++;
+			}
+			System.out.println("===>"+sb.toString());
+			//ctxWriteAndFlush(ctx,modbusInfo,"删除FLASH节点");  
 		} catch (Exception e) {
 			e.printStackTrace();
 			if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
@@ -139,8 +153,8 @@ public class PlcProtocolsUtilsTest {
   			ModbusInfo modbusInfo_42h = new ModbusInfo();
 			// 1,devId,cCode,cmdCode
 			modbusInfo_42h.setAddress(ConverUtil.hexStrToByteArr("000000000100"));//设备ID
-			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("80"));// 广播
-			modbusInfo_42h.setCmdCode(ConverUtil.hexStrToByteArr("f1"));
+			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("03"));// 广播
+			modbusInfo_42h.setCmdCode(ConverUtil.hexStrToByteArr("97"));
 			
 			// 2,Pdt部分
 			 
@@ -155,6 +169,19 @@ public class PlcProtocolsUtilsTest {
 			System.out.println(modbusInfo_42h.toString());
 			System.out.println("====<<<===");
 			  
+			
+			String temp = ConverUtil.convertByteToHexString(modbusInfo_42h.getNewFullData());
+			StringBuffer sb = new StringBuffer();
+			int p=0;
+			for(int i=0;i<temp.length();i++){
+				if(i%2 == 0){
+					sb.append(","+temp.charAt(i));
+				}else{
+					sb.append(temp.charAt(i));
+				}
+				p++;
+			}
+			System.out.println("===>"+sb.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -422,7 +449,7 @@ public class PlcProtocolsUtilsTest {
 			//	获取设备信息
 			InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
 			int port = insocket.getPort();
-			Map<String, String> attributers = IotInfoConstant.allDevInfo.get(port).get(modbusInfo.getAddress_str() + "_defAttribute");
+			Map<String, Object> attributers = IotInfoConstant.allDevInfo.get(port).get(modbusInfo.getAddress_str() + "_defAttribute");
 					
 			logger.info("=====>>>initstep(" + plc_SN+ ") 开始组网...===============");
 			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
@@ -430,7 +457,7 @@ public class PlcProtocolsUtilsTest {
 			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("62")); 
 			// PDT 组网个数
 			byte[] groupNum = new byte[1];
-			int x = Integer.parseInt(attributers.get(IotInfoConstant.dev_plc_cfg_step5_groupAtuo));
+			int x = Integer.parseInt((String)attributers.get(IotInfoConstant.dev_plc_cfg_step5_groupAtuo));
 			logger.info("     >>>组网个数 = " + x);
 			groupNum[0] = (byte) x;  
 			modbusInfo.setPdt(groupNum);

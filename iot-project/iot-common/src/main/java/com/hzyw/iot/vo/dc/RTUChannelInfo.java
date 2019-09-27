@@ -3,6 +3,7 @@ package com.hzyw.iot.vo.dc;
 import java.util.Map;
 
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelId;
 
 /**
@@ -19,8 +20,9 @@ public class RTUChannelInfo {
     private String sn;  //plc_sn  设备地址  
     //private IotInfo iotInfo;
     //Map<String, String> devInfo;
-    Map<String, Map<String,String>> devInfo;
+    Map<String, Map<String,Object>> devInfo;
     private Channel channel;
+    private ChannelHandlerContext ctx; //通过HTTP REST访问时候用此
 
     public static RTUChannelInfo build(String sn, ChannelId channelId) {
         return new RTUChannelInfo(sn, channelId);
@@ -58,12 +60,20 @@ public class RTUChannelInfo {
         return this;
     }
 
-	public Map<String, Map<String,String>> getDevInfo() {
+	public Map<String, Map<String,Object>> getDevInfo() {
 		return devInfo;
 	}
 
-	public void setDevInfo(Map<String, Map<String,String>> devInfo) {
+	public void setDevInfo(Map<String, Map<String,Object>> devInfo) {
 		this.devInfo = devInfo;
+	}
+	 
+	public ChannelHandlerContext getCtx() {
+		return ctx;
+	}
+
+	public void setCtx(ChannelHandlerContext ctx) {
+		this.ctx = ctx;
 	}
 
 	@Override

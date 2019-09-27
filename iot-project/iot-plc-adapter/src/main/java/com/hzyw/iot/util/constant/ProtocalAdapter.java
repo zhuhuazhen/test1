@@ -1,14 +1,18 @@
 package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONObject;
+import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.StringUtils;
 import java.nio.ByteBuffer;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.hzyw.iot.util.constant.PLC_CONFIG.节点ID;
 
 /**
  * PLC 协议适配置器
@@ -79,12 +83,13 @@ public class ProtocalAdapter{
      */
     public static String  messageRequest(JSONObject jsonObject) throws Exception {
         //与上游对接 入参格式的适配
-       //jsonObject=RequestFormatAdapter(jsonObject);
-
+       jsonObject=RequestFormatAdapter(jsonObject);
         try {
             String requestType= jsonObject.get("type").toString();
             if(!requestType.equals(DataType.Request.getMessageType()))
                 throw new Exception("PLC 消息类型 错误! 请检查'type'入参 ");
+
+            String  mesgID=jsonObject.getString("msgId");
 
             String jsonStr=((JSONObject) jsonObject.get("data")).toJSONString();
             RequestDataVO requestVO=JSONObject.parseObject(jsonStr,RequestDataVO.class);
@@ -124,20 +129,31 @@ public class ProtocalAdapter{
     public static String  messageRespose(byte[] resp, ChannelHandlerContext ctx) throws Exception {
         String paramBody="";
         if(resp.length<13) throw new Exception("协议报文长度有错误！总字节长度范围：13~267!");
-
         C_CODE_VAL.CMethod("80H");
-        //System.out.println("=====提取的入参设备UUID go in...");
-        String uuid="";//设备ID
-        for(int i=1;i<7; i++) {
-            uuid=uuid+ConverUtil.convertByteToHexStr(resp[i]);
-        }
+        String uuid=ConverUtil.unpackContent(resp,1,7);
         System.out.println("=====提取的入参设备UUID:"+uuid);
         HEAD_TEMPLATE.setUID(uuid); //设备ID
-
         //校验集中器- 返回的协议报文 (01H: 成功 02H: 失败, 03H：主机忙  或 协议报文有错误)
-        boolean validateRes= false;
+        paramBody=ValidateResponseMessage(resp);
+        //从 集中器 返回的报文 中 提取入参
+        String code=ConverUtil.convertByteToHexStr(resp[8])+"H"; //控制码
+        String cmd=ConverUtil.convertByteToHexStr(resp[10])+"H";  //指令码
+        System.out.println("======messageRespose方法==提取的入参控制码:"+code);
+        System.out.println("======messageRespose方法==提取的入参指令码:"+cmd);
+        System.out.println("======messageRespose方法==提取的入参指令参数:"+paramBody);
+        return generaMessage(uuid,"80H",cmd,paramBody,ctx);
+    }
+
+    /**
+     * PLC 设备->主机(响应) 上报文校验
+     * @param resp
+     * @return
+     */
+    public static String ValidateResponseMessage(byte[] resp){
+        String paramBody="";
+        //校验集中器- 返回的协议报文 (01H: 成功 02H: 失败, 03H：主机忙  或 协议报文有错误)
         try {
-            validateRes = ValidateProtocalMessage(resp);
+            boolean validateRes = ValidateProtocalMessage(resp);
             //协议报文 校验是否成功? 01H: 成功 02H: 失败
             paramBody=validateRes? "01":"02";
         } catch (Exception e) {
@@ -146,10 +162,6 @@ public class ProtocalAdapter{
             //throw new Exception("协议报文的格式或校验有错误! 无法生成报文!");
             e.printStackTrace();
         }
-        //if(!validateRes) paramBody="02";//响应失败;
-        //从 集中器 返回的报文 中 提取入参
-        String code=ConverUtil.convertByteToHexStr(resp[8])+"H"; //控制码
-        String cmd=ConverUtil.convertByteToHexStr(resp[10])+"H";  //指令码
         //提取指令入参
         ByteBuffer buffer = ByteBuffer.allocate(resp.length-13);
         for(int i=11;i<resp.length-2; i++) {
@@ -157,10 +169,7 @@ public class ProtocalAdapter{
         }
         String pdtContent=ConverUtil.convertByteToHexString(buffer.array()); //指令入参
         paramBody="".equals(pdtContent)?paramBody:pdtContent; //指令参数为空时,设返回状态码
-        System.out.println("======messageRespose方法==提取的入参控制码:"+code);
-        System.out.println("======messageRespose方法==提取的入参指令码:"+cmd);
-        System.out.println("======messageRespose方法==提取的入参指令参数:"+paramBody);
-        return generaMessage(uuid,"80H",cmd,paramBody,ctx);
+        return paramBody;
     }
 
     /**
@@ -206,11 +215,15 @@ public class ProtocalAdapter{
                     calcSum=byteArry.length+calcSum;
                 }
                 System.out.println("数据域 字节数计算和："+calcSum);
-                //sizeVal= ConverUtil.toHex(calcSum);  //10进制转16进制值
-                sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(calcSum),1); //10进制转16进制值
-                sizeVal=sizeVal.length()%2!=0?"0".concat(sizeVal):"0".equals(sizeVal)? "00":sizeVal;
-                //sizeVal=new DecimalFormat("00").format(sizeVal);
-                System.out.println("计算和 10进制转16进制值结果："+sizeVal);
+                if(String.valueOf(calcSum).length()>2){
+                    sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(calcSum),false)),1);
+                }else {
+                    sizeVal = DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(calcSum), true)), 1);
+                }
+                if(StringUtils.isNumeric(sizeVal)){
+                    sizeVal=new DecimalFormat("00").format(Integer.parseInt(sizeVal));
+                }
+                System.out.println("数据域 字节数计算和(进制转换处理后)："+sizeVal);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -318,7 +331,7 @@ public class ProtocalAdapter{
      * @throws Exception
      */
     public static String testRequestCode(String code, String cmd)throws Exception{
-        JSONObject jsonObj=T_RequestVO.getRequestVO("000000000001",code,cmd);
+        JSONObject jsonObj=T_RequestVO.getRequestVO("000000000100",code,cmd);
         return messageRequest(jsonObj);
     }
 
@@ -338,7 +351,7 @@ public class ProtocalAdapter{
      * @param jsonObj
      * @return
      */
-    private static JSONObject RequestFormatAdapter(JSONObject jsonObj){
+    private static JSONObject RequestFormatAdapter(JSONObject jsonObj)throws Exception{
         String requestType= jsonObj.get("type").toString(); //消息类型
         String uuid=jsonObj.get("gwId").toString(); //PLC设备ID
         String msgID=jsonObj.get("msgId").toString(); //消息ID
@@ -347,29 +360,27 @@ public class ProtocalAdapter{
         RequestDataVO requestVO=JSONObject.parseObject(jsonData,RequestDataVO.class);
         String nodeID=requestVO.getId(); //节点ID  或 组ID
 
+         //--------------取节点
+        nodeID = PlcProtocolsBusiness.getPlcNodeSnByPlcNodeID(nodeID); //00000200053a
+        System.out.println("====================景文 下发过来的 (转换后结果)节点ID:"+nodeID);
+         //----------------取集中器SN
+        uuid =PlcProtocolsBusiness.getPlcSnByPlcID(uuid); //000000000100
+        System.out.println("====================景文 下发过来的 (转换后结果)集中器SN:"+uuid);
+
         Map<String,Object> methodMap=(Map<String, Object>)requestVO.getMethods().get(0);  //自定义扩展属性集合
         List<Map<String,Object>> inList=(List<Map<String,Object>>) methodMap.get("in"); //上报参数属性集合
         String cmd=methodMap.get("method").toString(); //指令码
         Map<String,Object>pdtMap=inList.get(0);
-        if("set_onoff".equals(cmd)){
-            cmd="42H";
+        if(StringUtils.isNotBlank(nodeID) && StringUtils.isNotEmpty(nodeID)){
+            pdtMap.put("ID",nodeID);
         }
-        String onoff=StringUtils.trimToNull(pdtMap.get("onoff")+"");  //0:关灯; 1: 开灯
-        String dim=StringUtils.trimToNull(pdtMap.get("level")+"");
-        dim="0".equals(onoff)? "0":("".equals(dim) || dim==null)? "100":dim;
-
-        if("0".equals(onoff)){
-            System.out.println("========节点调光(42H)=======执行关灯操作, 调光值："+dim);
-        }else if("1".equals(onoff)){
-            System.out.println("========节点调光(42H)=======执行开灯操作, 调光值："+dim);
-        }else{
-            System.out.println("========节点调光(42H)=======执行空操作, 调光值："+dim);
+        cmd=PLC_METHOD_CMD_CONFIG.Method2CMD(cmd); //方法名 映射 指令码
+        String code=pdtMap.get("code")+"";//"03H";//控制码  上游没有 控制码 入参，暂定值:03H 广播类型
+        if("".equals(code) && code==null){
+            code="03H";
         }
-
-        String code="03H";//控制码  上游没有 控制码 入参，暂定值:03H 广播类型
-
-        if(!"000000000100".equals(uuid))uuid="000000000100";
-        JSONObject tragetObj=T_RequestVO.getRequestVO(uuid,code,cmd,msgID,dim);
+        if("".equals(uuid) && uuid==null)uuid="000000000100";
+        JSONObject tragetObj=T_RequestVO.getRequestVO(uuid,code,cmd,msgID,pdtMap);
         return tragetObj;
     }
 }

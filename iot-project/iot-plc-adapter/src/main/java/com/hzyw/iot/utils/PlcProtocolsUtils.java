@@ -1,6 +1,8 @@
 package com.hzyw.iot.utils;
 
+import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.kafka.config.ApplicationConfig;
+import com.hzyw.iot.util.constant.PLC_CONFIG;
 import com.hzyw.iot.util.constant.T_ResponseResult;
 import com.hzyw.iot.vo.dataaccess.*;
 
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.kafka.KafkaCommon;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
+import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.util.ByteUtils;
 import com.hzyw.iot.util.constant.ConverUtil;
 import com.hzyw.iot.vo.dc.ModbusInfo;
@@ -43,8 +46,9 @@ public class PlcProtocolsUtils {
 	@Autowired
 	private static KafkaCommon kafkaCommon;
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+	@Autowired
+	private ApplicationConfig applicationConfig;
+
 	/**
 	 * 设备是否已登陆成功
 	 * 
@@ -62,19 +66,21 @@ public class PlcProtocolsUtils {
 		return false;
 	}
 
+	public static final String rediskey_plc_isconfig_ = "plc_isconfig_";
 	/**
 	 * 设备是否已配置好
 	 * 
 	 * @param modbusInfo
 	 * @return
 	 */
-	public static boolean isConfig(ModbusInfo modbusInfo) {
-		String flag = gloable_dev_status.get(modbusInfo.getAddress_str() + "_config");// 1表示已下发配置到存储
+	public static boolean isConfig(ModbusInfo modbusInfo,RedisService redisService) {
+		//String flag = gloable_dev_status.get(modbusInfo.getAddress_str() + "_config");// 1表示已下发配置到存储
+		String flag = (String)redisService.get(rediskey_plc_isconfig_+modbusInfo.getAddress_str());
 		// 0表示未下发配置过（只需要配置一次即可，配置以后才能控灯）
 		if (flag != null && flag.equals("1")) {
 			return true;
 		}
-		return true;
+		return false;
 	}
 
 	/**
@@ -133,11 +139,12 @@ public class PlcProtocolsUtils {
 	private static final String logger_type_request = "request";
 	private static final String logger_type_response = "response";
 
-    /**
-     * 报文
-     * @param modbusInfo
-     * @return
-     */
+	/**
+	 * 报文
+	 * 
+	 * @param modbusInfo
+	 * @return
+	 */
 	public static String loggerBaseInfo(ModbusInfo modbusInfo) {
 		return ("plc_sn/cCode/cmdCode/hexMsg = /" + modbusInfo.getAddress_str() + "/" + modbusInfo.getcCode_str() + "/"
 				+ modbusInfo.getCmdCode_str() + "/" + modbusInfo.toStringBW());
@@ -173,14 +180,14 @@ public class PlcProtocolsUtils {
 									+ ",登陆成功，并已成功响应到设备! ");
 							// 获取节点ID(设备ID)
 							InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
-							String devcdId = IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
+							String gwId = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
 									.get(plc_sn + "_defAttribute").get(IotInfoConstant.dev_plc_plc_id);
 
 							// 上线成功需要上报消息到KAFKA
-							devOnline(plc_sn, devcdId);
+							devOnline(plc_sn, gwId);
 							// 设备属性与控制方法上报
-							devInfoResponse(plc_sn, devcdId);
-							
+							devInfoResponse(plc_sn, gwId, insocket, ctx);
+
 							// todo
 							gloable_dev_status.put(modbusInfo.getAddress_str() + "_login", "1"); // 设置设备上线状态 1-上线 0-下线
 							ChannelManagerHandler.setRTUChannelInfo(ctx, plc_sn); // 登陆成功，建立设备和通道的全局映射关系
@@ -223,15 +230,15 @@ public class PlcProtocolsUtils {
 	/**
 	 * 设备上线通知
 	 */
-	public static void devOnline(String plc_sn, String devcdId) {
+	public static void devOnline(String plc_sn, String gwId) {
 		// 设备上下VO
 		DevOnOffline devOnline = new DevOnOffline();
 		// 初始化设备属性
 		IotInfoConstant iotInfoConstant = new IotInfoConstant();
-		Map<String,Object> tags =new HashMap<String,Object>();//tags
+		Map<String, Object> tags = new HashMap<String, Object>();// tags
 		tags.put("agreement", "plc");
-		
-		devOnline.setId(devcdId);
+
+		devOnline.setId(gwId);
 		devOnline.setStatus("online");
 		devOnline.setTags(tags);
 		// 消息结构
@@ -240,23 +247,26 @@ public class PlcProtocolsUtils {
 		messageVo.setTimestamp(DateUtil.currentSeconds());
 		messageVo.setMsgId(UUID.randomUUID().toString());
 		messageVo.setData(devOnline);
-		messageVo.setGwId(plc_sn);
+		messageVo.setGwId(gwId);
 		
+		// 集中器下的灯节点应该也要上报上线
+		// todo
+
 		System.out.println(JSON.toJSONString(messageVo));
 		// kafka处理
 		try {
-			 Properties props = new Properties();
-		        props.put("bootstrap.servers", "47.106.189.255:9092");
-		        props.put("acks", "all");
-		        props.put("retries", 0);
-		        props.put("batch.size", 16384);
-		        props.put("linger.ms", 1);
-		        props.put("buffer.memory", 33554432);
-		        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+			Properties props = new Properties();
+			props.put("bootstrap.servers", "47.106.189.255:9092");
+			props.put("acks", "all");
+			props.put("retries", 0);
+			props.put("batch.size", 16384);
+			props.put("linger.ms", 1);
+			props.put("buffer.memory", 33554432);
+			props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+			props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
-		        Producer<String, String> producer = new KafkaProducer<>(props);
-			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
+			Producer<String, String> producer = new KafkaProducer<>(props);
+			// Producer<String, String> producer = kafkaCommon.getKafkaProducer();
 			producer.send(new ProducerRecord("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -268,38 +278,52 @@ public class PlcProtocolsUtils {
 	/**
 	 * 设备属性与控制方法上报
 	 */
-	public static void devInfoResponse(String plc_sn, String devcdId) {
-		DevInfoDataVO devInfoDataVo = new DevInfoDataVO();//设备属性和控制方法VO
+	public static void devInfoResponse(String plc_sn, String gwId, InetSocketAddress insocket,
+			ChannelHandlerContext ctx) {
+		String currentConnetionPort = insocket.getPort()+"";
+		// 集中器数据
+		DevInfoDataVO devInfoDataVo = new DevInfoDataVO();// 设备属性和控制方法VO
 		IotInfoConstant iotInfoConstant = new IotInfoConstant();// 初始化设备属性
 
-		List<Map> attributers = new ArrayList<Map>();//基本属性
-		Map<String,Object> attributersMap =new HashMap<String,Object>();
-		Map<String,String> attribute =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_attribute");
-        attributers.add(attribute);
-		
-		List<String> methods = new ArrayList<String>();//方法名
-		Map<String,String> method =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_method");
-		String methodStr = method.keySet().toString().substring(1,method.keySet().toString().length()-1);
+		List<Map> attributers = new ArrayList<Map>();// 基本属性
+		//Map<String, Object> attributersMap = new HashMap<String, Object>();
+		Map<String, Object> attribute = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(plc_sn + "_attribute");
+		attribute.put(IotInfoConstant.dev_base_online, 1);//在线
+		attributers.add(attribute);
+
+		List<String> methods = new ArrayList<String>();// 方法名
+		Map<String, Object> method = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(plc_sn + "_method");
+		String methodStr = method.keySet().toString().substring(1, method.keySet().toString().length() - 1);
 		methods.add(methodStr);
+
+		List<Map> definedAttributers = new ArrayList<Map>();// 自定义属性
+		Map<String, Object> defAttribute = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(plc_sn + "_defAttribute");// 集中器数据
 		
-		List<Map> definedAttributers = new ArrayList<Map>();//自定义属性
-		Map<String,String> defAttribute =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_defAttribute");
-		definedAttributers.add(defAttribute);
-		
-		
-		List<Map> signals = new ArrayList<Map>();//信号
-		Map<String,String> signalsMap =IotInfoConstant.allDevInfo.get("12345").get(plc_sn+"_signl");
+		for (Map.Entry<String, Object> entry :defAttribute.entrySet()) {
+			System.out.println("key:"+entry.getKey()+"   value:"+entry.getValue());
+			Map<String,Object> typeValue =new HashMap<String,Object>();
+			typeValue.put("type", entry.getKey());
+			typeValue.put("value", entry.getValue());
+			if(IotInfoConstant.getUnit(entry.getKey())==null) {
+				typeValue.put("company", "");
+			}else {
+				typeValue.put("company", IotInfoConstant.getUnit(entry.getKey()));
+			}
+			definedAttributers.add(typeValue);
+		}
+
+		List<Map> signals = new ArrayList<Map>();// 信号
+		Map<String, Object> signalsMap = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(plc_sn + "_signl");
 		signals.add(signalsMap);
-		
-		Map<String,Object> tags =new HashMap<String,Object>();//tags
-		tags.put("agreement", "plc");
-		
-		
-		devInfoDataVo.setId(devcdId);
-		devInfoDataVo.setAttributers(attributers); 
+
+		Map<String, Object> tags = new HashMap<String, Object>();// tags
+		tags.put(IotInfoConstant.dev_plc_dataaccess_key, IotInfoConstant.dev_plc_dataaccess_value);
+
+		devInfoDataVo.setId(gwId);
+		devInfoDataVo.setAttributers(attributers);
 		devInfoDataVo.setMethods(methods);
 		devInfoDataVo.setDefinedAttributers(definedAttributers);
-		devInfoDataVo.setSignals(signals); 
+		devInfoDataVo.setSignals(signals);
 		devInfoDataVo.setTags(tags);
 
 		// 消息结构
@@ -308,111 +332,184 @@ public class PlcProtocolsUtils {
 		messageVo.setTimestamp(DateUtil.currentSeconds());
 		messageVo.setMsgId(UUID.randomUUID().toString());
 		messageVo.setData(devInfoDataVo);
-		messageVo.setGwId(plc_sn);
-		
+		messageVo.setGwId(gwId);
 		System.out.println(JSON.toJSONString(messageVo));
-		// kafka处理
-		try {
-			 Properties props = new Properties();
-		        props.put("bootstrap.servers", "47.106.189.255:9092");
-		        props.put("acks", "all");
-		        props.put("retries", 0);
-		        props.put("batch.size", 16384);
-		        props.put("linger.ms", 1);
-		        props.put("buffer.memory", 33554432);
-		        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		SendKafkaUtils.sendKafka("iot_topic_dataAcess_devInfoResponse", JSON.toJSONString(messageVo));
+		//sendKafka(JSON.toJSONString(messageVo), "iot_topic_dataAcess_devInfoResponse");// 发送集中器属性
 
-		        Producer<String, String> producer = new KafkaProducer<>(props);
-			//Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord("iot_topic_dataAcess_devInfoResponse", JSON.toJSONString(messageVo)));
+		// 节点数据
+		List<Map<String, String>> nodelist = IotInfoConstant.plc_relation_plcsnToNodelist.get(getPort(ctx.channel())).get(plc_sn);
+		for (int i = 0; i < nodelist.size(); i++) {
+			Map<String, String> item = nodelist.get(i);
+			String node_sn = item.get(IotInfoConstant.dev_plc_node_sn); // 节点SN
+			//基本属性
+			attributers = new ArrayList<Map>();// 基本属性
+			attribute = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(node_sn + "_attribute");
+			attribute.put(IotInfoConstant.dev_base_online, 1);//在线
+			attributers.add(attribute);
+			//def属性
+			List<Map> definedAttributersNode = new ArrayList<Map>();    // 自定义属性
+			String deviceId = (String)IotInfoConstant.allDevInfo.get(currentConnetionPort).get(node_sn + "_defAttribute").get(IotInfoConstant.dev_plc_node_id);// 根据节点SN找出节点ID
+			Map<String, Object> defAttributeNode = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(node_sn + "_defAttribute");// 节点数据
+			for (Map.Entry<String, Object> entry :defAttributeNode.entrySet()) {
+				System.out.println("key:"+entry.getKey()+"   value:"+entry.getValue());
+				Map<String,Object> typeValueNode =new HashMap<String,Object>();
+				typeValueNode.put("type", entry.getKey());
+				typeValueNode.put("value", entry.getValue());
+				if(IotInfoConstant.getUnit(entry.getKey())==null) {
+					typeValueNode.put("company", "");
+				}else {
+					typeValueNode.put("company", IotInfoConstant.getUnit(entry.getKey()));
+				}
+				definedAttributersNode.add(typeValueNode);
+			}
+			
+			
+			//构造消息模型并上报到KAFKA
+			DevInfoDataVO devInfoDataVoNode = new DevInfoDataVO();
+			devInfoDataVoNode.setId(deviceId);
+			devInfoDataVoNode.setAttributers(attributers);
+			devInfoDataVoNode.setMethods(methods);
+			 devInfoDataVoNode.setDefinedAttributers(definedAttributersNode);
+			devInfoDataVoNode.setSignals(signals);
+			devInfoDataVoNode.setTags(tags);
+			MessageVO messageNode = new MessageVO<>();
+			messageNode.setType(DataType.DevInfoResponse.getMessageType());
+			messageNode.setTimestamp(DateUtil.currentSeconds());
+			messageNode.setMsgId(UUID.randomUUID().toString());
+			messageNode.setData(devInfoDataVoNode);
+			messageNode.setGwId(gwId);
+			SendKafkaUtils.sendKafka("iot_topic_dataAcess_devInfoResponse", JSON.toJSONString(messageNode));
+			//sendKafka(JSON.toJSONString(messageNode), "iot_topic_dataAcess_devInfoResponse");// 发送节点属性
+			System.out.println(JSON.toJSONString(messageNode));
+		}
+
+	}
+
+	/**
+	 * setKafka处理
+	 */
+	public static void sendKafka(String messageVo, String topic) {
+		try {
+			Properties props = new Properties();
+			props.put("bootstrap.servers", "47.106.189.255:9092");
+			props.put("acks", "all");
+			props.put("retries", 0);
+			props.put("batch.size", 16384);
+			props.put("linger.ms", 1);
+			props.put("buffer.memory", 33554432);
+			props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+			props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+			Producer<String, String> producer = new KafkaProducer<>(props);
+
+			// Producer<String, String> producer = kafkaCommon.getKafkaProducer();
+			producer.send(new ProducerRecord<>(topic, messageVo));
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-    /**
-     * PLC 响应 设备实时状态数据上报 发kafka
-     * @param plc_sn 集中器地址
-     * @param definedAttrMap
-     * @throws Exception
-     */
-    public static void plcStateResponseSend(String plc_sn, Map<String,String> definedAttrMap,ChannelHandlerContext ctx) throws Exception {
+	/**
+	 * PLC 响应 设备实时状态数据上报 发kafka
+	 * 
+	 * @param plc_sn
+	 *            集中器地址
+	 * @param definedAttrList
+	 * @throws Exception
+	 */
+	public static void plcStateResponseSend(String plc_sn, List<Map> definedAttrList, ChannelHandlerContext ctx)
+			throws Exception {
 		// 获取基本属性
-		List<Map> attributers = new ArrayList<Map>();//基本属性
+		List<Map> attributers = new ArrayList<Map>();// 基本属性
 		InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
-		Map<String,String> attribute= IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
-				.get(plc_sn + "_defAttribute");//.get(IotInfoConstant.base_attributers);
+		Map<String, Object> attribute = IotInfoConstant.allDevInfo.get((insocket.getPort()) + "")
+				.get(plc_sn + "_defAttribute");
 		attributers.add(attribute);
 
-        List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
-        definedAttrList.add(definedAttrMap);
+		String nodeID = ""; // 如果没有节点ID属性,gwId(集中器ID)属性值替代
+		for (int j = 0; j < definedAttrList.size(); j++) {
+			Map<String, String> itemMap = definedAttrList.get(j);
+			if (itemMap.containsKey(PLC_CONFIG.节点ID.getKey())) {
+				nodeID = itemMap.get(PLC_CONFIG.节点ID.getKey());
+				itemMap.remove(PLC_CONFIG.节点ID.getKey());
+				break;
+			}
+		}
+		if ("".equals(nodeID)) {
+			// 获取节点ID(设备ID)
+			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(plc_sn + "_defAttribute")
+					.get(IotInfoConstant.dev_plc_plc_id);
+		}
 
-        Map<String,String>tags=new HashMap<String,String>(); //tags 标识属性
-        tags.put("agreement","plc");
+		// List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
+		// definedAttrList.add(definedAttrMap);
 
-        MetricInfoResponseDataVO  metricInfoResponseDataVO = new MetricInfoResponseDataVO();
-        metricInfoResponseDataVO.setId(definedAttrMap.get("节点ID"));
-        metricInfoResponseDataVO.setAttributers(attributers);
-        metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
-        metricInfoResponseDataVO.setTags(tags);
+		Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
+		tags.put("agreement", "plc");
 
-        //消息结构
-        MessageVO<MetricInfoResponseDataVO> messageVo= T_ResponseResult.getResponseVO(ctx,plc_sn,"metricInfoResponse",metricInfoResponseDataVO);
+		MetricInfoResponseDataVO metricInfoResponseDataVO = new MetricInfoResponseDataVO();
+		metricInfoResponseDataVO.setId(nodeID);
+		// metricInfoResponseDataVO.setAttributers(attributers); //为空不传值
+		metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
+		metricInfoResponseDataVO.setTags(tags);
 
-        //kafka处理
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "47.106.189.255:9092");
-        props.put("acks", "all");
-        props.put("retries", 0);
-        props.put("batch.size", 16384);
-        props.put("linger.ms", 1);
-        props.put("buffer.memory", 33554432);
-        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		// 消息结构
+		MessageVO<MetricInfoResponseDataVO> messageVo = T_ResponseResult.getResponseVO(ctx, plc_sn,
+				"metricInfoResponse", metricInfoResponseDataVO);
 
-        Producer<String, String> producer = new KafkaProducer<>(props);
-        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
-    }
+		// kafka处理
+		Properties props = new Properties();
+		props.put("bootstrap.servers", "47.106.189.255:9092");
+		props.put("acks", "all");
+		props.put("retries", 0);
+		props.put("batch.size", 16384);
+		props.put("linger.ms", 1);
+		props.put("buffer.memory", 33554432);
+		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		System.out.println("===pdtResposeParser=====plcStateResponseSend==发送设备状态上报数据 的json结构:"+ JSON.toJSONString(messageVo));
+		Producer<String, String> producer = new KafkaProducer<>(props);
+		producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+	}
 
-    /**
-     * PLC 响应 设备信号上报 发kafka
-     * @param plc_sn 集中器地址
-     * @param nodeID 节点ID
-     * @param definedAttrMap
-     * @throws Exception
-     */
-    public static void plcSignlResponseSend(String plc_sn, String nodeID,Map<String,Object> definedAttrMap) throws Exception{
-        List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
-        definedAttrList.add(definedAttrMap);
+	/**
+	 * PLC 响应 设备信号上报 发kafka
+	 * 
+	 * @param plc_sn
+	 *            集中器地址
+	 * @param nodeID
+	 *            节点ID
+	 * @param definedAttrList
+	 * @throws Exception
+	 */
+	public static void plcSignlResponseSend(String plc_sn, String nodeID, List<Map> definedAttrList, ChannelHandlerContext ctx) throws Exception {
+		Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
+		tags.put("agreement", "plc");
 
-        Map<String,String>tags=new HashMap<String,String>(); //tags 标识属性
-        tags.put("agreement","plc");
+		DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
+		devSignlResponseDataVO.setId(nodeID);
+		devSignlResponseDataVO.setSignals(definedAttrList);
+		devSignlResponseDataVO.setTags(tags);
 
-        DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
-        devSignlResponseDataVO.setId(nodeID);
-        devSignlResponseDataVO.setSignals(definedAttrList);
-        devSignlResponseDataVO.setTags(tags);
+		// 消息结构
+		MessageVO<DevSignlResponseDataVO> messageVo = T_ResponseResult.getResponseVO(ctx, plc_sn, "devSignalResponse",
+				devSignlResponseDataVO);
 
-        ChannelHandlerContext ctx=null;
-        //消息结构
-        MessageVO<DevSignlResponseDataVO> messageVo= T_ResponseResult.getResponseVO(ctx,plc_sn,"devSignalResponse",devSignlResponseDataVO);
-
-        //kafka处理
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "47.106.189.255:9092");
-        props.put("acks", "all");
-        props.put("retries", 0);
-        props.put("batch.size", 16384);
-        props.put("linger.ms", 1);
-        props.put("buffer.memory", 33554432);
-        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-        Producer<String, String> producer = new KafkaProducer<>(props);
-        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
-    }
+		// kafka处理
+		Properties props = new Properties();
+		props.put("bootstrap.servers", "47.106.189.255:9092");
+		props.put("acks", "all");
+		props.put("retries", 0);
+		props.put("batch.size", 16384);
+		props.put("linger.ms", 1);
+		props.put("buffer.memory", 33554432);
+		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+		System.out.println("===pdtResposeParser=====plcSignlResponseSend==发送设备信号上报数据 的json结构:"+ JSON.toJSONString(messageVo));
+		Producer<String, String> producer = new KafkaProducer<>(props);
+		producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+	}
 
 	/**
 	 * @param modbusInfo
@@ -437,7 +534,7 @@ public class PlcProtocolsUtils {
 	 */
 	public static final Map<String, Boolean> plc_config_threadruning_flag = new HashMap<String, Boolean>();
 
-	public static void init_1(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+	public static void init_1(ChannelHandlerContext ctx, ModbusInfo modbusInfo,RedisService redisService) {
 		/*
 		 * if(PlcProtocolsUtils.plc_config_threadruning_flag!=null &&
 		 * PlcProtocolsUtils.plc_config_threadruning_flag.get(modbusInfo.getAddress_str(
@@ -466,7 +563,7 @@ public class PlcProtocolsUtils {
 						&& "80".equals(modbusInfo.getcCode_str().toLowerCase()))
 				|| ("96".equals(modbusInfo.getCmdCode_str().toLowerCase())
 						&& "80".equals(modbusInfo.getcCode_str().toLowerCase()))) {
-			initX_config_jzq_response(ctx, modbusInfo);
+			initX_config_jzq_response(ctx, modbusInfo,redisService);
 		} else {
 			// 发起init1请求 ，成功继续，失败退出流程
 			init1_config_jzq(ctx, modbusInfo.getAddress_str());
@@ -475,7 +572,7 @@ public class PlcProtocolsUtils {
 		plc_config_threadruning_flag.put(modbusInfo.getAddress_str(), false);// 处理完毕后设置为false
 	}
 
-	public static void init_2_9(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+	public static void init_2_9(ChannelHandlerContext ctx, ModbusInfo modbusInfo,RedisService redisService) {
 		// 判断控制码，根据控制码来引导配置流程
 		if (("8e".equals(modbusInfo.getCmdCode_str().toLowerCase())
 				&& "80".equals(modbusInfo.getcCode_str().toLowerCase())) // init1 集中器配置参数
@@ -492,8 +589,11 @@ public class PlcProtocolsUtils {
 				|| ("66".equals(modbusInfo.getCmdCode_str().toLowerCase())
 						&& "80".equals(modbusInfo.getcCode_str().toLowerCase()))
 				|| ("96".equals(modbusInfo.getCmdCode_str().toLowerCase())
-						&& "80".equals(modbusInfo.getcCode_str().toLowerCase()))) {
-			initX_config_jzq_response(ctx, modbusInfo);
+						&& "80".equals(modbusInfo.getcCode_str().toLowerCase()))
+				|| ("98".equals(modbusInfo.getCmdCode_str().toLowerCase())
+						&& "80".equals(modbusInfo.getcCode_str().toLowerCase())))
+		{
+			initX_config_jzq_response(ctx, modbusInfo,redisService);
 		}
 	}
 
@@ -502,7 +602,7 @@ public class PlcProtocolsUtils {
 		final ModbusInfo modbusInfo = new ModbusInfo(); // 8e表示命令码 00表示请求 80表示响应
 		try {
 			// 获取设备信息 通过chennelID ==> devinfo
-			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
+			Map<String, Object> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
 					.get(plc_SN + "_defAttribute");// 从自定义的字段里面获取值
 
 			logger.info("=====>>>initstep1(" + plc_SN + ")集中器配置参数...===============");
@@ -518,14 +618,14 @@ public class PlcProtocolsUtils {
 			 * --不考虑 操作员3 如:13812345678 字符串型 11 Bs --不考虑 短信操作回复 0 否 1是 1 B --不考虑 光控时段
 			 * 前2Byte：开始 时分 2Bs 后2Byte：结束 时分 2 Bs
 			 */
-			String plc_cfg_step1_longitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_longitude); // 经度
-			String plc_cfg_step1_latitude = def_attributers.get(IotInfoConstant.dev_plc_cfg_latitude); // 纬度
-			String plc_cfg_step1_sq = def_attributers.get(IotInfoConstant.dev_plc_cfg_sq); // "-8"; //时区 转化成整形表示
-			String plc_cfg_step1_gksd_start = def_attributers.get(IotInfoConstant.dev_plc_cfg_gksd_start); // "8:10";
+			String plc_cfg_step1_longitude = (String)def_attributers.get(IotInfoConstant.dev_plc_cfg_longitude); // 经度
+			String plc_cfg_step1_latitude = (String)def_attributers.get(IotInfoConstant.dev_plc_cfg_latitude); // 纬度
+			String plc_cfg_step1_sq = (String)def_attributers.get(IotInfoConstant.dev_plc_cfg_sq); // "-8"; //时区 转化成整形表示
+			String plc_cfg_step1_gksd_start = (String)def_attributers.get(IotInfoConstant.dev_plc_cfg_gksd_start); // "8:10";
 																											// //光控时段-开始时分
 			int gksd_start_h = Integer.parseInt(plc_cfg_step1_gksd_start.split(":")[0]);
 			int gksd_start_s = Integer.parseInt(plc_cfg_step1_gksd_start.split(":")[1]);
-			String plc_cfg_step1_gksd_end = def_attributers.get(IotInfoConstant.dev_plc_cfg_gksd_end); // "8:10"; //光控时段
+			String plc_cfg_step1_gksd_end = (String)def_attributers.get(IotInfoConstant.dev_plc_cfg_gksd_end); // "8:10"; //光控时段
 																										// 结束时分
 			int gksd_end_h = Integer.parseInt(plc_cfg_step1_gksd_end.split(":")[0]);
 			int gksd_end_s = Integer.parseInt(plc_cfg_step1_gksd_end.split(":")[1]);
@@ -591,7 +691,7 @@ public class PlcProtocolsUtils {
 	 * @param modbusInfo
 	 * @return
 	 */
-	public static boolean initX_config_jzq_response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+	public static boolean initX_config_jzq_response(ChannelHandlerContext ctx, ModbusInfo modbusInfo,RedisService redisService) {
 		boolean excuSeccess = true;
 		String cCode = modbusInfo.getcCode_str();
 		String cCmdCode = modbusInfo.getCmdCode_str();
@@ -600,10 +700,14 @@ public class PlcProtocolsUtils {
 
 			logger.info(">>>initstep(" + modbusInfo.getAddress_str() + "-配置流程)响应设备,cmdCode=" + cCmdCode + ",cCode="
 					+ cCode + ",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
+			
+			//做下一步之前休眠下
+			Thread.currentThread().sleep(1000*10);
+			
 			// PDT ack
 			/*
 			 * 01H：集中器成功受理。 02H：命令或数据格式无效。 03H：集中器忙。
-			 */
+			 */			
 			String hex_ptd = ConverUtil.convertByteToHexString(modbusInfo.getPdt()); // ack
 			if ("01".equals(hex_ptd)) {
 				// 8e 请求集中器配置
@@ -633,6 +737,7 @@ public class PlcProtocolsUtils {
 				}
 				if ("62".equals(cCmdCode) && "80".equals(cCode)) { // 组网执行成功 ，不管失败还是成功，都需要手动做停止组网的动作 ，2~300节点一般要好几分钟
 					step = 6;
+					Thread.currentThread().sleep(1000*30);
 					_logInfo(modbusInfo.getAddress_str(), cCmdCode, cCode, step);
 					// 请求设备，停止组网
 					init6_stopCfgNetwork(ctx, modbusInfo.getAddress_str());
@@ -650,11 +755,15 @@ public class PlcProtocolsUtils {
 					init8_sendDownNode(ctx, modbusInfo.getAddress_str());
 				}
 				if ("96".equals(cCmdCode) && "80".equals(cCode)) { // 下发节点成功
-					step = 9;
 					_logInfo(modbusInfo.getAddress_str(), cCmdCode, cCode, step);
 					// 请求设备，配置节点
 					ini9_configNode(ctx, modbusInfo.getAddress_str());
 				}
+				if ("98".equals(cCmdCode) && "80".equals(cCode)) { // 配置节点成功
+ 					_logInfo(modbusInfo.getAddress_str(), cCmdCode, cCode, step);//打印结果即可
+ 					//gloable_dev_status.put(modbusInfo.getAddress_str() + "_config", "1");// 配置节点后 设置为已配置即可
+ 					redisService.set(rediskey_plc_isconfig_ + modbusInfo.getAddress_str() , "1");  
+ 				}
 			} else if ("02".equals(hex_ptd)) {
 				logger.info(">>>initstep(" + modbusInfo.getAddress_str() + "-配置流程)响应设备,cmdCode=" + cCmdCode + ",cCode="
 						+ cCode + " ,集中器反馈：命令或数据格式无效");
@@ -680,7 +789,7 @@ public class PlcProtocolsUtils {
 		final ModbusInfo modbusInfo_8c_00 = new ModbusInfo();
 		try {
 			// 获取设备信息 通过chennelID ==> devinfo
-			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
+			Map<String, Object> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
 					.get(plc_SN + "_defAttribute");// 从自定义的字段里面获取值
 
 			logger.info("=====>>>initstep(" + plc_SN + ")集中器设置时钟...===============");
@@ -752,14 +861,11 @@ public class PlcProtocolsUtils {
 					if (future.isSuccess()) {
 						logger.info(">>>initstep" + step + " (" + modbusInfo.getAddress_str() + ")请求设备成功/" + logmsg
 								+ "！,cmdCode=" + modbusInfo.getCmdCode_str() + ",ccode=" + modbusInfo.getcCode_str()
-								+ ",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
-						if (step == 9) {
-							gloable_dev_status.put(modbusInfo.getAddress_str() + "_config", "1");// 配置节点后 设置为已配置即可
-						}
+								+ ",byteMsg=" + ConverUtil.convertByteToHexStringPrint(modbusInfo.getNewFullData()));
 					} else {
 						logger.info(">>>initstep" + step + " (" + modbusInfo.getAddress_str() + ")请求设备失败/" + logmsg
 								+ "！,cmdCode=" + modbusInfo.getCmdCode_str() + ",ccode=" + modbusInfo.getcCode_str()
-								+ ",byteMsg=" + ConverUtil.convertByteToHexString(modbusInfo.getNewFullData()));
+								+ ",byteMsg=" + ConverUtil.convertByteToHexStringPrint(modbusInfo.getNewFullData()));
 					}
 				});
 	}
@@ -786,19 +892,20 @@ public class PlcProtocolsUtils {
 
 	}
 
-    /**
-     * 68 00 00 00 00 00 01 68 00 02 62 02 37 16
-     * @param ctx
-     * @param plc_SN
-     * @return
-     */
+	/**
+	 * 68 00 00 00 00 00 01 68 00 02 62 02 37 16
+	 * 
+	 * @param ctx
+	 * @param plc_SN
+	 * @return
+	 */
 	public static boolean init5_CfgNetwork(ChannelHandlerContext ctx, String plc_SN) {
 		boolean excuSeccess = true;
 		final ModbusInfo modbusInfo = new ModbusInfo();
 		try {
 			logger.info("=====>>>initstep(" + plc_SN + ") 开始组网...===============");
 			// 获取设备信息
-			Map<String, String> attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
+			Map<String, Object> attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
 					.get(plc_SN + "_defAttribute");
 
 			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
@@ -806,7 +913,7 @@ public class PlcProtocolsUtils {
 			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("62"));
 			// PDT 组网个数
 			byte[] groupNum = new byte[1];
-			int x = Integer.parseInt(attributers.get(IotInfoConstant.dev_plc_cfg_step5_groupAtuo));
+			int x = Integer.parseInt((String)attributers.get(IotInfoConstant.dev_plc_cfg_step5_groupAtuo));
 			logger.info("     >>>组网个数 = " + x);
 			groupNum[0] = (byte) x;
 			modbusInfo.setPdt(groupNum);
@@ -876,14 +983,14 @@ public class PlcProtocolsUtils {
 		try {
 			logger.info("=====>>>initstep8(" + plc_SN + ") 下发节点...==96,03=============");
 			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
-			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("03"));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("03"));//全部节点
 			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("96"));
 
 			// 获取设备信息 通过chennelID ==> devinfo
-			Map<String, String> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
+			Map<String, Object> def_attributers = IotInfoConstant.allDevInfo.get(getPort(ctx.channel()))
 					.get(plc_SN + "_defAttribute");// 从自定义的字段里面获取值
-			List<Map<String, String>> nodelist = IotInfoConstant.plc_relation_plcsnToNodelist.get(getPort(ctx.channel()))
-					.get(plc_SN);
+			List<Map<String, String>> nodelist = IotInfoConstant.plc_relation_plcsnToNodelist
+					.get(getPort(ctx.channel())).get(plc_SN);
 
 			// PDT 节点列表
 			int pdtLen = 8 * nodelist.size();// 一个节点占8个字节
@@ -897,13 +1004,24 @@ public class PlcProtocolsUtils {
 						String nodeid = item.get(IotInfoConstant.dev_plc_node_sn); // 6
 						int groupid = Integer.parseInt(item.get(IotInfoConstant.dev_plc_node_group)); // 1
 						String devCode = item.get(IotInfoConstant.dev_plc_node_devCode); // 1
-						byteBuf.writeBytes(ConverUtil.hexStrToByteArr(nodeid)) // 节点ID
+						logger.info("=====  nodesn /groupid /devCode ;" + nodeid +"/"+groupid+"/"+devCode );
+						byte[] t1 = new byte[6];
+						t1=ConverUtil.hexStrToByteArr(nodeid);
+						byte[] t2 = new byte[1];
+						t2=ByteUtils.varIntToByteArray(groupid);
+						byte[] t3 = new byte[1];
+						t3 = ConverUtil.hexStrToByteArr(devCode);
+						byteBuf.writeBytes(t1) // 节点ID
+							.writeBytes(t2) // 组号
+							.writeBytes(t3); // 设备码
+						/*byteBuf.writeBytes(ConverUtil.hexStrToByteArr(nodeid)) // 节点ID   这样这届赋值给byteBuf貌似不行
 								.writeBytes(ByteUtils.varIntToByteArray(groupid)) // 组号
 								.writeBytes(ConverUtil.hexStrToByteArr(devCode)); // 设备码
-					}
-					byte[] temp = byteBuf.array();
-					if (byteBuf != null)
+*/					}
+					temp1 = byteBuf.array();
+					if (byteBuf != null){
 						ReferenceCountUtil.release(byteBuf);
+					}
 				}
 				modbusInfo.setPdt(temp1);
 				ctxWriteAndFlush(ctx, modbusInfo, "下发节点", 8);
@@ -961,7 +1079,7 @@ public class PlcProtocolsUtils {
 		try {
 			logger.info("=====>>>heartbeat 收到心跳...==f1,04=============");
 			modbusInfo.setAddress(ConverUtil.hexStrToByteArr(plc_SN));
-			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("04"));
+			modbusInfo.setcCode(ConverUtil.hexStrToByteArr("80"));
 			modbusInfo.setCmdCode(ConverUtil.hexStrToByteArr("f1"));
 			// PDT
 			byte[] temp1 = new byte[0];
@@ -976,19 +1094,20 @@ public class PlcProtocolsUtils {
 		return excuSeccess;
 
 	}
-	
-	 	public static byte[] getPdt(byte[]... ls) throws Exception{
-		 		int len = 0;
-		 		for(byte[] it:  ls){
-		 			len = len+it.length;
-		 		}
-		 		ByteBuf byteBuf = Unpooled.buffer(len);
-		 		for(byte[] it:  ls){
-		 			byteBuf.writeBytes(it);
-		 		} 
-		        byte[] temp = byteBuf.array();
-		        if(byteBuf != null)ReferenceCountUtil.release(byteBuf);
-		       return temp;
-	   }
+
+	public static byte[] getPdt(byte[]... ls) throws Exception {
+		int len = 0;
+		for (byte[] it : ls) {
+			len = len + it.length;
+		}
+		ByteBuf byteBuf = Unpooled.buffer(len);
+		for (byte[] it : ls) {
+			byteBuf.writeBytes(it);
+		}
+		byte[] temp = byteBuf.array();
+		if (byteBuf != null)
+			ReferenceCountUtil.release(byteBuf);
+		return temp;
+	}
 
 }

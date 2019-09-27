@@ -25,8 +25,8 @@ public class IotInfoConstant {
      *     4：allDevInfo= Map<port, Map<sn设备地址_signl, Map<key信号字段, value信号字段默认值>>>	   如节点离线，节点告警
      *    
      */
-    public static final Map<String, Map<String, Map<String, String>>> allDevInfo = new HashMap<String, Map<String, Map<String, String>>>();
-    private static final Map<String, Map<String, String>> plc_iotInfo_ = new HashMap<String, Map<String, String>>();
+    public static final Map<String, Map<String, Map<String, Object>>> allDevInfo = new HashMap<String, Map<String, Map<String, Object>>>();
+    private static final Map<String, Map<String, Object>> plc_iotInfo_ = new HashMap<String, Map<String, Object>>();
     
     
     /**
@@ -47,7 +47,7 @@ public class IotInfoConstant {
      
     //公共
     public static final String base_plc_port = "12345";
-    public static final String dev_plc_dataaccess_key = "dataAccess"; //接入类型
+    public static final String dev_plc_dataaccess_key = "agreement"; //接入类型
     public static final String dev_plc_dataaccess_value = "plc";      //每种接入，初始化数据的时候应该要指定接入类型
     
     //基本属性
@@ -114,6 +114,7 @@ public class IotInfoConstant {
     static String[] plc_def_attributers_initcfg={ dev_plc_cfg_longitude, dev_plc_cfg_latitude, dev_plc_cfg_sq ,dev_plc_cfg_gksd_start 
     		,dev_plc_cfg_gksd_end,dev_plc_cfg_systime ,dev_plc_cfg_step5_groupAtuo };
      
+    private static final Map<String, String > plc_unit_ = new HashMap<String, String>();
     
     //灯具属性
     public static final String dev_plc_node_id ="plc_node_id"; //deviceId 
@@ -121,10 +122,11 @@ public class IotInfoConstant {
     //public static final String dev_plc_node_type ="plc_node_type";  //节点类型  :jie点类型    单灯(OL)，双灯(TL)，HID ,LED
     public static final String dev_plc_node_temperature ="plc_node_temperature";//温度
     public static final String dev_plc_node_voltage_in ="plc_node_voltage_in";//输入电压
-    public static final String dev_plc_node_voltage_out ="plc_node_voltage_out";//输出电压
+    public static final String dev_plc_node_voltage_out ="voltage";//输出电压
     public static final String dev_plc_node_a_electri_in ="plc_node_a_electri_in";//A路输入电流	
-    public static final String dev_plc_node_a_electri_out ="plc_node_a_electri_out";//A路输出电流
-    public static final String dev_plc_node_a_power ="plc_node_a_power";//A路有功功率
+    public static final String dev_plc_node_a_electri_out ="current";//A路输出电流
+
+    public static final String dev_plc_node_a_power ="capacity";//A路有功功率
     public static final String dev_plc_node_a_pf ="plc_node_a_pf";//A路功率因数
     //public static final String dev_plc_node_a_lighting ="plc_node_a_lighting";//A亮度
     public static final String dev_plc_node_a_brightness ="plc_node_a_brightness";//A亮度   0-100
@@ -146,7 +148,50 @@ public class IotInfoConstant {
 	
 	public static String plc_json = "";
     public static String plc_node_json = ""; 
+    public static String getUnit(String attributer){
+    	return plc_unit_.get(attributer);
+    }
+    public static void initUnitData(){
+    	//节点
+    	plc_unit_.put(dev_plc_node_temperature, "V"); //温度
+    	plc_unit_.put(dev_plc_node_voltage_in, "V"); //输入电压
+    	plc_unit_.put(dev_plc_node_voltage_out, "V"); //输出电压
+    	plc_unit_.put(dev_plc_node_a_electri_in, "mA"); //A路输入电流
+    	plc_unit_.put(dev_plc_node_a_electri_out, "mA"); //A路输出电流
+    	plc_unit_.put(dev_plc_node_a_power, "W"); //A路有功功率
+    	plc_unit_.put(dev_plc_node_a_pf, "F"); //A路功率因数
+    	//plc_unit_.put(dev_plc_node_a_brightness, ""); //A亮度   0-100
+    	//plc_unit_.put(dev_plc_node_type, ""); //控制类型   单灯A(01)，单灯B(02),双灯(03) 
+    	//plc_unit_.put(dev_plc_node_devCode, ""); //设备码
+    	//plc_unit_.put(dev_plc_node_group, ""); //节点所属组
+    	//plc_unit_.put(dev_plc_node_cCode, ""); //控制码
+    	//plc_unit_.put(dev_plc_node_a_status, ""); // 在线状态  0-离线 1-在线
+    	//plc_unit_.put(dev_plc_node_a_onoff, ""); // 开关状态  0-开灯 1-关灯
+    	
+    	
+    	
+    	//集中器
+    	plc_unit_.put(dev_plc_a_voltage, "V"); //集中器，A相电压
+    	plc_unit_.put(dev_plc_a_electric, "mA");//集中器，A相电流
+    	plc_unit_.put(dev_plc_a_power, "W"); //集中器，A相功率:
+    	plc_unit_.put(dev_plc_a_pf, "F"); //集中器，A相功率因素
+    	//plc_unit_.put(dev_plc_ad1_in, ""); //集中器，AD1输入
+    	plc_unit_.put(dev_plc_b_voltage, "V"); //集中器，B相电压
+    	
+    	plc_unit_.put(dev_plc_b_electric, "mA"); //集中器，B相电流
+    	plc_unit_.put(dev_plc_b_power, "W"); //集中器，B相功率
+    	plc_unit_.put(dev_plc_b_pf, "F"); //集中器，B相功率因素
+    	plc_unit_.put(dev_plc_all_power, "W"); //集中器，总功率
+    	//plc_unit_.put(dev_plc_ad2_in, "℃"); //集中器，AD2输入
+    	plc_unit_.put(dev_plc_c_voltage, "V"); //集中器，C相电压
+    	plc_unit_.put(dev_plc_c_electric, "mA"); //集中器，C相电流
+    	plc_unit_.put(dev_plc_c_power, "W"); //集中器，C相功率
+    	plc_unit_.put(dev_plc_c_pf, "F"); //集中器，C相功率因素
+    	plc_unit_.put(dev_plc_3_power, "F"); //集中器，三相功率因素
+    }
+    
     public static void initData(){
+    	initUnitData();
     	try{
     		allDevInfo.put(base_plc_port, plc_iotInfo_);
        	 
@@ -167,14 +212,28 @@ public class IotInfoConstant {
             	String plc_cfg_step2_timestamp= String.valueOf(System.currentTimeMillis()); //时钟      时间戳
             	String plc_cfg_step5_groupAtuo = (String)jsonObject.get("plc_cfg_step5_groupAtuo");    //组网个数
             	
+            	String vendor_name = (String)jsonObject.get("vendor_name");   
+            	String vendor_code = (String)jsonObject.get("vendor_code");  
+            	String model = (String)jsonObject.get("model");
+            	String device_type_code_plc = (String)jsonObject.get("device_type_code");
+            	
             	//----new一个集中器 并put到plc_iotInfo_
             	//基本属性
             	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_attribute", base_attributers);  
-            	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_plc_plc_sn, plc_sn);//给默认值
+            	//plc_iotInfo_.get(plc_sn+"_attribute").put("device_type_code", "");//设备类型代码
+            	//plc_iotInfo_.get(plc_sn+"_attribute").put("device_type_name", "");//设备类型名称
+            	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_base_sn, plc_sn);//PLC SN
+            	plc_iotInfo_.get(plc_sn+"_attribute").put("vendor_name", vendor_name);//厂家名字
+            	plc_iotInfo_.get(plc_sn+"_attribute").put("vendor_code", Integer.parseInt(vendor_code));//厂家代码
+            	
+            	plc_iotInfo_.get(plc_sn+"_attribute").put("model", model);//设备型号
+            	plc_iotInfo_.get(plc_sn+"_attribute").put(dev_base_uuid, plc_id);//uuid
+            	plc_iotInfo_.get(plc_sn+"_attribute").put("device_type_code", Integer.parseInt(device_type_code_plc));//设备类型代码
             	//def属性
             	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_defAttribute", plc_def_attributers);//硬件自带
             	IotInfo.initDevAttribute(plc_iotInfo_, plc_sn+"_defAttribute", plc_def_attributers_initcfg);//设备接入前配置引入的属性
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_plc_id, plc_id);   //deviceId
+            	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_plc_sn, plc_sn); 
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_dataaccess_key, dev_plc_dataaccess_value); //接入类型
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_longitude, plc_cfg_step1_longitude); 
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_latitude, plc_cfg_step1_latitude); 
@@ -214,13 +273,27 @@ public class IotInfoConstant {
                 	String plc_node_devCode = (String)it.get("plc_node_devCode");   //设备码   ,设备码只和灯具有关 ，和产品类型对齐
                 	String plc_node_group = (String)it.get("plc_node_group");      //组号   1~255
                 	
+                	String node_vendor_name = (String)jsonObject.get("vendor_name");   
+                	String node_vendor_code = (String)jsonObject.get("vendor_code");  
+                	String node_model = (String)jsonObject.get("model");
+                	String node_device_type_code = (String)jsonObject.get("device_type_code");
+                	
+                	
                 	//----new一个灯具信息 并put到plc_iotInfo_
                 	IotInfo.initDevAttribute(plc_iotInfo_, plc_node_sn+"_attribute", base_attributers);  //基本属性
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put("vendor_name", node_vendor_name);//厂家名字
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put("vendor_code", Integer.parseInt(node_vendor_code));//厂家代码
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put("model", node_model);//设备型号
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put(dev_base_uuid, plc_node_id);//uuid
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put(dev_base_sn, plc_node_sn);//SN
+                	plc_iotInfo_.get(plc_node_sn+"_attribute").put("device_type_code", Integer.parseInt(node_device_type_code));//设备类型代码
+                	
                 	IotInfo.initDevAttribute(plc_iotInfo_, plc_node_sn+"_defAttribute", plc_node_def_attributers);//自定义属性
-            		plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(IotInfoConstant.dev_plc_plc_sn, plc_sn);
+            		//plc_iotInfo_.get(plc_node_sn+"_defAttribute_node").put(IotInfoConstant.dev_plc_plc_sn, plc_sn);
             		plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(IotInfoConstant.dev_plc_node_sn, plc_node_sn);
                 	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(IotInfoConstant.dev_plc_dataaccess_key, IotInfoConstant.dev_plc_dataaccess_value);
-                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(plc_node_id, plc_node_id);  //deviceId
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_id, plc_node_id);  //deviceId
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_plc_sn, plc_sn);
                 	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_type, plc_node_type); 
                 	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_devCode, plc_node_devCode); 
                 	
@@ -229,6 +302,8 @@ public class IotInfoConstant {
                 	
                 	//----plc_sn和node关系
                 	Map<String, String> _it = new HashMap<String,String>();
+                	_it.put(dev_plc_plc_id, plc_id);
+                	_it.put(dev_plc_node_id, plc_node_id);
                 	_it.put(dev_plc_plc_sn, plc_sn);  				 //sn (plc)
                 	_it.put(dev_plc_node_sn, plc_node_sn);  		 //sn (node)
                 	_it.put(dev_plc_node_type, plc_node_type);  	 //设备类型

@@ -74,13 +74,13 @@ public class IotInfo {
     	plc_iotInfo_.put(SN1, init_value);
 	}
 	
-	public static void initDevAttribute(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_attributers) {
+	public static void initDevAttribute(Map<String, Map<String, Object>> plc_iotInfo_,String atrType,String... plc_attributers) {
         if(plc_iotInfo_.containsKey(atrType)){
         	for(String attr : plc_attributers){
         		plc_iotInfo_.get(atrType).put(attr, "");
             }
         }else{
-        	Map<String,String> init_value = new HashMap<String,String>();
+        	Map<String,Object> init_value = new HashMap<String,Object>();
             for(String attr : plc_attributers){
             	init_value.put(attr, "");//没指定则默认空
             }
@@ -88,23 +88,23 @@ public class IotInfo {
         }
     	
 	}
-	public static void initMethod(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_methods) {
-		Map<String,String> init_value = new HashMap<String,String>();
+	public static void initMethod(Map<String, Map<String, Object>> plc_iotInfo_,String atrType,String... plc_methods) {
+		Map<String,Object> init_value = new HashMap<String,Object>();
         for(String method : plc_methods){
         	String[] ms = method.split(":");
         	init_value.put(ms[0], ms[1]); 
         }
     	plc_iotInfo_.put(atrType, init_value);
 	}
-	public static void initCmd(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_methods) {
-		Map<String,String> init_value = new HashMap<String,String>();
+	public static void initCmd(Map<String, Map<String, Object>> plc_iotInfo_,String atrType,String... plc_methods) {
+		Map<String,Object> init_value = new HashMap<String,Object>();
         for(String method : plc_methods){
         	String[] ms = method.split(":");
         	init_value.put(ms[1] , ms[0]); 
         }
     	plc_iotInfo_.put(atrType, init_value);
 	}
-	public static void initSignl(Map<String, Map<String, String>> plc_iotInfo_,String atrType,String... plc_Signl) {
+	public static void initSignl(Map<String, Map<String, Object>> plc_iotInfo_,String atrType,String... plc_Signl) {
 		initMethod( plc_iotInfo_, atrType, plc_Signl);
 	}
  	 

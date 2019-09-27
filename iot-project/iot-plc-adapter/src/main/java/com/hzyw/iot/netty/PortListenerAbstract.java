@@ -3,6 +3,7 @@ package com.hzyw.iot.netty;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.netty.channelhandler.ExceptionHandler;
 import com.hzyw.iot.netty.channelhandler.HeartBeatHandler;
+import com.hzyw.iot.service.RedisService;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -29,11 +30,13 @@ abstract class PortListenerAbstract {
 	private int port;
 	private EventLoopGroup bossGroup;
 	private EventLoopGroup workerGroup;
+	private RedisService redisService;
 
-	PortListenerAbstract(int port, EventLoopGroup bossGroup, EventLoopGroup workerGroup) {
+	PortListenerAbstract(int port, EventLoopGroup bossGroup, EventLoopGroup workerGroup,RedisService redisService) {
 		this.port = port;
 		this.bossGroup = bossGroup;
 		this.workerGroup = workerGroup;
+		this.redisService = redisService;
 	}
 
 	/**
@@ -87,7 +90,7 @@ abstract class PortListenerAbstract {
 					// log
 					.addLast("logging", new LoggingHandler(LogLevel.INFO))
 					// 心跳检测  第一个参数是指定读操作空闲秒数，第二个参数是指定写操作的空闲秒数，第三个参数是指定读写空闲秒数，当有操作操作超出指定空闲秒数时，便会触发HeartBeatHandler::UserEventTriggered事件
-					 .addLast(new IdleStateHandler(11, 0, 0, TimeUnit.SECONDS))//PLC设备上报心跳的频率
+					 .addLast(new IdleStateHandler(11*2, 0, 0, TimeUnit.SECONDS))//PLC设备上报心跳的频率
 					 .addLast(new HeartBeatHandler())
 					// 链路管理
 					.addLast(new ChannelManagerHandler());
@@ -104,6 +107,14 @@ abstract class PortListenerAbstract {
 
 	public void setPort(int port) {
 		this.port = port;
+	}
+
+	public RedisService getRedisService() {
+		return redisService;
+	}
+
+	public void setRedisService(RedisService redisService) {
+		this.redisService = redisService;
 	}
 	
 	

@@ -199,9 +199,113 @@ public class DecimalTransforUtil {
         return result;
     }
 
+    /**
+     * 二进制数据转化为16进制字符串
+     * @param src
+     * @return
+     */
+
+    public static String bytesToHexString(byte[] src){
+        StringBuilder stringBuilder = new StringBuilder();
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            String hv = Integer.toHexString(v);
+
+            stringBuilder.append(i + ":");
+
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv + ";");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     *
+     * @param bytes
+     * @return 将二进制转换为十六进制字符输出
+     */
+    public static String BinaryToHexString(byte[] bytes){
+        String hexStr =  "0123456789ABCDEF";
+        String result = "";
+        String hex = "";
+        for(int i=0;i<bytes.length;i++){
+            //字节高4位
+            hex = String.valueOf(hexStr.charAt((bytes[i]&0xF0)>>4));
+            //字节低4位
+            hex += String.valueOf(hexStr.charAt(bytes[i]&0x0F));
+            result +=hex+" ";
+        }
+        return result;
+    }
+
+    /**
+     * 16进制字符串转换2进制字符串
+     * @param hexString
+     * @return
+     */
+    public static String HexString2binaryString(String hexString) {
+        if (hexString == null || hexString.length() % 2 != 0)
+            return null;
+        String bString = "", tmp;
+        for (int i = 0; i < hexString.length(); i++) {
+            tmp = "0000" + Integer.toBinaryString(Integer.parseInt(hexString.substring(i, i + 1), 16));
+            bString += tmp.substring(tmp.length() - 4);
+        }
+        return bString;
+    }
+
+    /**
+     * 2进制字符串转换6进制字符串
+     * @param bString
+     * @return
+     */
+    //------------------------------------------------------
+    public static String BinaryString2hexString(String bString) {
+        if (bString == null || bString.equals("") || bString.length() % 8 != 0)
+            return null;
+        StringBuffer tmp=new StringBuffer();
+        int iTmp = 0;
+        for (int i = 0; i < bString.length(); i += 4) {
+            iTmp = 0;
+            for (int j = 0; j < 4; j++) {
+                iTmp += Integer.parseInt(bString.substring(i + j, i + j + 1)) << (4 - j - 1);
+            }
+            tmp.append(Integer.toHexString(iTmp));
+        }
+        return tmp.toString();
+    }
+
     public static void main(String[] args){
-        String aa="7F";
+        String str = "11111000";
+        System.out.println("源字符串：\n"+str);
+
+        String hexString = BinaryString2hexString(str);
+        System.out.println("转换为十六进制：\n"+hexString);
+
+
+
+
+        /*String aa="1b"; //7F
+        Integer hh=1;
+        System.out.println("======length:"+String.valueOf(hh).length());
         System.out.println("======:"+hexToLong(aa,true));
+        System.out.println("======:"+hexToLong(aa,false));
+
+        System.out.println("====11111==:"+DecimalTransforUtil.toHexStr(String.valueOf(hexToLong(aa,true)),1));
+        System.out.println("===22222===:"+DecimalTransforUtil.toHexStr(String.valueOf(hexToLong(aa,false)),1));
+        String bb=DecimalTransforUtil.toHexStr(String.valueOf(hexToLong(aa,true)),1);
+        if(StringUtils.isNumeric(bb)){
+            System.out.println("===333333===:"+new DecimalFormat("00").format(Integer.parseInt(bb)));
+        }else{
+            System.out.println("===333333===:"+bb);
+        }*/
+
+
     }
 
 }

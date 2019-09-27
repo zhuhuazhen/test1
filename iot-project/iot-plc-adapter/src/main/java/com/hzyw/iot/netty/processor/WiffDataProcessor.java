@@ -3,6 +3,7 @@ package com.hzyw.iot.netty.processor;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.netty.processor.Impl.IDataProcessor;
 import com.hzyw.iot.netty.processor.Impl.ProcessorAbstract;
+import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.vo.dc.ItemInfo;
 import com.hzyw.iot.vo.dc.RTUInfo;
 import com.hzyw.iot.vo.dc.enums.EMqExchange;
@@ -20,13 +21,15 @@ import org.slf4j.LoggerFactory;
 public class WiffDataProcessor extends ProcessorAbstract implements IDataProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(WiffDataProcessor.class);
     private int type;
+    private RedisService redisService;
     
     public WiffDataProcessor() {
         super(ERTUChannelFlag.WIFF); //表示接入类型是wiff
     }
     
-	public void setType(int type){ 
+	public void setType(int type,RedisService redisService){ 
 		this.type = type;
+		this.redisService = redisService;
 	}
 
     @Override

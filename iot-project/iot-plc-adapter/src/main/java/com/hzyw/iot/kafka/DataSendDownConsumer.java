@@ -57,7 +57,7 @@ public class DataSendDownConsumer implements Runnable {
 	 */
 	@SuppressWarnings("static-access")
 	public void consumerProcess() {
-		String topic = "testbyzhu" ; // applicationConfig.plcOrder(); 
+		String topic = applicationConfig.plcOrder(); //  "testbyzhu" ;
 		try {
 			//获取kafka主题
 			KafkaConsumer<String, String> consumer =  kafkaCommon.getKafka();
@@ -84,11 +84,14 @@ public class DataSendDownConsumer implements Runnable {
 		for (ConsumerRecord<String, String> record : records) {
 			value = record.value();
 			if(ObjectUtil.isNotNull(value)) {
-				//CommandHandler.writeCommand("12345000000000100", value, 2);
+				
 				ProtocalAdapter protocalAdapter = new ProtocalAdapter();
 				try {
-					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(JSON.toJSONString(value)));
-					CommandHandler.writeCommandByRequestMessageVO(plcTest);
+					System.out.println(JSON.parseObject(value));
+					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(value));
+					System.out.println("111111111111111拼装好的指令:"+plcTest);
+					//CommandHandler.writeCommandByRequestMessageVO(plcTest);
+					CommandHandler.writeCommand("12345000000000100", plcTest, 2);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

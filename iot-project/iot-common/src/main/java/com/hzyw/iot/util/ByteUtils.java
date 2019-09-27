@@ -1,5 +1,7 @@
 package com.hzyw.iot.util;
 
+import com.alibaba.fastjson.JSON;
+
 /**
  * @author TheEmbers Guo
  * @version 1.0
@@ -130,6 +132,32 @@ public class ByteUtils {
 		}
 		return Double.longBitsToDouble(value);
 	} 
+    
+    /*public static void main(String[] args) throws Exception {
+    	String[] aa = new String[2+6*2*1];
+    	for(int i=0;i < aa.length; i++){
+    		aa[i]= i+1+"";
+    	}
+    	System.out.println(JSON.toJSONString(aa));
+    	
+    	int p=0;
+    	String[] x = new String[6];
+    	for(int i=2;i < aa.length; i++){
+    		if(p%6==0){
+    			p=0;
+    			x = new String[6];
+    			x[p]=aa[i];
+    		}else{
+    			x[p]=aa[i];
+    		}
+    		if(p==5){
+    			System.out.println("-"+JSON.toJSONString(x));
+    		}
+    		 
+    		p++;
+    	}
+    	
+    }*/
     
     /*private static void check(long s, long r, String tag) {
         if (s == r) {
