@@ -448,30 +448,34 @@ public class PlcProtocolsBusiness {
 	
 	
 	/**
-	 *F7指令解析
+	 *状态数据上报
 	 */
 	public static boolean protocols_API_F7_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
 		boolean excuSeccess = true;
 		//final ModbusInfo modbusInfo = new ModbusInfo(); 
 		try {
-			
-			logger.info("=====>>>protocols_F7  节点数据上报   ...===============");
+			//68,00,00,00,00,01,00,68,04,4a,f7,04,00,00,02,00,04,ee,0a,01,09,33,00,3f,00,1e,14,00,00,00,00,00,10,00,14,d1,00,00,00,00,00,00,00,00,00,00,00,00,00,00,10,02,00,b6,00,00,00,00,00,00,00,00,00,00,00,00,00,00,10,02,01,48,00,00,00,00,00,00,00,00,00,00,00,00,de,16
+			//新设备
+			//68,00,00,00,00,01,00,68,04,4a,f7,    04, 00,00,02,00,04,ee,0a,01,09,33,00,3f,00,1e,14,00,00,00(18),00,00,10,00,14,d1,00,00,00,00,00,00,00,00,00,00,00,00(18),00,00,10,02,00,b6,00,00,00,00,00,00,00,00,00,00,00,00(18),00,00,10,02,01,48,00,00,00,00,00,00,00,00,00,00,00,00(18),de,16
+			logger.info("=====>>>protocols_F7  状态数据上报   ...===============");
 			byte[] allpdt = modbusInfo.getPdt();
-			ByteBuf byteBuf = Unpooled.wrappedBuffer(allpdt);
+			byte[] temp0_bytes = {allpdt[0]}; 
+		    long node_len = ByteUtils.byteArrayToLong(temp0_bytes);     //节点总数
+			ByteBuf byteBuf = Unpooled.wrappedBuffer(allpdt,1,allpdt.length);//所有节点
 			
 			//判断是新设备还是老设备 
-			if(allpdt.length%19 == 0){
+			boolean isOld = true;
+			if(allpdt.length-1%18 == 0){
 				//说明是新设备
+				isOld = false;
 			}
-			if(allpdt.length%28 == 0){
+			if(allpdt.length-1%27 == 0){
 				//说明是老设备
+				isOld = true;
 			}
-			
-			
-			//解析PDT
+			 
 			//需要定义14个临时变量  27个字节
 			byte[] temp1 = new byte[6]; //节点ID
-			
 			byte[] temp2 = new byte[1]; //设备码  列如:19是100W
 			byte[] temp3 = new byte[1]; //在线状态   00H：不在线;    01H：在线
 			byte[] temp4 = new byte[2]; //输入电压V   单位0.1V
@@ -486,33 +490,46 @@ public class PlcProtocolsBusiness {
 			byte[] temp12 = new byte[2];  //灯具运行时长
 			byte[] temp13 = new byte[2];  //电能
 			byte[] temp14 = new byte[2];  //故障时长
-			boolean isNew = false;
-			if(isNew){
-				byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
-				.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9).readBytes(temp10)
-				.readBytes(temp11).readBytes(temp12).readBytes(temp13).readBytes(temp14);
-			}else{
-				byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
-				.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9);
-			}
-			if (byteBuf != null)ReferenceCountUtil.release(byteBuf);
-			String _temp1 = ConverUtil.convertByteToHexString(temp1);//节点ID
-			String _temp2 = ConverUtil.convertByteToHexString(temp2);//设备码  列如:19是100W
-			String _temp3 = ConverUtil.convertByteToHexString(temp3);//在线状态   00H：不在线;    01H：在线
-			double _temp4 = ByteUtils.bytes2Double(temp4);//浮点数     输入电压
-			double _temp5 = ByteUtils.bytes2Double(temp5);  //整形            输入电流
-			double _temp6 = ByteUtils.bytes2Double(temp6);  //整形            输入功率
-			String _temp7 = ConverUtil.convertByteToHexString(temp7);  //整形            功率因素
-			String _temp8 = ConverUtil.convertByteToHexString(temp8); //状态   转化位二进制串？
-			String _temp9 = ConverUtil.convertByteToHexString(temp9);//异常状态
-			String _temp10 = ConverUtil.convertByteToHexString(temp10);//灯具温度   新程序才有temp10~14的数据
-			double _temp11 = ByteUtils.bytes2Double(temp11);;//输出功率
-			double _temp12 = ByteUtils.bytes2Double(temp12);;  //灯具运行时长
-			double _temp13 = ByteUtils.bytes2Double(temp13);;  //电能
-			double _temp14 = ByteUtils.bytes2Double(temp14);; //故障时长
+			for(int i=0;i < node_len; i++){ //一个节点
+				if(isOld){
+					byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
+					.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9).readBytes(temp10)
+					.readBytes(temp11).readBytes(temp12).readBytes(temp13).readBytes(temp14);
+				}else{
+					byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
+					.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9);
+				}
+				
+				String _temp1 = ConverUtil.convertByteToHexString(temp1);//节点ID
+				String _temp2 = ConverUtil.convertByteToHexString(temp2);//设备码  列如:19是100W
+				String _temp3 = ConverUtil.convertByteToHexString(temp3);//在线状态   00H：不在线;    01H：在线
+				double _temp4 = ByteUtils.bytes2Double(temp4);//浮点数     输入电压
+				double _temp5 = ByteUtils.bytes2Double(temp5);  //整形            输入电流
+				double _temp6 = ByteUtils.bytes2Double(temp6);  //整形            输入功率
+				String _temp7 = ConverUtil.convertByteToHexString(temp7);  //整形            功率因素
+				String _temp8 = ConverUtil.convertByteToHexString(temp8); //状态   转化位二进制串？
+				state(_temp8);//解析二进制数据     信号数据，在里面构造一条信号数据上报
+				String _temp9 = ConverUtil.convertByteToHexString(temp9);//异常状态
+				if(isOld){
+					String _temp10 = ConverUtil.convertByteToHexString(temp10);//灯具温度   新程序才有temp10~14的数据
+					double _temp11 = ByteUtils.bytes2Double(temp11);;//输出功率
+					double _temp12 = ByteUtils.bytes2Double(temp12);;  //灯具运行时长
+					double _temp13 = ByteUtils.bytes2Double(temp13);;  //电能
+					double _temp14 = ByteUtils.bytes2Double(temp14);; //故障时长
+				}
+				//构造一条状态数据上报
+				
+	    	}
+			if (byteBuf != null)ReferenceCountUtil.release(byteBuf);//释放内存
 			
 			
-			state(_temp8);//解析二进制数据
+			
+			
+			//解析PDT
+			  
+			
+			
+			//state(_temp8);//解析二进制数据
 			
 			
 			// 设备上下VO
@@ -542,12 +559,7 @@ public class PlcProtocolsBusiness {
 			String plc_nodde_SN = "";
 			Map<String, Object> def_attributers = IotInfoConstant.allDevInfo.get(PlcProtocolsUtils.getPort(ctx.channel()))
 					.get(plc_nodde_SN + "_defAttribute");// 从自定义的字段里面获取值
-  
-
-			//此报文不需要响应回设备
-			//构造状态数据消息体
-			//构造信号消息体
-			
+   
 			//发送KAFKA上报
 		} catch (Exception e) {
 			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode=F7,exception ！", e);
