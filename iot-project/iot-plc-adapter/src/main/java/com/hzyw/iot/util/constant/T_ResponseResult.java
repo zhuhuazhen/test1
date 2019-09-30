@@ -3,6 +3,7 @@ package com.hzyw.iot.util.constant;
 import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
+import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.net.InetSocketAddress;
@@ -47,5 +48,42 @@ public class T_ResponseResult {
         mesVO.setMsgId(msgId);
         mesVO.setGwId(devcdId);
         return mesVO;
+    }
+
+    /**
+     * PLC ACK 响应消息体 生成
+     * @param plc_sn
+     * @param megCode
+     * @param type
+     * @param data
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    public static <T> ResultMessageVO<T> getACKResponseVO(String plc_sn,Integer megCode, String type, T data)throws Exception{
+        String msgId="31a8c447-5079-4e91-a364-1769ac06fd5c";  //暂时固定值，后面考虑怎么生成获取消息ID  消息ID 请求那边生成的带的
+        //消息结构
+        ResultMessageVO<T> messageVo = new ResultMessageVO<T>();
+
+        DataType enumType = DataType.getByValue(type);
+        System.out.println("============getResponseVO 方法， 消息type: "+type);
+        String typee="";
+        switch (enumType) {
+            case MetricInfoResponse://设备状态数据上报
+                typee=DataType.MetricInfoResponse.getMessageType();
+                break;
+            case DevSignalResponse://设备信号上报
+                typee=DataType.DevSignalResponse.getMessageType();
+                break;
+        }
+        if("".equals(typee)) throw new Exception("PLC响应 上报 消息类型 :"+type+", 没在配置文件中定义!");
+        //消息结构
+        messageVo.setType(typee);
+        messageVo.setTimestamp(System.nanoTime());//消息上报时间
+        messageVo.setMsgId(msgId);
+        messageVo.setData(data);
+        messageVo.setGwId(plc_sn);
+        messageVo.setMessageCode(megCode);
+        return messageVo;
     }
 }

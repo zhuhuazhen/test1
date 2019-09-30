@@ -281,14 +281,19 @@ public class DecimalTransforUtil {
     }
 
     public static void main(String[] args){
-        String str = "11111000";
+       /* String str = "11111000";
         System.out.println("源字符串：\n"+str);
 
         String hexString = BinaryString2hexString(str);
-        System.out.println("转换为十六进制：\n"+hexString);
+        System.out.println("转换为十六进制：\n"+hexString);*/
 
+        String aa="000002000533";
 
+        String bb=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(aa), true)), 6);
 
+        String cc=DecimalTransforUtil.toHexStr(aa,6);
+        System.out.println(bb);
+        System.out.println(bb);
 
         /*String aa="1b"; //7F
         Integer hh=1;

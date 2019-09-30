@@ -17,6 +17,7 @@ import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
+import com.hzyw.iot.utils.md5.DeviceIdGenerator;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.RTUChannelInfo;
 
@@ -56,7 +57,9 @@ public class PlcController {
 					+ redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn"))
 					+ " /sn=" + jsonParam.getString("plc_sn"));
 			
-			redisService.set(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn") , jsonParam.getString("isConfig"));  
+			redisService.set(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn") , jsonParam.getString("isConfig"));
+			PlcProtocolsUtils.gloable_dev_status.put(jsonParam.getString("plc_sn") + "_login",jsonParam.getString("isConfig"));
+			
 			logger.info("curent plc update seccess, isconfig="
 					+ redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn"))
 					+ " /sn=" + jsonParam.getString("plc_sn")); 
@@ -338,7 +341,17 @@ public class PlcController {
     }
 	
 	
-	
-	
+	/**
+	 * 根据节点SN生成节点ID
+	 * 
+	 */
+	 @ResponseBody
+	 @RequestMapping(value = "/plc/generatorId", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+	    public String generatorId(@RequestBody JSONObject jsonParam) {
+	    	JSONObject json = new JSONObject();
+	    	String id = DeviceIdGenerator.generatorId(jsonParam.getString("plc_node_sn"),4112,12289);
+	    	json.put("plc_node_id", id);
+	    	return json.toJSONString();
+	    }
 	
 }

@@ -2,24 +2,31 @@ package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.utils.PlcProtocolsBusiness;
+import com.hzyw.iot.utils.PlcProtocolsUtils;
 import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.kafka.common.protocol.types.Field;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.hzyw.iot.util.constant.PLC_CONFIG.节点ID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PLC 协议适配置器
  * 上行通信规约
  */
+//@Slf4j
 public class ProtocalAdapter{
-    //public static ByteBuffer buffer=null;
+    private static final Logger log = LoggerFactory.getLogger(ProtocalAdapter.class);
+    //缓存 请求消息ID(实现PLC 一应一答)
+    private static ConcurrentHashMap<String,String[]> CacheReqID=new ConcurrentHashMap<String,String[]>();
     /**
      * 按指令生成对应的协议码报文
      * @param uuid 设备ID(必填)
@@ -39,14 +46,6 @@ public class ProtocalAdapter{
         //如果控制码传参为空，从指令模板中取默认值
         if("".equals(code) || code==null) code=O_CODE_VAL.CodeNameMethod(cmd);
 
-        //响应类型的 后面的协议报文不用校验，直接返回PDT的JSON转换结果
-        /*if("80H".equals(code)){
-            //根据指令调PDT模板，生成相应指令参数
-            paramBody=O_CODE_VAL.PDTTemplate(code,cmd,paramBody);
-            //System.out.println("========PDT(响应) 解析后JSON结果:"+paramBody);
-            return paramBody;
-        }*/
-
         //设备ID (校验16进制的长度6个字节)
         HEAD_TEMPLATE.setUID(checkDeviceUID(uuid));
 
@@ -65,13 +64,15 @@ public class ProtocalAdapter{
         HEAD_TEMPLATE.setCS(CLAC_CS_SUM(C_CODE_VAL.CValueMethod(code),L_SIZE,O_CODE_VAL.CmdValueMethod(cmd),paramBody));
 
         String reqMessage=O_CODE_VAL.OrderMethod(cmd);
-        System.out.println("====reqMessage:"+reqMessage);
-        System.out.println("====uid:"+HEAD_TEMPLATE.getUID());
+        System.out.println("====组装后的协议报文(reqMessage):"+reqMessage);
+        System.out.println("====PLC地址(uid):"+HEAD_TEMPLATE.getUID());
 
         //校验生成的协议报文是否有错误
         byte[] resp=ConverUtil.hexStrToByteArr(reqMessage);
         boolean validateRes=ValidateProtocalMessage(resp);
-        if (!validateRes) throw new Exception("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
+        if (!validateRes) log.error("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
+            //throw new Exception("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
+
         return reqMessage;
     }
 
@@ -82,14 +83,15 @@ public class ProtocalAdapter{
      * @throws Exception
      */
     public static String  messageRequest(JSONObject jsonObject) throws Exception {
+        List<Map<String,Object>>outList=new ArrayList<Map<String,Object>>();
+        Map<String,Object>outMap=new HashMap<String,Object>();
         //与上游对接 入参格式的适配
-       jsonObject=RequestFormatAdapter(jsonObject);
+       jsonObject=RequestFormatAdapter(jsonObject,outMap);
+       outList.add(outMap);
         try {
             String requestType= jsonObject.get("type").toString();
             if(!requestType.equals(DataType.Request.getMessageType()))
                 throw new Exception("PLC 消息类型 错误! 请检查'type'入参 ");
-
-            String  mesgID=jsonObject.getString("msgId");
 
             String jsonStr=((JSONObject) jsonObject.get("data")).toJSONString();
             RequestDataVO requestVO=JSONObject.parseObject(jsonStr,RequestDataVO.class);
@@ -112,12 +114,70 @@ public class ProtocalAdapter{
             System.out.println("=========按指令生成对应请求码报文KAFKA 指令码:"+cmd);
             System.out.println("=========按指令生成对应请求码报文KAFKA 指令参数:"+pdtParams);
 
-            return generaMessage(uuid,code,cmd,pdtParamsStr,null);
+            //请求时，设置消息ID 缓存 处理逻辑 实现(一应一答)功能
+            String  mesgID=jsonObject.getString("msgId");
+            //if(!isReqBlock(outList,uuid,cmd,nodeID,mesgID)){
+                return generaMessage(uuid,code,cmd,pdtParamsStr,null);
+            //}
         } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
     }
+
+    /**
+     * 是否请求 阻塞，如果阻塞不发PLC
+     * 直接响应 "忙" 状态码 给请求端
+     * 则否发PLC, 缓存 请求消息ID
+     * 忙: 20324(（冲突）服务器在完成请求时发生冲突。 服务器必须在响应中包含有关冲突的信息
+     * @param outList
+     * @param params (plc_sn:plc设备ID、cmd:指令码、nodeID:节点ID)
+     * @return true:忙
+     */
+    private static boolean isReqBlock(List<Map<String,Object>> outList, String... params){
+        String msgID_NEW=params[3]; //新的请求消息ID
+        //请求消息ID为空，默认为 单向请求无应答
+        if (StringUtils.isEmpty(msgID_NEW) || StringUtils.isBlank(msgID_NEW)) return false;
+        try {
+            String sn =PlcProtocolsBusiness.getPlcSnByPlcID(params[0]);
+            String key=sn+"_"+params[1]; //sn_cmd
+            if(CacheReqID.contains(key)){
+                long init_time=Long.parseLong(CacheReqID.get(key)[1]);
+                Long time_out=(System.currentTimeMillis()-init_time)/1000;
+                System.out.println("=======缓存中 请求消息ID:"+CacheReqID.get(key)[0]);
+                System.out.println("=======缓存中 请求消息KEY:"+key+",未响应超时 时间(s):"+time_out);
+                if(time_out<=3) {//调置 超时3秒
+                    //20324:请求冲突, 响应后面要做错误码 映射配置
+                    PlcProtocolsUtils.plcACKResponseSend(params[0],params[1],params[2],20324,msgID_NEW,outList);
+                    return true;
+                }
+                CacheReqID.put(key,new String[]{msgID_NEW,String.valueOf(System.currentTimeMillis())});
+            }else{
+                CacheReqID.put(key,new String[]{msgID_NEW,String.valueOf(System.currentTimeMillis())});
+            }
+        } catch (Exception e) {
+            log.error("=====请求 阻塞, 发送 响应状态 异常！ Exception:"+e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * 响应端 消费 缓存中 对应请求ID
+     * 实现(一应一答)绑定
+     * @param key
+     * @return
+     */
+    public static String consumeRequestID(String key){
+        String resMesgID="";
+        if(CacheReqID.contains(key)){
+            resMesgID=CacheReqID.get(key)[0];
+            System.out.println("=====响应 正在 消费掉 缓存中的请求ID:"+resMesgID);
+            CacheReqID.remove(key);
+        }
+        return resMesgID;
+    }
+
 
     /**
      * 按指令生成对应响应码报文
@@ -286,7 +346,6 @@ public class ProtocalAdapter{
         System.out.println("====检查协议报文的数据长度，校验码=L_SIZE:"+L_SIZE);
         //计算校验码(CS): 从“帧起始符”到校验码之前的所有字节的模256的和，即各字节二进制算术和，不计超过256 的溢出值
         String CS_SIZE=StringUtils.lowerCase(CLAC_CS_SUM(C_CODE_VAL.CValueMethod(code),L_SIZE,O_CODE_VAL.CmdValueMethod(cmd),paramBody));
-
         System.out.println("====检查协议报文的数据长度，校验码 比较结果:"+L_SIZE);
         return L.equals(L_SIZE) && Integer.parseInt(L,16)<=255 && CS.equals(CS_SIZE);
     }
@@ -351,7 +410,7 @@ public class ProtocalAdapter{
      * @param jsonObj
      * @return
      */
-    private static JSONObject RequestFormatAdapter(JSONObject jsonObj)throws Exception{
+    private static JSONObject RequestFormatAdapter(JSONObject jsonObj,Map<String,Object> outMap)throws Exception{
         String requestType= jsonObj.get("type").toString(); //消息类型
         String uuid=jsonObj.get("gwId").toString(); //PLC设备ID
         String msgID=jsonObj.get("msgId").toString(); //消息ID
@@ -380,6 +439,7 @@ public class ProtocalAdapter{
             code="03H";
         }
         if("".equals(uuid) && uuid==null)uuid="000000000100";
+        outMap=pdtMap;
         JSONObject tragetObj=T_RequestVO.getRequestVO(uuid,code,cmd,msgID,pdtMap);
         return tragetObj;
     }

@@ -48,7 +48,7 @@ public class PDTAdapter {
                 	byteLen=lenArr[h][0];
                 	System.out.println("====每个字节定义的长度B:" +byteLen);
                 	System.out.println("*************遍历字节长度 二维数组值10进制原值:" +paramValArray.getString(h));
-                	hexStr=DecimalTransforUtil.toHexStr(paramValArray.getString(h),byteLen);//10进制->16进制串
+                	hexStr=paramValArray.getString(h);//DecimalTransforUtil.toHexStr(paramValArray.getString(h),byteLen);//10进制->16进制串
                 	System.out.println("*************遍历字节长度 二维数组值 转换16进制结果:" +hexStr);
                 	codeByte=ConverUtil.hexStrToByteArr(hexStr); //16进制值的字符串转换为byte数组
                 	if(codeByte.length>byteLen)throw new Exception("解析请求的PDT报文错误！定义的字节长度模板与参数结构不一致!");

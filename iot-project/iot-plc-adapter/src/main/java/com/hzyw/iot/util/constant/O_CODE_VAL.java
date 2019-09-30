@@ -113,6 +113,8 @@ public enum O_CODE_VAL{
                     MessageVO<ResponseDataVO> ResultMesssage=T_MessageResult.getResponseVO(HEAD_TEMPLATE.getUID(),c,"73H", pdtResposeVO);
                     pdtMesg=JSONObject.toJSONString(ResultMesssage);
                     System.out.println("======解析 查询集中器状态(73H) 响应PDT协议报文的 结果:" +pdtMesg);
+                    //String mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_73H")); //响应 消费对应 请求消息ID
+                    //PlcProtocolsUtils.plcACKResponseSend(null,null,null,20324,null);
                     //封装成指定JSON结构返回 或 调KAFKA发送报文
                     pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：成功;
                 }else{
@@ -471,16 +473,22 @@ public enum O_CODE_VAL{
             }else { //pdt 响应报文解析处理
                 pdtMesg=ConverUtil.MappCODE(cmdParam);
                 System.out.println("*************节点调光(42H) 响应的PDT解析 结果:" +pdtMesg);
-
+                Integer mesgCode=0;
+                String mesageID="";
                 /*01H：集中器成功受理.
                   02H：命令或数据格式无效.
                   03H：集中器忙*/
                 if (PDTValidateUtil.validateResComPdt(cmdParam)){
-                    //对响应状态码，发kafka
-                    //System.out.println("==========集中器继电器开(70H) 响应结果 发KAFKA 操作......");
-                    pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：登陆成功;
+                    pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：成功;
+                    //mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_42H")); //响应 消费对应 请求消息ID
+                    System.out.println("==========节点调光(42H) 响应结果 发KAFKA 操作......");
+                    //PlcProtocolsUtils.plcACKResponseSend(HEAD_TEMPLATE.getUID(),"42H",null,mesgCode,mesageID,null);
                 }else{
-                    pdtMesg=DecimalTransforUtil.toHexStr(cmdParam,1); //02H：登陆失败; 03H：主机忙
+                    pdtMesg=DecimalTransforUtil.toHexStr(cmdParam,1);
+                    //02：失败 (命令或数据格式无效); 03：忙 (集中器忙)
+                    //mesgCode="2".equals(pdtMesg)?10005:20324;
+                   // mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_42H")); //响应 消费对应 请求消息ID
+                   // PlcProtocolsUtils.plcACKResponseSend(HEAD_TEMPLATE.getUID(),"42H",null,mesgCode,mesageID,null);
                 }
             }
             return pdtMesg;
@@ -1620,15 +1628,18 @@ public enum O_CODE_VAL{
         for (O_CODE_VAL cf : O_CODE_VAL.values()) {
             if (cf.name().endsWith(cmd)) {
                 System.out.println("查询到 "+cf.name()+" 的对应指令码值： " + cf.value);
-                System.out.println("查询到 HEAD_TEMPLATE L： " + HEAD_TEMPLATE.getL());
+                System.out.println("查询到 *******HEAD_TEMPLATE L： " + HEAD_TEMPLATE.getL());
                 System.out.println("查询到 HEAD_TEMPLATE PDT： " + HEAD_TEMPLATE.getPDT());
-                System.out.println("查询到 HEAD_TEMPLATE CS： " + HEAD_TEMPLATE.getCS());
+                System.out.println("查询到 *******HEAD_TEMPLATE CS： " + HEAD_TEMPLATE.getCS());
                 System.out.println("查询到 C_CODE_VAL C： " + C_CODE_VAL.TxxH.getValue());
                 System.out.println("查询到 HEAD_TEMPLATE UID： " + HEAD_TEMPLATE.getUID());
-                resMessage=cf.message.replaceAll("null","%s");
+                //resMessage=cf.message.replaceAll("null","%s");
+
+                resMessage=HEAD_TEMPLATE.H.getValue()+HEAD_TEMPLATE.UID.getValue()+HEAD_TEMPLATE.H.getValue()+"%s"+HEAD_TEMPLATE.L.getValue()+"%s"+HEAD_TEMPLATE.PDT.getValue()+HEAD_TEMPLATE.CS.getValue()+HEAD_TEMPLATE.T.getValue();
+                resMessage=String.format(resMessage,C_CODE_VAL.TxxH.getValue(),cf.value);
 
                 System.out.println("查询到 resMessage： " + resMessage);
-                resMessage=String.format(resMessage,HEAD_TEMPLATE.getL(),HEAD_TEMPLATE.getPDT(),HEAD_TEMPLATE.getCS());
+                //resMessage=String.format(resMessage,HEAD_TEMPLATE.getL(),HEAD_TEMPLATE.getPDT(),HEAD_TEMPLATE.getCS());
                 break;
             }
         }

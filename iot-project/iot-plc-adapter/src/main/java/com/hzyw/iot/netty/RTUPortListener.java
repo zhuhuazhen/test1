@@ -42,7 +42,7 @@ public class RTUPortListener extends PortListenerAbstract {
         	//获取接入类型,根据具体的协议规范来定义Decoder
         	if(_port == 12345){
         		System.out.println("---PLC("+_port+")集中器---建立连接--------------" + pipeline.channel().id());
-        		pipeline.addLast(new LengthFieldBasedFrameDecoder(100, 9, 1, 2, 0));//根据数据帧的格式做拆包粘包解码
+        		pipeline.addLast(new LengthFieldBasedFrameDecoder(100000, 9, 1, 2, 0));//根据数据帧的格式做拆包粘包解码
         		// 数据封装
                 pipeline.addLast(new ProcessorHandler(_port,_redisService));
         	}

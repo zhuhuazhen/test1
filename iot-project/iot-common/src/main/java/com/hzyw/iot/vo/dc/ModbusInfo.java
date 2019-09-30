@@ -31,6 +31,9 @@ public class ModbusInfo {
     private byte[] end;  //1
     private byte[] fullData;
     
+    public  String getCacheMsgId(){
+    	return this.getAddress_str()+"_"+this.getCmdCode_str()+"_"+this.getcCode_str();
+    }
     
     /**
      * 获取下发到设备的CRC数据
@@ -232,7 +235,7 @@ public class ModbusInfo {
 		return address;
 	}
 	public String getAddress_str() {
-		return ConverUtil.convertByteToHexString(address);
+		return address!=null?ConverUtil.convertByteToHexString(address):"";
 	}
 	 
 
@@ -248,7 +251,7 @@ public class ModbusInfo {
 	}
 
 	public String getHeadEnd_str() {
-		return ConverUtil.convertByteToHexString(headEnd);
+		return headEnd!=null?ConverUtil.convertByteToHexString(headEnd):"";
 	}
 
 	public void setHeadEnd(byte[] headEnd) {
@@ -263,7 +266,7 @@ public class ModbusInfo {
 	}
 	
 	public String getcCode_str() {
-		return ConverUtil.convertByteToHexString(cCode);
+		return cCode!=null?ConverUtil.convertByteToHexString(cCode):"";
 	}
 
 
@@ -299,7 +302,7 @@ public class ModbusInfo {
 	}
 	
 	public String getCmdCode_str() {
-		return ConverUtil.convertByteToHexString(cmdCode);
+		return cmdCode!=null?ConverUtil.convertByteToHexString(cmdCode):"";
 	}
 
 

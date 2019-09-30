@@ -79,8 +79,9 @@ public class T_ParamTest {
             case "42H": {//节点调光
                 String onoff= StringUtils.trimToNull(pdtMap.get("onoff")+"");  //0:关灯; 1: 开灯
                 String dim=StringUtils.trimToNull(pdtMap.get("level")+"");
-                dim="0".equals(onoff)? "0":("".equals(dim) || dim==null)? "100":dim;
+                dim="0".equals(onoff)? "0":(ConverUtil.parseNumeric(dim)==0)? "100":dim;
 
+                System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim);
                 int dimNum=Integer.parseInt(dim)*2;
                 dim=DecimalTransforUtil.toHexStr(String.valueOf(dimNum),1);
                 pdtMap.put("level",dim+"H");

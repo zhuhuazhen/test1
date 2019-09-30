@@ -8,8 +8,10 @@ package com.hzyw.iot.utils;
  *
  */
 public class IotInfoMethod {
+	
+
   
-    public static final	String[] plc_methods = {"operator_70:70",
+ public static final	String[] plc_methods = {"operator_70:70",
     			"operator_71:71",
     			"operator_73:73",
     			"operator_82:82",

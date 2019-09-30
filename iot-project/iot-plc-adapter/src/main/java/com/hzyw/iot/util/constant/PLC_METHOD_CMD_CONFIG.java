@@ -76,4 +76,16 @@ public enum PLC_METHOD_CMD_CONFIG {
         }
         return resCode;
     }
+
+    public static String CMD2Method(String cmdCode){
+        String resOperaName="";
+        for (PLC_METHOD_CMD_CONFIG cf : PLC_METHOD_CMD_CONFIG.values()) {
+            cmdCode=cmdCode==null?"NONE":cmdCode;
+            if (cf.code.equals(cmdCode)) {
+                resOperaName=cf.name();
+                break;
+            }
+        }
+        return resOperaName;
+    }
 }

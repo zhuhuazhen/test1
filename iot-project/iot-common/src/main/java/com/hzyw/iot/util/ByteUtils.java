@@ -1,6 +1,7 @@
 package com.hzyw.iot.util;
 
 import com.alibaba.fastjson.JSON;
+import com.hzyw.iot.util.constant.ConverUtil;
 
 /**
  * @author TheEmbers Guo
@@ -89,14 +90,15 @@ public class ByteUtils {
 
     /**
      * int转byte[]，高位在前低位在后
-     * 
+     * 有符号的单个字节 127
+     * 无符号的单个字节  数值范围 255
      * @param value
      * @return
      */
     public static byte[] varIntToByteArray(long value) {
         Long l = new Long(value);
         byte[] valueBytes = null;
-        if (l == l.byteValue()) {
+        if (l == l.byteValue()) {  //这里有点问题，如果是小于 255的int 会返回两个字节的数值哦 ，这里应该是当有符号的数值来处理了
             valueBytes = toBytes(value, 1);
         } else if (l == l.shortValue()) {
             valueBytes = toBytes(value, 2);
@@ -107,7 +109,69 @@ public class ByteUtils {
         }
         return valueBytes;
     }
+    
+    public static byte[] intToByteArray(int i) {
+        byte[] result = new byte[4];
+        result[0] = (byte)((i >> 24) & 0xFF);
+        result[1] = (byte)((i >> 16) & 0xFF);
+        result[2] = (byte)((i >> 8) & 0xFF);
+        result[3] = (byte)(i & 0xFF);
+        return result;
+    } 
+    public static void main(String[] args) throws Exception {
+        // byte
+        byte bMax = Byte.MAX_VALUE;
+        byte bMin = Byte.MIN_VALUE;
+        long b_max_v = byteArrayToLong(varIntToByteArray(bMax));
+        check(bMax, b_max_v, "byte");
+        long b_min_v = byteArrayToLong(varIntToByteArray(bMin));
+        check(bMin, b_min_v, "byte");
 
+        // short
+        short sMax = Short.MAX_VALUE;
+        short sMin = Short.MIN_VALUE;
+        long s_max_v = byteArrayToLong(varIntToByteArray(sMax));
+        check(sMax, s_max_v, "short");
+        long s_min_v = byteArrayToLong(varIntToByteArray(sMin));
+        check(sMin, s_min_v, "short");
+
+        byte[] temp3 = new byte[1];
+        int plc_node_a_brightness = 100;
+        Integer x = new Integer(plc_node_a_brightness);
+		temp3[1] = x.byteValue(); 
+		System.out.println(ConverUtil.convertByteToHexString(temp3));
+		temp3[1] = (byte)(plc_node_a_brightness);
+		System.out.println(ConverUtil.convertByteToHexString(temp3));
+		
+		 
+		
+        //int
+        int iMax = 200 ;
+        int iMin = Integer.MIN_VALUE;
+        long i_max_v = byteArrayToLong(varIntToByteArray(iMax));
+        System.out.println(ConverUtil.convertByteToHexString(varIntToByteArray(iMax)));
+        check(iMax, i_max_v, "int");
+        long i_min_v = byteArrayToLong(varIntToByteArray(iMin));
+        check(iMin, i_min_v, "int");
+
+        // long
+        long lMax = Long.MAX_VALUE;
+        long lMin = Long.MIN_VALUE;
+        long l_max_v = byteArrayToLong(varIntToByteArray(lMax));
+        check(lMax, l_max_v, "long");
+        long l_min_v = byteArrayToLong(varIntToByteArray(lMin));
+        check(lMin, l_min_v, "long");
+         
+        
+    } 
+    private static void check(long s, long r, String tag) {
+        if (s == r) {
+            System.out.println(tag + "[result:" + r + "]");
+        } else {
+            System.err.println(tag + "[source:" + s + ",result:" + r + "]");
+        }
+    }
+    
     private static byte[] toBytes(long value, int len) {
         byte[] valueBytes = new byte[len];
         for (int i = 0;i < len;i++) {
@@ -132,6 +196,40 @@ public class ByteUtils {
 		}
 		return Double.longBitsToDouble(value);
 	} 
+    /**
+     * float转换byte
+     *
+     * @param bb
+     * @param x
+     * @param index
+     */
+    public static void putFloat(byte[] bb, float x, int index) {
+        // byte[] b = new byte[4];
+        int l = Float.floatToIntBits(x);
+        for (int i = 0; i < 4; i++) {
+            bb[index + i] = new Integer(l).byteValue();
+            l = l >> 8;
+        }
+    }
+     
+    /**
+     * 通过byte数组取得float
+     *
+     * @param bb
+     * @param index
+     * @return
+     */
+    public static float getFloat(byte[] b, int index) {
+        int l;
+        l = b[index + 0];
+        l &= 0xff;
+        l |= ((long) b[index + 1] << 8);
+        l &= 0xffff;
+        l |= ((long) b[index + 2] << 16);
+        l &= 0xffffff;
+        l |= ((long) b[index + 3] << 24);
+        return Float.intBitsToFloat(l);
+    } 
     
     /*public static void main(String[] args) throws Exception {
     	String[] aa = new String[2+6*2*1];

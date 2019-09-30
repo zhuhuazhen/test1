@@ -3,6 +3,7 @@ package com.hzyw.iot.utils;
 import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.kafka.config.ApplicationConfig;
 import com.hzyw.iot.util.constant.PLC_CONFIG;
+import com.hzyw.iot.util.constant.PLC_METHOD_CMD_CONFIG;
 import com.hzyw.iot.util.constant.T_ResponseResult;
 import com.hzyw.iot.vo.dataaccess.*;
 
@@ -12,6 +13,7 @@ import java.util.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.protocol.types.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -253,25 +255,7 @@ public class PlcProtocolsUtils {
 		// todo
 
 		System.out.println(JSON.toJSONString(messageVo));
-		// kafka处理
-		try {
-			Properties props = new Properties();
-			props.put("bootstrap.servers", "47.106.189.255:9092");
-			props.put("acks", "all");
-			props.put("retries", 0);
-			props.put("batch.size", 16384);
-			props.put("linger.ms", 1);
-			props.put("buffer.memory", 33554432);
-			props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-			props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-			Producer<String, String> producer = new KafkaProducer<>(props);
-			// Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
 
 	}
 
@@ -352,7 +336,6 @@ public class PlcProtocolsUtils {
 			String deviceId = (String)IotInfoConstant.allDevInfo.get(currentConnetionPort).get(node_sn + "_defAttribute").get(IotInfoConstant.dev_plc_node_id);// 根据节点SN找出节点ID
 			Map<String, Object> defAttributeNode = IotInfoConstant.allDevInfo.get(currentConnetionPort).get(node_sn + "_defAttribute");// 节点数据
 			for (Map.Entry<String, Object> entry :defAttributeNode.entrySet()) {
-				System.out.println("key:"+entry.getKey()+"   value:"+entry.getValue());
 				Map<String,Object> typeValueNode =new HashMap<String,Object>();
 				typeValueNode.put("type", entry.getKey());
 				typeValueNode.put("value", entry.getValue());
@@ -450,7 +433,6 @@ public class PlcProtocolsUtils {
 
 		MetricInfoResponseDataVO metricInfoResponseDataVO = new MetricInfoResponseDataVO();
 		metricInfoResponseDataVO.setId(nodeID);
-		// metricInfoResponseDataVO.setAttributers(attributers); //为空不传值
 		metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
 		metricInfoResponseDataVO.setTags(tags);
 
@@ -509,6 +491,64 @@ public class PlcProtocolsUtils {
 		System.out.println("===pdtResposeParser=====plcSignlResponseSend==发送设备信号上报数据 的json结构:"+ JSON.toJSONString(messageVo));
 		Producer<String, String> producer = new KafkaProducer<>(props);
 		producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+	}
+
+    /**
+     * PLC ACK响应
+     * 01H：集中器成功受理.(0)
+     * 02H：命令或数据格式无效.(10005)
+     * 03H：集中器忙.   10010（已经存在）/20324(（冲突）
+     * @param plc_sn
+     * @param cmd
+     * @param nodeID
+     * @param mesgCode
+     * @param outList
+     * @throws Exception
+     */
+    public static void plcACKResponseSend(String plc_sn,String cmd,String nodeID,Integer mesgCode,String messageID, List<Map<String,Object>> outList)throws Exception{
+        Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
+        tags.put("agreement", "plc");
+
+        if(ConverUtil.parseNumeric(nodeID)==0) nodeID=plc_sn;
+
+        ResponseDataVO devResponseDataVO = new ResponseDataVO();
+        devResponseDataVO.setId(nodeID);
+        devResponseDataVO.setMethods(responseMethodBody(cmd,outList));
+        devResponseDataVO.setTags(tags);
+
+        // 消息结构
+        ResultMessageVO<ResponseDataVO> messageVo = T_ResponseResult.getACKResponseVO(plc_sn,mesgCode,"devSignalResponse",
+                devResponseDataVO);
+		messageVo.setMsgId(messageID);
+
+        // kafka处理
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "47.106.189.255:9092");
+        props.put("acks", "all");
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("linger.ms", 1);
+        props.put("buffer.memory", 33554432);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        System.out.println("===pdtResposeParser=====plcACKResponseSend==发送PLC ACK响应数据 的json结构:"+ JSON.toJSONString(messageVo));
+        Producer<String, String> producer = new KafkaProducer<>(props);
+        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+    }
+
+	/**
+	 * PLC Methods响应消息组装
+	 * @param cmd 指令码
+	 * @param outBody out出参
+	 * @return
+	 */
+    private static List<Map> responseMethodBody(String cmd,List<Map<String,Object>>outBody){
+    	List<Map>resMethodList=new ArrayList<Map>();
+		LinkedHashMap<String, Object> bodyMap = new LinkedHashMap<String, Object>();
+		bodyMap.put("method", PLC_METHOD_CMD_CONFIG.CMD2Method(cmd)); //指令码 对应操作方法名
+		bodyMap.put("out",outBody); //响应出参, 如：TN 任务号
+		resMethodList.add(bodyMap);
+		return resMethodList;
 	}
 
 	/**

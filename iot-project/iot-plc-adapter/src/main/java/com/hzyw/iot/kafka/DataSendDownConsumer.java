@@ -91,7 +91,7 @@ public class DataSendDownConsumer implements Runnable {
 					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(value));
 					System.out.println("111111111111111拼装好的指令:"+plcTest);
 					//CommandHandler.writeCommandByRequestMessageVO(plcTest);
-					CommandHandler.writeCommand("12345000000000100", plcTest, 2);
+					//CommandHandler.writeCommand("12345000000000100", plcTest, 2);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

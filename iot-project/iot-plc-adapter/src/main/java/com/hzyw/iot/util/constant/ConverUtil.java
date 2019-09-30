@@ -1,14 +1,11 @@
 package com.hzyw.iot.util.constant;
 
-import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -442,6 +439,13 @@ public class ConverUtil {
 		return new HashMap();
 	}
 
+	public static Integer parseNumeric(String dim){
+		if(!StringUtils.isNumeric(dim)){
+			return 0;
+		}
+		return Integer.valueOf(dim);
+	}
+
 	public static void main(String[] args) {
 
 		/*String sizeVal= ConverUtil.toHex(23);  //10进制转16进制值
@@ -450,11 +454,16 @@ public class ConverUtil {
 		System.out.println("=========sizeVal:"+sizeVal);
 		System.out.println("======aaaa===sizeVals:"+sizeVals);*/
 
-		String[] arr=new String[]{"ID","AB","DIM"};
+		String aa="680000000001006803094200000200053e03c8";
+		System.out.println("==============:"+makeChecksum(aa));
+		/*String[] arr=new String[]{"ID","AB","DIM"};
 		Arrays.fill(arr,0,1,"aa");       //使用fill()方法对数组进行初始化
 		for(int i=0;i<arr.length;i++){
-		System.out.println("第"+i+"个元素是："+arr[i]);
-	}
+		System.out.println("第"+i+"个元素是："+arr[i]);*/
+
+		Map<String,String>amap=new HashMap<String,String>();
+		amap.put("aa_bb_001","aaaaa");
+		System.out.println("=====:"+amap.get("aa_bb_001"));
 	}
 
 }

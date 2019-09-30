@@ -108,9 +108,9 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	             
 	            // ====登陆、设备配置过程=======start >>===
 	            boolean isLogin = PlcProtocolsUtils.isLogin(modbusInfo);   //是否已登陆
-	            boolean isConfig =PlcProtocolsUtils.isConfig(modbusInfo,redisService); //  true;PlcProtocolsUtils.isConfig(modbusInfo); //是否已配置设备
+	            boolean isConfig =PlcProtocolsUtils.isConfig(modbusInfo,redisService); //true;//是否已配置设备
 	            if(!isLogin && "f0".equals(modbusInfo.getCmdCode_str().toLowerCase())){
-	            	isLogin = true;
+	            	//isLogin = true;
 	            	boolean seccess = PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
 	            	if(!seccess)return;//通知登陆失败，直接退出
 	            	//登陆成功，如果是第一次登陆，则自动进入配置设备流程
@@ -154,13 +154,17 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 					metricInfoResponse	设备状态数据上报          ResultMessageVO<MetricInfoResponseDataVO>
 					devSignlResponse	设备信号上报                    ResultMessageVO<DevSignlResponseDataVO>
 				*/
-	            if(PlcProtocolsBusiness.transformTemplateSelect(ctx, modbusInfo)){
+	            boolean flag = PlcProtocolsBusiness.transformTemplateSelect(ctx, modbusInfo);
+	            if(flag){
+	            	System.out.println("-------------1------------" + modbusInfo.getCmdCode_str());
 	            	PlcProtocolsBusiness.protocals_process_Response(ctx, modbusInfo);
 	            }else{
-	            	source.resetReaderIndex();
+	            	System.out.println("--------------2-----------" + modbusInfo.getCmdCode_str());
+
+	            	/*source.resetReaderIndex();
 	            	byte[] requestBytes = new byte[source.readableBytes()]; 
 					source.readBytes(requestBytes);
-	            	ProtocalAdapter.messageRespose(requestBytes,ctx);
+	            	ProtocalAdapter.messageRespose(requestBytes,ctx);*/
 	            }
 	            
 			}catch(Exception e){

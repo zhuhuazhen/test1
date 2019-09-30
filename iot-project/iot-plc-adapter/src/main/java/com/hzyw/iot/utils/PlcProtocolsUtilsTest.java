@@ -1,22 +1,27 @@
 package com.hzyw.iot.utils;
 
+import com.hzyw.iot.vo.dataaccess.DevSignlResponseDataVO;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.util.ByteUtils;
 import com.hzyw.iot.util.constant.ConverUtil;
 import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ModbusInfo;
 
+import cn.hutool.core.convert.Convert;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -66,12 +71,16 @@ public class PlcProtocolsUtilsTest {
 	public static void main(String[] a) {
 		//testOpenLight();
 		//testGetBW();  //PDT为空
-		testSendDown(new MessageVO()); //构造带PDT内容的报文
+		//testSendDown(new MessageVO()); //构造带PDT内容的报文
 		/*testGetBW(); //手工构造一条没有PDT的报文
 		init1_config_jzq(null,"000000000100");
 		init8_sendNode();//下发节点
 		ini9_configNode(null,"000000000100"); //配置节点
 		getSplSTR();*/
+		
+		
+		
+		protocols_API_F7_Response(null,null);  //数据上报报文解析调试
 	}
 
 	 
@@ -540,5 +549,153 @@ public class PlcProtocolsUtilsTest {
 		return excuSeccess;
 		
 	}
+	
+	
+	public static boolean protocols_API_F7_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
+		boolean excuSeccess = true;
+		//final ModbusInfo modbusInfo = new ModbusInfo(); 
+		try {
+			//68,00,00,00,00,01,00,68,04,4a,f7,04,00,00,02,00,04,ee,0a,01,09,33,00,3f,00,1e,14,00,00,00,00,00,10,00,14,d1,00,00,00,00,00,00,00,00,00,00,00,00,00,00,10,02,00,b6,00,00,00,00,00,00,00,00,00,00,00,00,00,00,10,02,01,48,00,00,00,00,00,00,00,00,00,00,00,00,de,16
+			//新设备
+			//68,00,00,00,00,01,00,68,04,4a,f7,    04, 00,00,02,00,04,ee,0a,01,09,33,00,3f,00,1e,14,00,00,00(18),00,00,10,00,14,d1,00,00,00,00,00,00,00,00,00,00,00,00(18),00,00,10,02,00,b6,00,00,00,00,00,00,00,00,00,00,00,00(18),00,00,10,02,01,48,00,00,00,00,00,00,00,00,00,00,00,00(18),de,16
+			//test 
+			String hexbw = "6800000000010068044af7040000020004ee0a010933003f001e140000000000100014d10000000000000000000000000000100200b6000000000000000000000000000010020148000000000000000000000000de16";
+			byte[] tb = ConverUtil.hexStrToByteArr(hexbw);
+			ByteBuf testbytebuf = Unpooled.wrappedBuffer(tb,0,tb.length); //wrappedBuffer  支持0拷贝（软拷贝）  buffer()同样支持；注意 byteBuf.readBytes引发了内存拷贝操作
+			modbusInfo = new ModbusInfo(testbytebuf);
+			
+			logger.info("=====>>>protocols_F7  状态数据上报   ...===============");
+			byte[] allpdt = modbusInfo.getPdt();
+			byte[] temp0_bytes = {allpdt[0]}; 
+		    long node_len = ByteUtils.byteArrayToLong(temp0_bytes);     //节点总数
+		    
+		    System.out.println("-------节点总数--------" + node_len);
+			ByteBuf allPdtBuf = Unpooled.wrappedBuffer(allpdt,0,allpdt.length);//所有节点
+		    System.out.println("-------aa-------" + allPdtBuf.readerIndex());
+
+		    allPdtBuf.readByte();//移动一个字节
+		 
+		    System.out.println("-------bb-------" + allPdtBuf.readerIndex());
+			System.out.println("------- 切分到的节点--------" + ConverUtil.convertByteToHexString(allPdtBuf.array())   );
+			ByteBuf byteBuf = allPdtBuf.copy();  //拷贝readindex开始到后面的字节 ，深度拷贝，即硬拷贝
+			System.out.println("------- 切分到的节点--------" + ConverUtil.convertByteToHexString(byteBuf.array())   );
+			
+			//判断是新设备还是老设备 
+			boolean isOld = true;
+			if((allpdt.length-1)%18 == 0){
+				//说明是新设备
+				isOld = false;
+				System.out.println("-------isOld---新-----" + isOld);
+			}
+			if((allpdt.length-1)%27 == 0){
+				//说明是老设备
+				isOld = true;
+				System.out.println("-------isOld----老----" + isOld);
+			}
+			
+			 System.out.println("-------3--------" ); 
+			//需要定义14个临时变量  27个字节
+			byte[] temp1 = new byte[6]; //节点ID
+			byte[] temp2 = new byte[1]; //设备码  列如:19是100W
+			byte[] temp3 = new byte[1]; //在线状态   00H：不在线;    01H：在线
+			byte[] temp4 = new byte[2]; //输入电压V   单位0.1V
+			byte[] temp5 = new byte[2]; //输入电流A   单位mA
+			byte[] temp6 = new byte[2]; //输入功率
+			byte[] temp7 = new byte[1];  //功率因素
+			byte[] temp8 = new byte[2]; //状态                  二进制位来表示
+			byte[] temp9 = new byte[1];  //异常状态
+			
+			byte[] temp10 = new byte[1];  //灯具温度   新程序才有temp10~14的数据
+			byte[] temp11 = new byte[2];  //输出功率
+			byte[] temp12 = new byte[2];  //灯具运行时长
+			byte[] temp13 = new byte[2];  //电能
+			byte[] temp14 = new byte[2];  //故障时长
+			for(int i=0;i < node_len; i++){ //一个节点
+				if(isOld){
+					byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
+					.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9).readBytes(temp10)
+					.readBytes(temp11).readBytes(temp12).readBytes(temp13).readBytes(temp14);
+				}else{
+					byteBuf.readBytes(temp1).readBytes(temp2).readBytes(temp3).readBytes(temp4).readBytes(temp5)
+					.readBytes(temp6).readBytes(temp7).readBytes(temp8).readBytes(temp9);
+				}
+				
+				String _temp1 = ConverUtil.convertByteToHexString(temp1);//节点ID
+				String _temp2 = ConverUtil.convertByteToHexString(temp2);//设备码  列如:19是100W
+				String _temp3 = ConverUtil.convertByteToHexString(temp3);//在线状态   00H：不在线;    01H：在线
+				double _temp4 = ByteUtils.byteArrayToLong(temp4) * 0.1;// 输入电压  ,单位0.1V ,   
+				long _temp5 = ByteUtils.byteArrayToLong(temp5);  //整形            输入电流
+				double _temp6 = ByteUtils.byteArrayToLong(temp6) * 0.1;  //整形            输入功率  单位0.1W
+				long _temp7 = ByteUtils.byteArrayToLong(temp7);  //整形            功率因素
+				String _temp8 = ConverUtil.byteArrToBinStr(temp8); //状态   转化位二进制串？
+				parseSingl(_temp8,temp2);//解析二进制数据     信号数据，在里面构造一条信号数据上报
+				String _temp9 = ConverUtil.convertByteToHexString(temp9);//异常状态
+				if(isOld){
+					long _temp10 = ByteUtils.byteArrayToLong(temp10);//灯具温度 ,   温度范围从-127℃~+127℃，单位为1℃
+					double _temp11 = ByteUtils.byteArrayToLong(temp11);//输出功率      ,   单位0.1W
+					long _temp12 = ByteUtils.byteArrayToLong(temp12);  //灯具运行时长
+					double _temp13 = ByteUtils.byteArrayToLong(temp13);  //电能          0.1KW
+					long _temp14 = ByteUtils.byteArrayToLong(temp14); //故障时长   1小时
+				}
+				//构造一条状态数据上报
+				
+	    	}
+			if (byteBuf != null)ReferenceCountUtil.release(byteBuf);//释放内存
+			
+			 
+			//解析PDT
+			//state(_temp8);//解析二进制数据
+			
+ 		} catch (Exception e) {
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode=F7,exception ！", e);
+			excuSeccess = false;
+		}
+		return excuSeccess;
+
+	}
+	
+	public static long _6f = 110;
+	public static long _70 = 112;
+	public static long _7f = 127;
+	public static void parseSingl(String _temp8,byte[] plc_node_devCode){ //dev_plc_node_devCode ="plc_node_devCode" 设备码
+		//2个字节，通过二进制 0/1来表示
+		/*1、路灯电源（设备码：00H~6FH）
+		bit15~bit9：bit15~bit9：0x00,为老程序，没有以下红色数据，0x88，则为新程序，将上报以下红色数据
+		bit8：温度过高报警位  bit7：温度过低报警位
+		bit6：无法启动报警位  bit5：输出短路报警位
+		bit4：输出开路报警位  bit3：功率过高报警位
+		bit2：输入电压过高报警位
+		bit1：输入电压过低报警位
+		以上bit1~bit8：0表示无报警，1表示有报警。
+		bit0：电源状态位；0：电源关，1：电源开。
+
+		2、路灯控制器（设备码：70H~7FH）
+		bit15~bit8表示B灯的状态：
+		bit15：继电器失效报警位 bit14：过载报警位
+		bit13：欠载报警位       bit12：过压警位
+		bit11：欠压报警位       bit10：过流报警位
+		bit9： 欠流报警位 
+		以上报警位： 0表示无报警，1表示有报警      
+		bit8：继电器状态位；0表示关，1表示开
+		------------------------------------
+		bit7~bit0表示A灯的状态：
+		bit7：继电器失效报警位  bit6：过载报警位
+		bit5：欠载报警位        bit4：过压警位
+		bit3：欠压报警位        bit2：过流报警位
+		bit1：欠流报警位 
+		以上报警位： 0表示无报警，1表示有报警      
+		bit0：继电器状态位；0表示关，1表示开
+        */
+		long long_plc_node_devCode = ByteUtils.byteArrayToLong(plc_node_devCode);
+		if(long_plc_node_devCode >= 0 && long_plc_node_devCode <=_6f){ //表示路灯电源信息
+			//bit15~bit9：0x00,为老程序，没有以下红色数据，0x88   前面已经根据长度计算出新老程序了，这里不需要
+			 
+		}else if(long_plc_node_devCode >= _70 && long_plc_node_devCode <=_7f){ //表示路灯控制器信息
+			
+		}
+ 
+		System.out.println("temp =" + _temp8);
+	}
+	
 
 }
