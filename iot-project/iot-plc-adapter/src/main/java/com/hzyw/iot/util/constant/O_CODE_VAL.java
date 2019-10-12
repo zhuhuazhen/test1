@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public enum O_CODE_VAL{
     /* 集中器继电器开 */
-    T70H("70",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),70)+"",C_CODE_VAL.T00H.getValue()){
+    T70H("70",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception {
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -47,7 +47,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 集中器继电器关 */
-    T71H("71",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),71)+"",C_CODE_VAL.T00H.getValue())
+    T71H("71",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue())
             {
                 @Override
                 public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx) throws Exception{
@@ -80,7 +80,7 @@ public enum O_CODE_VAL{
                 }
             },
     /* 查询集中器状态 */
-    T73H("73",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),73)+"",C_CODE_VAL.T00H.getValue()){
+    T73H("73",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx) throws Exception{
             /*
@@ -125,7 +125,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 下发定时任务 */
-    T82H("82",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),82)+"",C_CODE_VAL.T00H.getValue()){
+    T82H("82",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx) throws Exception{
             /*
@@ -171,7 +171,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询定时任务 */
-    T83H("83",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),83)+"",C_CODE_VAL.T00H.getValue()){
+    T83H("83",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -189,7 +189,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 清除定时任务 */
-    T84H("84",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),84)+"",C_CODE_VAL.T00H.getValue()){
+    T84H("84",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -206,7 +206,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设置集中器时间 */
-    T8CH("8c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8c")+"",C_CODE_VAL.T00H.getValue()){
+    T8CH("8c",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -223,7 +223,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设置集中器参数 */
-    T8EH("8e",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8e")+"",C_CODE_VAL.T00H.getValue()){
+    T8EH("8e",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -240,7 +240,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器参数 */
-    T8FH("8f",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"8f")+"",C_CODE_VAL.T00H.getValue()){
+    T8FH("8f",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -257,7 +257,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 下发节点 */
-    T96H("96",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),96)+"",C_CODE_VAL.TxxH.getValue()){
+    T96H("96",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -274,7 +274,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 读取节点 */
-    T97H("97",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue(),97)+"",C_CODE_VAL.T03H.getValue()){
+    T97H("97",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -291,7 +291,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 配置节点 */
-    T98H("98",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue(),98)+"",C_CODE_VAL.T03H.getValue()){
+    T98H("98",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T03H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -308,7 +308,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 删除节点 */
-    T99H("99",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),99)+"",C_CODE_VAL.TxxH.getValue()){
+    T99H("99",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -325,7 +325,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 集中器登录 集中器->主机 */
-    F0H("f0",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue(),"f0")+"",C_CODE_VAL.T04H.getValue()){
+    F0H("f0",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -351,7 +351,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 集中器与主机保持连接心跳 集中器->主机 */
-    F1H("f1",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f1")+"",C_CODE_VAL.TxxH.getValue()){
+    F1H("f1",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -367,7 +367,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 系统控制 */
-    F2H("f2",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f2")+"",C_CODE_VAL.T00H.getValue()){
+    F2H("f2",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -383,7 +383,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 集中器报警 集中器->主机 */
-    F3H("f3",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"f3")+"",C_CODE_VAL.TxxH.getValue()){
+    F3H("f3",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -399,7 +399,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 执行失败返回 */
-    F4H("f4",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue(),"f4")+"",C_CODE_VAL.T04H.getValue()){
+    F4H("f4",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -415,7 +415,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 报警能使设置 */
-    F5H("f5",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f5")+"",C_CODE_VAL.T00H.getValue()){
+    F5H("f5",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -430,8 +430,8 @@ public enum O_CODE_VAL{
             return pdtMesg;
         }
     },
-    /* 报警能使查询 */
-    F6H("f6",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f6")+"",C_CODE_VAL.T00H.getValue()){
+    /*报警使能查询(F6H) */
+    F6H("f6",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -447,7 +447,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 节点调光 */
-    T42H("42",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),42)+"",C_CODE_VAL.TxxH.getValue()){
+    T42H("42",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             /*
@@ -475,27 +475,22 @@ public enum O_CODE_VAL{
                 System.out.println("*************节点调光(42H) 响应的PDT解析 结果:" +pdtMesg);
                 Integer mesgCode=0;
                 String mesageID="";
-                /*01H：集中器成功受理.
-                  02H：命令或数据格式无效.
-                  03H：集中器忙*/
+                /*01H：集中器成功受理;02H：命令或数据格式无效;03H：集中器忙*/
+                mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_42H")); //响应 消费对应 请求消息ID
                 if (PDTValidateUtil.validateResComPdt(cmdParam)){
                     pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：成功;
-                    //mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_42H")); //响应 消费对应 请求消息ID
-                    System.out.println("==========节点调光(42H) 响应结果 发KAFKA 操作......");
-                    //PlcProtocolsUtils.plcACKResponseSend(HEAD_TEMPLATE.getUID(),"42H",null,mesgCode,mesageID,null);
                 }else{
                     pdtMesg=DecimalTransforUtil.toHexStr(cmdParam,1);
-                    //02：失败 (命令或数据格式无效); 03：忙 (集中器忙)
-                    //mesgCode="2".equals(pdtMesg)?10005:20324;
-                   // mesageID=ProtocalAdapter.consumeRequestID(HEAD_TEMPLATE.getUID().concat("_42H")); //响应 消费对应 请求消息ID
-                   // PlcProtocolsUtils.plcACKResponseSend(HEAD_TEMPLATE.getUID(),"42H",null,mesgCode,mesageID,null);
+                    mesgCode="2".equals(pdtMesg)?10005:20324;//02：失败 (命令或数据格式无效); 03：忙 (集中器忙)
                 }
+                System.out.println("==========节点调光(42H) 响应结果 发KAFKA 操作......");
+                PlcProtocolsUtils.plcACKResponseSend(HEAD_TEMPLATE.getUID(),"42H",null,mesgCode,mesageID,null,ctx);
             }
             return pdtMesg;
         }
     },
     /* 主动上报节点数据 集中器->主机 */
-    F7H("f7",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue(),"f7")+"",C_CODE_VAL.T04H.getValue()){
+    F7H("f7",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T04H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             /*
@@ -508,10 +503,10 @@ public enum O_CODE_VAL{
              * 请求模板 不考虑二进制位的转换
              */
             //非路灯控制器设备【路灯电源】 老程序
-            int[][] byteLenResTemp_OLD=new int[][]{{1,1,0,1},{6,1,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
+            int[][] byteLenResTemp_OLD=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
                     {2,2,16,0},{1,1,0,0}};
             //非路灯控制器设备【路灯电源】 新程序
-            int[][] byteLenResTemp_NEW=new int[][]{{1,1,0,1},{6,1,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
+            int[][] byteLenResTemp_NEW=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
                     {2,2,16,0},{1,1,0,0},{1,11,8,0},{2,1,3,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
 
             //状态: 位(bit)属性名模板
@@ -549,7 +544,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询节点详细数据 【注： 这个指令 属性名映射需求 复杂 代码有点问题， 后面待细化处理】*/
-    T45H("45",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),45)+"",C_CODE_VAL.TxxH.getValue()){
+    T45H("45",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             /*
@@ -571,14 +566,14 @@ public enum O_CODE_VAL{
              */
             /*int[][] byteLenResTemp_OLD=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
                                                    {2,1,3,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; */
-            int[][] byteLenResTemp_OLD=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
+            int[][] byteLenResTemp_OLD=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
                     {1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; //{2,1,3,0},
-            int[][] byteLenResTemp_NEW=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
+            int[][] byteLenResTemp_NEW=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
                     {2,1,3,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0},
                     {1,11,8,0},{2,1,3,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
-            int[][] byteLenResTemp_SINGLE=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,3,0},{1,1,4,0},
+            int[][] byteLenResTemp_SINGLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,3,0},{1,1,4,0},
                     {1,1,41,0},{2,2,16,0},{1,1,0,0}};
-            int[][] byteLenResTemp_DOUBLE=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
+            int[][] byteLenResTemp_DOUBLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
                     {2,1,4,0},{2,1,4,0},{1,1,41,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}};
             //状态: 位(bit)属性名模板
             Object[][] stateBitTemp=PLC_CONFIG.StateBitTemp();
@@ -622,7 +617,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询和上传历史数据 */
-    FBH("fb",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fb")+"",C_CODE_VAL.T00H.getValue()){
+    FBH("fb",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -648,7 +643,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设置集中器远程更新IP和端口 */
-    FCH("fc",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fc")+"",C_CODE_VAL.T00H.getValue()){
+    FCH("fc",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -671,7 +666,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器远程更新IP和端口 */
-    FDH("fd",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"fd")+"",C_CODE_VAL.T00H.getValue()){
+    FDH("fd",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -690,7 +685,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器组网情况 */
-    T9AH("9a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9a")+"",C_CODE_VAL.T00H.getValue()){
+    T9AH("9a",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -708,7 +703,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器版本信息 */
-    T9BH("9b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9b")+"",C_CODE_VAL.T00H.getValue()){
+    T9BH("9b",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -747,7 +742,7 @@ public enum O_CODE_VAL{
         }
     },
     /* PLC软件复位 */
-    T9CH("9c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"9c")+"",C_CODE_VAL.T00H.getValue()){
+    T9CH("9c",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -772,7 +767,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设置集中器继电器必须开启时间 */
-    T60H("60",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),60)+"",C_CODE_VAL.T00H.getValue()){
+    T60H("60",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -804,7 +799,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器继电器必须开启时间 */
-    T61H("61",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),61)+"",C_CODE_VAL.T00H.getValue()){
+    T61H("61",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -847,7 +842,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询节点传感器信息 */
-    T46H("46",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),46)+"",C_CODE_VAL.TxxH.getValue()){
+    T46H("46",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -893,7 +888,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 节点传感器主动上报信息 集中器->主机 */
-    FEH("FE",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"FE")+"",C_CODE_VAL.TxxH.getValue()){
+    FEH("FE",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -932,7 +927,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 2480开始组网 */
-    T62H("62",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),62)+"",C_CODE_VAL.T00H.getValue()){
+    T62H("62",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -965,7 +960,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 2480停止组网 */
-    T63H("63",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),63)+"",C_CODE_VAL.T00H.getValue()){
+    T63H("63",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -990,7 +985,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 2480存储节点列表 */
-    T66H("66",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),66)+"",C_CODE_VAL.T00H.getValue()){
+    T66H("66",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -1014,7 +1009,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 读取2480FLAH节点列表 */
-    T67H("67",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),67)+"",C_CODE_VAL.T00H.getValue()){
+    T67H("67",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -1038,7 +1033,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 增加单个节点 */
-    T9EH("9e",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"9e")+"",C_CODE_VAL.T01H.getValue()){
+    T9EH("9e",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -1071,7 +1066,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 删除单个节点 */
-    T9DH("9d",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"9d")+"",C_CODE_VAL.T01H.getValue()){
+    T9DH("9d",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1102,7 +1097,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 2480删除节点FLSH存储列表 */
-    T69H("69",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),69)+"",C_CODE_VAL.T00H.getValue()){
+    T69H("69",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1128,7 +1123,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器硬件信息 */
-    T4AH("4a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"4a")+"",C_CODE_VAL.T00H.getValue()){
+    T4AH("4a",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1168,7 +1163,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设置集中器服务器IP和端口 */
-    F8H("f8",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f8")+"",C_CODE_VAL.T00H.getValue()){
+    F8H("f8",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1191,7 +1186,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询集中器服务器IP和端口 */
-    F9H("f9",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue(),"f9")+"",C_CODE_VAL.T00H.getValue()){
+    F9H("f9",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T00H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             String pdtMesg="";
@@ -1211,7 +1206,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设定电源最大功率 */
-    T6AH("6a",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"6a")+"",C_CODE_VAL.TxxH.getValue()){
+    T6AH("6a",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1244,7 +1239,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询电源最大功率 */
-    T6BH("6b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6b")+"",C_CODE_VAL.T01H.getValue()){
+    T6BH("6b",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1291,7 +1286,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设定电源报警阀值 */
-    T6CH("6c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"6c")+"",C_CODE_VAL.TxxH.getValue()){
+    T6CH("6c",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1325,7 +1320,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询电源报警阀值 */
-    T6DH("6d",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6d")+"",C_CODE_VAL.T01H.getValue()){
+    T6DH("6d",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1372,7 +1367,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询电源任务编号 */
-    T6FH("6f",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"6f")+"",C_CODE_VAL.T01H.getValue()){
+    T6FH("6f",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1419,7 +1414,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 删除电源任务编号 */
-    T47H("47",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),47)+"",C_CODE_VAL.TxxH.getValue()){
+    T47H("47",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1452,7 +1447,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询电源一条定时任务 */
-    T48H("48",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),48)+"",C_CODE_VAL.T01H.getValue()){
+    T48H("48",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1479,7 +1474,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设定电源时间 */
-    T49H("49",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),49)+"",C_CODE_VAL.TxxH.getValue()){
+    T49H("49",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1514,7 +1509,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 查询电源时间 */
-    T4BH("4b",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue(),"4b")+"",C_CODE_VAL.T01H.getValue()){
+    T4BH("4b",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.T01H.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) throw new Exception("入参不能为空！");
@@ -1561,7 +1556,7 @@ public enum O_CODE_VAL{
         }
     },
     /* 设定电源初始化值 */
-    T4CH("4c",String.format(HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue(),"4c")+"",C_CODE_VAL.TxxH.getValue()){
+    T4CH("4c",HEAD_TEMPLATE.T.toString(),C_CODE_VAL.TxxH.getValue()){
         @Override
         public String pdtData(String c,String cmdParam,ChannelHandlerContext ctx)throws Exception{
             if("".equals(cmdParam) || cmdParam==null) return "";
@@ -1611,7 +1606,6 @@ public enum O_CODE_VAL{
     public String getMessage() {
         return message;
     }
-//public abstract String eval(double a, double b);
 
     /**
      * 根据指令获取相应请求报文
@@ -1633,13 +1627,8 @@ public enum O_CODE_VAL{
                 System.out.println("查询到 *******HEAD_TEMPLATE CS： " + HEAD_TEMPLATE.getCS());
                 System.out.println("查询到 C_CODE_VAL C： " + C_CODE_VAL.TxxH.getValue());
                 System.out.println("查询到 HEAD_TEMPLATE UID： " + HEAD_TEMPLATE.getUID());
-                //resMessage=cf.message.replaceAll("null","%s");
-
-                resMessage=HEAD_TEMPLATE.H.getValue()+HEAD_TEMPLATE.UID.getValue()+HEAD_TEMPLATE.H.getValue()+"%s"+HEAD_TEMPLATE.L.getValue()+"%s"+HEAD_TEMPLATE.PDT.getValue()+HEAD_TEMPLATE.CS.getValue()+HEAD_TEMPLATE.T.getValue();
-                resMessage=String.format(resMessage,C_CODE_VAL.TxxH.getValue(),cf.value);
-
+                resMessage=String.format(cf.message,HEAD_TEMPLATE.getUID(),C_CODE_VAL.TxxH.getValue(),HEAD_TEMPLATE.getL(),cf.value,HEAD_TEMPLATE.getPDT(),HEAD_TEMPLATE.getCS());
                 System.out.println("查询到 resMessage： " + resMessage);
-                //resMessage=String.format(resMessage,HEAD_TEMPLATE.getL(),HEAD_TEMPLATE.getPDT(),HEAD_TEMPLATE.getCS());
                 break;
             }
         }

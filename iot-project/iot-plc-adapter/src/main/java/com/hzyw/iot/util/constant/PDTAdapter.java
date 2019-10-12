@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
@@ -13,15 +15,7 @@ import java.util.*;
  *
  */
 public class PDTAdapter {
-	private Map<String,String>paramStruct=new HashMap<String,String>(); //PDT 参数自定义结构
-	public Map<String, String> getParamStruct() {
-		return paramStruct;
-	}
-
-	public void setParamStruct(Map<String, String> paramStruct) {
-		this.paramStruct = paramStruct;
-	}
-
+	private static final Logger log = LoggerFactory.getLogger(PDTAdapter.class);
 	/**
 	 * pdt 请求协议解析
 	 * JSON->16进制解析
@@ -44,7 +38,7 @@ public class PDTAdapter {
                 System.out.println("遍历字节长度 二维数组值:" +JSONArray.toJSONString(lenArr[h])+ " ");
                 converType=lenArr[h][1]; //转换类型： 1、进制转换；2、码映射
                 System.out.println("遍历字节长度 二维数组值 转换类型:" +converType);
-                if(converType==1) { //进制转换（10进制->16进制）
+                if(converType==1) { //进制转换（16进制->16进制字符串）
                 	byteLen=lenArr[h][0];
                 	System.out.println("====每个字节定义的长度B:" +byteLen);
                 	System.out.println("*************遍历字节长度 二维数组值10进制原值:" +paramValArray.getString(h));
@@ -152,6 +146,8 @@ public class PDTAdapter {
                         devStateMap.put("value",itemVal);
                         devStateMap.put("company","");
                         devStateList.add(devStateMap);
+					}else{//直接赋值
+						itemVal=pdtParam;
 					}
 					if(!"".equals(itemVal)) paramMap.put(paramNameTemp[i], itemVal);
 				}

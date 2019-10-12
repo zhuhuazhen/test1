@@ -36,8 +36,8 @@ public class TestRequest {
 	        //inMap.put("program", "pictrue_and_multy_text.vsn");
 	        inMap.put("level", 100);
 	        inMap.put("ab", "03H");
-	        inMap.put("code", "01H");
-	        inMap.put("onoff", 1);
+	        inMap.put("code", "03H");
+	        inMap.put("onoff", 0);
 	        inList.add(inMap);
 
 			Map<String,Object> tags =new HashMap<String,Object>();
@@ -48,7 +48,7 @@ public class TestRequest {
 	        methods.put("method", "set_brightness");//set_onoff  set_brightness
 	        methods.put("in", inList);
 	        listMethods.add(methods);
-	        setListMap.put("id", "1010-9d8f96e03af5c4a0-3001-ffff-08f4");
+	        setListMap.put("id", "1010-71d8537795b8f25e-3001-ffff-812d");
 			//1010-1f31e84812046d00-3001-ffff-8ea3	----------------00000200053A
 			//1010-b6fdc8a25f45b30e-3001-ffff-b2af	----------------0000020004EE
 			//1010-c06f1c384d8175c1-3001-ffff-c827	----------------000002000533
@@ -67,7 +67,7 @@ public class TestRequest {
 	        mapVo.put("type", "request");
 	        mapVo.put("timestamp",1566205651);
 	        mapVo.put("msgId", "1db179ce-c81e-4499-bff2-29e8a954af97");
-	        mapVo.put("gwId", "1010-d8b38d288d431464-3001-ffff-36cf");//000000000100-1010-d8b38d288d431464-3001-ffff-36cf
+	        mapVo.put("gwId", "1001-d8b38d288d431464-3001-ffff-9ac9");//000000000100-1010-d8b38d288d431464-3001-ffff-36cf
 	        mapVo.put("data", setListMap);
 	        ProtocalAdapter protocalAdapter = new ProtocalAdapter();
 	        JSONObject jsonObject = JSONUtil.parseObj(mapVo);
@@ -76,8 +76,8 @@ public class TestRequest {
 				//String plcTest = protocalAdapter.messageRequest(JSON.parseObject(jsonObject.toString()));
 				//System.out.println("111111111111111拼装好的指令:"+plcTest);
 				//SendKafkaUtils.sendKafka("iot_topic_dataAcess_request", jsonObject.toString());
-				//producer.send(new ProducerRecord<>("iot_topic_dataAcess_request", jsonObject.toString()));
-			    //producer.close();
+				producer.send(new ProducerRecord<>("iot_topic_dataAcess_request", jsonObject.toString()));
+			    producer.close();
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

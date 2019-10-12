@@ -75,8 +75,8 @@ public enum HEAD_TEMPLATE {
      */
     @Override
     public String toString() {
-        return HEAD_TEMPLATE.H.value+HEAD_TEMPLATE.UID.value+HEAD_TEMPLATE.H.value+"%s"+HEAD_TEMPLATE.L.value+"%s"+HEAD_TEMPLATE.PDT.value+HEAD_TEMPLATE.CS.value+HEAD_TEMPLATE.T.value;
-    }
+        return HEAD_TEMPLATE.H.value+"%s"+HEAD_TEMPLATE.H.value+"%s%s%s%s%s"+HEAD_TEMPLATE.T.value;
+}
 
 
     HEAD_TEMPLATE(String value) {

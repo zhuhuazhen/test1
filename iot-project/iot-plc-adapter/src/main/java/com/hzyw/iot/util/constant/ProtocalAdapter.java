@@ -7,7 +7,6 @@ import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.kafka.common.protocol.types.Field;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
@@ -22,7 +21,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * PLC 协议适配置器
  * 上行通信规约
  */
-//@Slf4j
 public class ProtocalAdapter{
     private static final Logger log = LoggerFactory.getLogger(ProtocalAdapter.class);
     //缓存 请求消息ID(实现PLC 一应一答)
@@ -71,8 +69,6 @@ public class ProtocalAdapter{
         byte[] resp=ConverUtil.hexStrToByteArr(reqMessage);
         boolean validateRes=ValidateProtocalMessage(resp);
         if (!validateRes) log.error("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
-            //throw new Exception("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
-
         return reqMessage;
     }
 
@@ -85,6 +81,8 @@ public class ProtocalAdapter{
     public static String  messageRequest(JSONObject jsonObject) throws Exception {
         List<Map<String,Object>>outList=new ArrayList<Map<String,Object>>();
         Map<String,Object>outMap=new HashMap<String,Object>();
+        String algorithm_uuid=jsonObject.get("gwId").toString(); //算法后 PLC设备ID
+
         //与上游对接 入参格式的适配
        jsonObject=RequestFormatAdapter(jsonObject,outMap);
        outList.add(outMap);
@@ -109,6 +107,7 @@ public class ProtocalAdapter{
             String pdtParamsStr = JSONObject.toJSONString(pdtParams);
 
             System.out.println("=========按指令生成对应请求码报文KAFKA 集中器ID:"+uuid);
+            System.out.println("=========按指令生成对应请求码报文KAFKA 算法后的集中器ID:"+algorithm_uuid);
             System.out.println("=========按指令生成对应请求码报文KAFKA 节点ID:"+nodeID);
             System.out.println("=========按指令生成对应请求码报文KAFKA 控制码:"+code);
             System.out.println("=========按指令生成对应请求码报文KAFKA 指令码:"+cmd);
@@ -116,9 +115,9 @@ public class ProtocalAdapter{
 
             //请求时，设置消息ID 缓存 处理逻辑 实现(一应一答)功能
             String  mesgID=jsonObject.getString("msgId");
-            //if(!isReqBlock(outList,uuid,cmd,nodeID,mesgID)){
+            if(!isReqBlock(outList,algorithm_uuid,cmd,nodeID,mesgID,uuid)){
                 return generaMessage(uuid,code,cmd,pdtParamsStr,null);
-            //}
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -139,16 +138,16 @@ public class ProtocalAdapter{
         //请求消息ID为空，默认为 单向请求无应答
         if (StringUtils.isEmpty(msgID_NEW) || StringUtils.isBlank(msgID_NEW)) return false;
         try {
-            String sn =PlcProtocolsBusiness.getPlcSnByPlcID(params[0]);
+            String sn =params[4].trim();
             String key=sn+"_"+params[1]; //sn_cmd
-            if(CacheReqID.contains(key)){
+            if(CacheReqID.containsKey(key)){
                 long init_time=Long.parseLong(CacheReqID.get(key)[1]);
                 Long time_out=(System.currentTimeMillis()-init_time)/1000;
                 System.out.println("=======缓存中 请求消息ID:"+CacheReqID.get(key)[0]);
                 System.out.println("=======缓存中 请求消息KEY:"+key+",未响应超时 时间(s):"+time_out);
                 if(time_out<=3) {//调置 超时3秒
                     //20324:请求冲突, 响应后面要做错误码 映射配置
-                    PlcProtocolsUtils.plcACKResponseSend(params[0],params[1],params[2],20324,msgID_NEW,outList);
+                    PlcProtocolsUtils.plcACKResponseSend(params[0],params[1],params[2],20324,msgID_NEW,null,null);
                     return true;
                 }
                 CacheReqID.put(key,new String[]{msgID_NEW,String.valueOf(System.currentTimeMillis())});
@@ -170,7 +169,7 @@ public class ProtocalAdapter{
      */
     public static String consumeRequestID(String key){
         String resMesgID="";
-        if(CacheReqID.contains(key)){
+        if(CacheReqID.containsKey(key)){
             resMesgID=CacheReqID.get(key)[0];
             System.out.println("=====响应 正在 消费掉 缓存中的请求ID:"+resMesgID);
             CacheReqID.remove(key);
@@ -187,6 +186,7 @@ public class ProtocalAdapter{
      * @throws Exception
      */
     public static String  messageRespose(byte[] resp, ChannelHandlerContext ctx) throws Exception {
+        log.info("=============messageResposen 入参:"+ConverUtil.convertByteToHexString(resp));
         String paramBody="";
         if(resp.length<13) throw new Exception("协议报文长度有错误！总字节长度范围：13~267!");
         C_CODE_VAL.CMethod("80H");
@@ -438,7 +438,7 @@ public class ProtocalAdapter{
         if("".equals(code) && code==null){
             code="03H";
         }
-        if("".equals(uuid) && uuid==null)uuid="000000000100";
+        if("".equals(uuid) || uuid==null)uuid="000000000100";
         outMap=pdtMap;
         JSONObject tragetObj=T_RequestVO.getRequestVO(uuid,code,cmd,msgID,pdtMap);
         return tragetObj;

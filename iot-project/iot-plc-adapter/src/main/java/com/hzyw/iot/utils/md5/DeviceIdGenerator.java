@@ -55,7 +55,7 @@ public class DeviceIdGenerator {
         return false;
     }
     public static void main(String[] args) {
-    	System.out.println(generatorId("000002000533",4112,12289));
+    	System.out.println(generatorId("000000000100",8192,12289));
 	}
    
 }

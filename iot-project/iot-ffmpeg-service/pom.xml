@@ -10,11 +10,19 @@
   <artifactId>iot-ffmpeg-service</artifactId>
   <name>iot-ffmpeg-service</name>
 	<dependencies>
-	   <dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-eureka</artifactId>
-		</dependency>
-	
+	   
+        <!-- web模块 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- thmeleaf模板引擎 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        
 	    <!-- netty 
 	    <dependency>
             <groupId>io.netty</groupId>

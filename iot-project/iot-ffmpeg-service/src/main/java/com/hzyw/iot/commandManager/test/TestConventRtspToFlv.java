@@ -10,7 +10,6 @@ import java.util.List;
 /**
  * 视频转换（转换为flv格式）
  *
- * 创建时间：2010-11-21
  */
 public class TestConventRtspToFlv {
 

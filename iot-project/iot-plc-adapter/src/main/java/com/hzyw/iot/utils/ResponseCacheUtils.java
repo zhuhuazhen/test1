@@ -4,25 +4,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.vo.ResponseCache;
-import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dataaccess.ResponseDataVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 import com.hzyw.iot.vo.dc.ModbusInfo;
 
-import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
-import io.netty.channel.Channel;
 
 public class ResponseCacheUtils {
 	private static final Logger logger = LoggerFactory.getLogger(PlcProtocolsBusiness.class);
 	
+	/**
+	 * 缓存hash结构：<sn+cmcCOde+cCode , msgId-gwid-nodeid-timestamp>
+	 */
 	public static final Map<String,ResponseCache> plc_ResponseCache = new HashMap<String,ResponseCache>();
 	
 	/**

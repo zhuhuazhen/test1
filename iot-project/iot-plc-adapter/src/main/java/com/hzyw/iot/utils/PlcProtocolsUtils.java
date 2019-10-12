@@ -419,14 +419,15 @@ public class PlcProtocolsUtils {
 				break;
 			}
 		}
-		if ("".equals(nodeID)) {
-			// 获取节点ID(设备ID)
+		if(!"".equals(nodeID) && nodeID!=null){
+			nodeID=ConverUtil.isNumeric(nodeID)?nodeID:nodeID.toUpperCase();
+			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(nodeID+"_defAttribute")
+					.get(IotInfoConstant.dev_plc_node_id);
+		}else{
+			// 如果没有节点ID属性,gwId(集中器ID)属性值替代
 			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(plc_sn + "_defAttribute")
 					.get(IotInfoConstant.dev_plc_plc_id);
 		}
-
-		// List<Map> definedAttrList=new ArrayList<Map>();//自定义属性
-		// definedAttrList.add(definedAttrMap);
 
 		Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
 		tags.put("agreement", "plc");
@@ -435,10 +436,9 @@ public class PlcProtocolsUtils {
 		metricInfoResponseDataVO.setId(nodeID);
 		metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
 		metricInfoResponseDataVO.setTags(tags);
-
 		// 消息结构
 		MessageVO<MetricInfoResponseDataVO> messageVo = T_ResponseResult.getResponseVO(ctx, plc_sn,
-				"metricInfoResponse", metricInfoResponseDataVO);
+				DataType.MetricInfoResponse.getMessageType(), metricInfoResponseDataVO);
 
 		// kafka处理
 		Properties props = new Properties();
@@ -460,7 +460,7 @@ public class PlcProtocolsUtils {
 	 * 
 	 * @param plc_sn
 	 *            集中器地址
-	 * @param nodeID
+	 * @param nodeID  00000200053a
 	 *            节点ID
 	 * @param definedAttrList
 	 * @throws Exception
@@ -468,14 +468,22 @@ public class PlcProtocolsUtils {
 	public static void plcSignlResponseSend(String plc_sn, String nodeID, List<Map> definedAttrList, ChannelHandlerContext ctx) throws Exception {
 		Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
 		tags.put("agreement", "plc");
-
+		InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
+		if(!"".equals(nodeID) && nodeID!=null){
+			nodeID=ConverUtil.isNumeric(nodeID)?nodeID:nodeID.toUpperCase();
+			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(nodeID+"_defAttribute")
+					.get(IotInfoConstant.dev_plc_node_id);
+		}else{
+			// 如果没有节点ID属性,gwId(集中器ID)属性值替代
+			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(plc_sn + "_defAttribute")
+					.get(IotInfoConstant.dev_plc_plc_id);
+		}
 		DevSignlResponseDataVO devSignlResponseDataVO = new DevSignlResponseDataVO();
 		devSignlResponseDataVO.setId(nodeID);
 		devSignlResponseDataVO.setSignals(definedAttrList);
 		devSignlResponseDataVO.setTags(tags);
-
 		// 消息结构
-		MessageVO<DevSignlResponseDataVO> messageVo = T_ResponseResult.getResponseVO(ctx, plc_sn, "devSignalResponse",
+		MessageVO<DevSignlResponseDataVO> messageVo = T_ResponseResult.getResponseVO(ctx, plc_sn, DataType.DevSignalResponse.getMessageType(),
 				devSignlResponseDataVO);
 
 		// kafka处理
@@ -501,25 +509,37 @@ public class PlcProtocolsUtils {
      * @param plc_sn
      * @param cmd
      * @param nodeID
-     * @param mesgCode
+     * @param resultCode 0:成功，10005:失败，20324:忙
      * @param outList
+     * @param ctx
      * @throws Exception
      */
-    public static void plcACKResponseSend(String plc_sn,String cmd,String nodeID,Integer mesgCode,String messageID, List<Map<String,Object>> outList)throws Exception{
+    public static void plcACKResponseSend(String plc_sn,String cmd,String nodeID,Integer resultCode,String messageID, List<Map<String,Object>> outList,ChannelHandlerContext ctx)throws Exception{
         Map<String, String> tags = new HashMap<String, String>(); // tags 标识属性
         tags.put("agreement", "plc");
 
-        if(ConverUtil.parseNumeric(nodeID)==0) nodeID=plc_sn;
+		if(ctx!=null){  //ctx不为空，表示从PLC 返回的， 否则从请求端手动返回的
+			InetSocketAddress insocket = (InetSocketAddress) ctx.channel().localAddress();
+			//算法后的 集中器SN
+			plc_sn = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(plc_sn + "_defAttribute")
+					.get(IotInfoConstant.dev_plc_plc_id);
+			if(ConverUtil.parseNumeric(nodeID)==0) nodeID=plc_sn;
 
+			if(!nodeID.equalsIgnoreCase(plc_sn)&& nodeID!=null && !"".equals(nodeID)){
+				nodeID=ConverUtil.isNumeric(nodeID)?nodeID:nodeID.toUpperCase();
+				nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(nodeID+"_defAttribute")
+						.get(IotInfoConstant.dev_plc_node_id);
+			}
+		}
+		if(ConverUtil.parseNumeric(nodeID)==0) nodeID=plc_sn;
         ResponseDataVO devResponseDataVO = new ResponseDataVO();
         devResponseDataVO.setId(nodeID);
         devResponseDataVO.setMethods(responseMethodBody(cmd,outList));
         devResponseDataVO.setTags(tags);
 
         // 消息结构
-        ResultMessageVO<ResponseDataVO> messageVo = T_ResponseResult.getACKResponseVO(plc_sn,mesgCode,"devSignalResponse",
+        ResultMessageVO<ResponseDataVO> messageVo = T_ResponseResult.getACKResponseVO(plc_sn,nodeID,resultCode,messageID,DataType.Response.getMessageType(),
                 devResponseDataVO);
-		messageVo.setMsgId(messageID);
 
         // kafka处理
         Properties props = new Properties();

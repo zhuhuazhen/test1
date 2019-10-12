@@ -61,24 +61,24 @@ public class GateWayServiceImpl implements GateWayService {
 		//下线消息
 		String msgId = GatewayMqttUtil.getUUID();
 		ServiceDataVO serviceOfflineVO = new ServiceDataVO();
-		serviceOfflineVO.setId("0001-f82d132f9bb018ca-2001-ffff-acbc");
+		serviceOfflineVO.setId("1000-f82d132f9bb018ca-2001-ffff-d28a");
 		serviceOfflineVO.setStatus("offline");
 		serviceOfflineVO.setTags(map);
 		MessageVO offlineMessageVO = new MessageVO(serviceOfflineVO);
 		offlineMessageVO.setType(DataType.ServiceOffline.getMessageType());
 		offlineMessageVO.setMsgId(msgId);
 		offlineMessageVO.setTimestamp(System.currentTimeMillis());
-		offlineMessageVO.setGwId("1000-f82d132f9bb018ca-2001-ffff-d28a");
+		offlineMessageVO.setGwId("0001-f82d132f9bb018ca-2001-ffff-acbc");
 		//上线消息
 		ServiceDataVO serviceOnlineVO = new ServiceDataVO();
-		serviceOnlineVO.setId("0001-f82d132f9bb018ca-2001-ffff-acbc");
+		serviceOnlineVO.setId("1000-f82d132f9bb018ca-2001-ffff-d28a");//1000-f82d132f9bb018ca-2001-ffff-d28a
 		serviceOnlineVO.setStatus("online");
 		serviceOnlineVO.setTags(map);
 		MessageVO onlineMessageVO = new MessageVO(serviceOnlineVO);
 		onlineMessageVO.setType(DataType.ServiceOnline.getMessageType());
 		onlineMessageVO.setMsgId(msgId);
 		onlineMessageVO.setTimestamp(System.currentTimeMillis());
-		onlineMessageVO.setGwId("1000-f82d132f9bb018ca-2001-ffff-d28a");
+		onlineMessageVO.setGwId("0001-f82d132f9bb018ca-2001-ffff-acbc");//0001-f82d132f9bb018ca-2001-ffff-acbc
 		//服务上线完毕后才能做下发和上报之类的交互，所以这里不用起新的线程处理
 		servicePubHandler.Publish(JSON.toJSONString(onlineMessageVO),JSON.toJSONString(offlineMessageVO));
 	}

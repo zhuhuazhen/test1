@@ -119,6 +119,19 @@ public class ByteUtils {
         return result;
     } 
     public static void main(String[] args) throws Exception {
+    	int plc_node_a_brightness = 118593;
+    	System.out.println("-1-" + plc_node_a_brightness);
+    	//System.out.println("-2-" + ConverUtil.convertByteToHexStr(x) );
+    	System.out.println("-2-" + ConverUtil.convertByteToHexString(ByteUtils.intToByteArray(plc_node_a_brightness)) );
+    	
+    	System.out.println("-1-" + Integer.toHexString(plc_node_a_brightness) );
+    	byte x =  (byte)(((plc_node_a_brightness)) & 0xFF); //强制转化为byte 取最低位字节
+    	System.out.println("-2-" + ConverUtil.convertByteToHexStr(x) );
+    	
+    	x =  (byte)(((plc_node_a_brightness >> 8))); //强制转化为byte 取最低位字节 ,因为右移了8位 所以下面打印的肯定是右边数过来的第二个字节
+    	System.out.println("-2-" + ConverUtil.convertByteToHexStr(x) );
+    	 
+    	
         // byte
         byte bMax = Byte.MAX_VALUE;
         byte bMin = Byte.MIN_VALUE;
@@ -135,13 +148,7 @@ public class ByteUtils {
         long s_min_v = byteArrayToLong(varIntToByteArray(sMin));
         check(sMin, s_min_v, "short");
 
-        byte[] temp3 = new byte[1];
-        int plc_node_a_brightness = 100;
-        Integer x = new Integer(plc_node_a_brightness);
-		temp3[1] = x.byteValue(); 
-		System.out.println(ConverUtil.convertByteToHexString(temp3));
-		temp3[1] = (byte)(plc_node_a_brightness);
-		System.out.println(ConverUtil.convertByteToHexString(temp3));
+       
 		
 		 
 		

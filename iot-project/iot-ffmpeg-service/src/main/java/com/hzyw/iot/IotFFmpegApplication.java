@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class IotFFmpegApplication {
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(IotFFmpegApplication.class);
-		//application.addInitializers(new ApplicationStartedListener());
 		SpringApplication.run(IotFFmpegApplication.class, args);
 		
     }

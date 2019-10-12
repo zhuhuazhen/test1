@@ -144,9 +144,9 @@ public class PDTValidateUtil {
      * @return
      * @throws Exception
      */
-    public static boolean validateReqT45HPdt(String cmdParam) throws Exception {
+    /*public static boolean validateReqT45HPdt(String cmdParam) throws Exception {
         return true;
-    }
+    }*/
 
     /**
      * 查询节点详细数据(45H) 响应报文校验
@@ -154,11 +154,11 @@ public class PDTValidateUtil {
      * @return
      * @throws Exception
      */
-    public static boolean validateResT45HPdt(String cmdParam) throws Exception {
+   /* public static boolean validateResT45HPdt(String cmdParam) throws Exception {
         boolean resBoolean=true;
         if ("02".equals(cmdParam) || "03".equals(cmdParam)) return false; //02 (02H) 表示报文校验有错误，返回错误码:02; 03: 系统忙
         return resBoolean;
-    }
+    }*/
 
     /**
      * 查询集中器状态 (73H)响应报文校验

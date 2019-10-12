@@ -184,12 +184,9 @@ public class PlcProtocolsBusiness {
 			byte[] temp2 = new byte[1]; //A/B   01H：控制A灯。(控制双灯控制器的A灯) 02H：控制B灯。(控制双灯控制器的B灯) 03H：同时控制A灯和B灯
 			temp2 = ConverUtil.hexStrToByteArr(dev_plc_node_type); 
 			byte[] temp3 = new byte[1]; 
-			//temp3 = ByteUtils.intToByteArray(plc_node_a_brightness*2); //DIM 调光值(0~200) ，页面上调光值尺度是0~100
-			Integer x = new Integer(plc_node_a_brightness*2);
-			temp3[1] = x.byteValue(); 
-			temp3[1] = (byte)(plc_node_a_brightness*2);
+			//temp3 = ByteUtils.intToByteArray(plc_node_a_brightness*2); //DIM 调光值(0~200) ，页面上调光值尺度是0~100   ，用此方法也可以，但要默认取数组里的最后一个字节
+			temp3[1] = (byte)(((plc_node_a_brightness*2)) & 0xFF); //取第一个低位  
 			modbusInfo.setPdt(PlcProtocolsUtils.getPdt(temp1,temp2,temp3));
-			System.out.println("------------" + modbusInfo.getNewFullDataWithByteBuf());
 			ctxWriteAndFlush_byResponse(channel,modbusInfo,"调灯光" , jsonObject.getString("msgId"),jsonObject.getString("gwId"),plc_node_id,method); 
 		} catch (Exception e) {
 			logger.error(">>>request(" + modbusInfo.getAddress_str() + ")请求设备,,cmdCode="+modbusInfo.getCmdCode_str()
@@ -318,8 +315,7 @@ public class PlcProtocolsBusiness {
 	public static boolean transformTemplateSelect(ChannelHandlerContext ctx, ModbusInfo modbusInfo){
 		boolean flag = false;
 		String cCmdCode = modbusInfo.getCmdCode_str()!=null?modbusInfo.getCmdCode_str():"";
-		if(!("f0".equals(modbusInfo.getCmdCode_str().toLowerCase()) 
-	            		|| "f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase()))){
+		if("f0".equals(modbusInfo.getCmdCode_str().toLowerCase()) || "f1".equals(modbusInfo.getCmdCode_str().trim().toLowerCase())){
 			return true; //忽略f0登陆指令，f1心跳指令
 		}
 		if ("9a".equals(cCmdCode)  		//查询组网个数

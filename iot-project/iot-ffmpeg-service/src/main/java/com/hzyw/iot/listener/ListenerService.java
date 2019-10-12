@@ -11,10 +11,8 @@ import org.springframework.stereotype.Component;
 
  
 /**
- * 
- * 接口监听服务
- * 
- * @author Administrator
+ * 启动服务，定义一个钩子，当服务正常退出的时候，关闭所有打开的ffmpeg连接，否则下次再连接的时候无法建立连接的哦
+ * @author zhu
  *
  */
 @Component
@@ -29,22 +27,9 @@ public class ListenerService implements CommandLineRunner {
     public void run(String... args) throws Exception {
         LOGGER.info("Camera Service Start..");
         new ShutdownSampleHook(Thread.currentThread());
-        // 获取已配置的设备信息
-        //ioTService.loadIotMapper2Global(InetAddress.getLocalHost().getHostAddress(), port);
-        //端口监听
-        /*singleThreadExecutor.submit(
-        	new Runnable() {
-				@Override
-				public void run() {
-					//PLC
-					new RTUPortListener(12345, new NioEventLoopGroup(), new NioEventLoopGroup());
-				}
-			}
-        );*/
-        
-         
     }
 }
+
 class ShutdownSampleHook extends Thread {
     private Thread mainThread;
     @Override
@@ -52,7 +37,9 @@ class ShutdownSampleHook extends Thread {
         System.out.println("监听到服务停止信号.....");
         mainThread.interrupt();//给主线程发送一个中断信号
         try {
-        	System.out.println("等待执行完毕.....");
+        	System.out.println("等待:关闭所有正在跑的任务进程.....");
+        	//调用公共方法来关闭 ，应该在启动任务的某个地方记录下启动的任务或进程且关闭的时候做清除
+        	// --
         	Thread.currentThread().sleep(1000*5);
             mainThread.join(); //等待 mainThread 正常运行完毕
         } catch (InterruptedException e) {
