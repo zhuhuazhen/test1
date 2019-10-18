@@ -22,7 +22,7 @@ public class KafkaProducerExampleByzhu {
 	//盒子
 	 public static void main(String[] args) {
 	        Properties props = new Properties();
-	        props.put("bootstrap.servers", "47.106.189.255:9092");
+	        props.put("bootstrap.servers", "192.168.3.183:9901,192.168.3.183:9902,192.168.3.183:9903");
 	        props.put("acks", "all");
 	        props.put("retries", 0);
 	        props.put("batch.size", 16384);
@@ -66,7 +66,7 @@ public class KafkaProducerExampleByzhu {
 	        methods.put("method", "set_onoff");
 	        methods.put("in", inList);
 	        listMethods.add(methods);
-	        setListMap.put("id", "1010-3f7b3eb6bffe6fb1-2009-ffff-be7"); //plc_node_ID
+	        setListMap.put("id", "test"); //plc_node_ID
 	        setListMap.put("methods", listMethods);
 	        
 	        List list = new ArrayList();
@@ -84,7 +84,7 @@ public class KafkaProducerExampleByzhu {
 	        
 	        JSONObject jsonObject = JSONUtil.parseObj(map);
 	        System.out.println(jsonObject.toString());
-	        producer.send(new ProducerRecord<>("testbyzhu", jsonObject.toString()));
+	        producer.send(new ProducerRecord<>("test", jsonObject.toString()));
 
 	        producer.close();
 	    }

@@ -115,7 +115,7 @@ public class IotInfoConstant {
     public static final String dev_plc_node_id ="plc_node_id"; //deviceId 
     public static final String dev_plc_node_sn ="plc_node_sn"; //节点地址
     //public static final String dev_plc_node_type ="plc_node_type";  //节点类型  :jie点类型    单灯(OL)，双灯(TL)，HID ,LED
-    public static final String dev_plc_node_temperature ="plc_node_temperature";//温度
+    public static final String dev_plc_node_temperature ="plc_node_temperature";//温度(电源或灯控的)
     public static final String dev_plc_node_voltage_in ="plc_node_voltage_in";//输入电压
     public static final String dev_plc_node_voltage_out ="voltage";//输出电压
     public static final String dev_plc_node_capacity_out ="capacity";
@@ -133,18 +133,35 @@ public class IotInfoConstant {
 	//灯具属性 (调灯光协议引入)
 	public static final String dev_plc_node_cCode ="plc_node_cCode";  //控制码
     public static final String dev_plc_node_a_status ="plc_node_a_status";// 在线状态  0-离线 1-在线
-    public static final String dev_plc_node_a_onoff ="plc_node_a_onoff";  // 开关状态  0-开灯 1-关灯
+    public static final String dev_plc_node_a_onoff ="plc_node_a_onoff";  // 开关状态  1-开灯 0-关灯
     //灯具属性 (状态数据上报协议引入)
     public static final String dev_plc_node_power ="plc_node_power";//输出功率
     public static final String dev_plc_node_runtime ="plc_node_runtime";//灯具运行时长
     public static final String dev_plc_node_electri_energy ="plc_node_electri_energy";//电能
     public static final String dev_plc_node_error_runtime ="plc_node_error_runtime";//故障时长
     
-	static String[] plc_node_def_attributers={dev_plc_node_sn,dev_plc_node_type,dev_plc_node_temperature,dev_plc_node_voltage_in
+    //新增属性
+    public static final String dev_plc_node_electri_in ="plc_node_electri_in";//输入电流
+    public static final String dev_plc_node_electri_out ="plc_node_electri_out";//输出电流
+    public static final String dev_plc_node_power_in ="plc_node_power_in";//输入功率
+    public static final String dev_plc_node_pf ="plc_node_pf";//功率因素
+    public static final String dev_plc_node_exception_state ="plc_node_exception_state";//异常状态
+    public static final String dev_plc_node_b_electri_in ="plc_node_b_electri_in";//B路输入电流
+    public static final String dev_plc_node_b_power ="plc_node_b_power";//B路有功功率
+    public static final String dev_plc_node_b_pf ="plc_node_b_pf";//B路功率因数
+    public static final String dev_plc_node_b_brightness ="plc_node_b_brightness";//B路亮度
+    public static final String dev_plc_node_brightness ="plc_node_brightness";//调光亮度
+    public static final String dev_plc_node_state ="plc_node_state";//状态
+    
+    public static final String dev_plc_node_temperature_li ="plc_node_temperature_li";//灯具温度
+    
+	static String[] plc_node_def_attributers={dev_plc_node_sn,dev_plc_node_type,dev_plc_node_temperature,dev_plc_node_temperature_li,dev_plc_node_voltage_in
 			,dev_plc_node_voltage_out,dev_plc_node_a_electri_in,dev_plc_node_a_electri_out,dev_plc_node_a_power
 			,dev_plc_node_a_pf,dev_plc_node_a_brightness,dev_plc_node_a_status,dev_plc_node_a_onoff
 			,dev_plc_node_devCode,dev_plc_node_group,dev_plc_node_cCode
-			,dev_plc_node_power,dev_plc_node_runtime,dev_plc_node_electri_energy,dev_plc_node_error_runtime
+			,dev_plc_node_power,dev_plc_node_runtime,dev_plc_node_electri_energy,dev_plc_node_error_runtime,dev_plc_node_electri_in
+			,dev_plc_node_electri_out,dev_plc_node_power_in,dev_plc_node_pf,dev_plc_node_exception_state,dev_plc_node_b_electri_in
+			,dev_plc_node_b_power,dev_plc_node_b_pf,dev_plc_node_b_brightness,dev_plc_node_brightness,dev_plc_node_state
 			};
 	
 	
@@ -161,7 +178,7 @@ public class IotInfoConstant {
     	plc_unit_.put(dev_plc_node_voltage_out, "mV"); //输出电压
     	plc_unit_.put(dev_plc_node_a_electri_in, "mA"); //A路输入电流
     	plc_unit_.put(dev_plc_node_a_electri_out, "mA"); //A路输出电流
-    	plc_unit_.put(dev_plc_node_a_power, "W"); //A路有功功率
+    	plc_unit_.put(dev_plc_node_a_power, "mW"); //A路有功功率
     	plc_unit_.put(dev_plc_node_a_pf, "%"); //A路功率因数
     	//plc_unit_.put(dev_plc_node_a_brightness, ""); //A亮度   0-100
     	//plc_unit_.put(dev_plc_node_type, ""); //控制类型   单灯A(01)，单灯B(02),双灯(03) 
@@ -194,9 +211,22 @@ public class IotInfoConstant {
     	plc_unit_.put(dev_plc_c_power, "mW"); //集中器，C相功率
     	plc_unit_.put(dev_plc_c_pf, "F"); //集中器，C相功率因素
     	plc_unit_.put(dev_plc_3_power, "F"); //集中器，三相功率因素
-    	
     	plc_unit_.put(dev_plc_node_capacity_out, "mW"); 
     	
+    	
+    	plc_unit_.put(dev_plc_node_electri_in, "mA"); //输入电流
+    	plc_unit_.put(dev_plc_node_electri_out, "mA"); //输出电流
+    	plc_unit_.put(dev_plc_node_power_in, "W"); //输入功率
+    	plc_unit_.put(dev_plc_node_pf, "%"); //功率因素
+    	//plc_unit_.put(dev_plc_node_exception_state, "℃"); //异常状态
+    	plc_unit_.put(dev_plc_node_b_electri_in, "mA"); //B路输入电流
+    	plc_unit_.put(dev_plc_node_b_power, "mW"); //B路有功功率
+    	plc_unit_.put(dev_plc_node_b_pf, "%"); //B路功率因数
+    	plc_unit_.put(dev_plc_node_b_brightness, "%"); //B路亮度
+    	plc_unit_.put(dev_plc_node_brightness, "%"); //调光亮度
+    	plc_unit_.put(dev_plc_node_temperature_li, "℃"); 
+    	
+    	//plc_unit_.put(dev_plc_node_state, ""); //状态
     }
     
     public static void initData(){
@@ -307,8 +337,33 @@ public class IotInfoConstant {
                 	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_type, plc_node_type); 
                 	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_devCode, plc_node_devCode);
                 	
-                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_voltage_out, "0");
-                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_power, "0");
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_voltage_out, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_power, 0);
+                	//test
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_voltage_in, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_electri_in, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_power_in, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_pf, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_brightness, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_b_pf, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_runtime, 0);
+                	
+                	
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_onoff, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_b_electri_in, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_capacity_out, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_status, 1);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_electri_out, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_temperature_li, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_b_brightness, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_b_power, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_pf, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_brightness, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_temperature, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_a_electri_in, 0);
+                	plc_iotInfo_.get(plc_node_sn+"_defAttribute").put(dev_plc_node_electri_out, 0);
+                	
+                	
                 	//---deviceId和SN关系
                 	plc_relation_deviceToSn.put(plc_node_id, plc_node_sn);
                 	

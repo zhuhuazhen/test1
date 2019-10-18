@@ -22,7 +22,7 @@ public class KafkaProducerExample {
 	//盒子
 	 public static void main(String[] args) {
 	        Properties props = new Properties();
-	        props.put("bootstrap.servers", "47.106.189.255:9092");
+	        props.put("bootstrap.servers", "192.168.3.183:9901,192.168.3.183:9902,192.168.3.183:9903");
 	        props.put("acks", "all");
 	        props.put("retries", 0);
 	        props.put("batch.size", 16384);

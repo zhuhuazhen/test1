@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
 import io.netty.channel.ChannelHandlerContext;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -69,7 +70,7 @@ public class PDTAdapter {
 	 * @throws Exception
 	 */
 	public static LinkedHashMap<String,Object> pdtResposeParser(int [][] lenArr, String[] paramNameTemp, String pdt, ChannelHandlerContext ctx) throws Exception{
-		String pdtParam="",byteBit="",itemVal="";
+		String pdtParam="",byteBit="",itemVal="",nodeID="";
 		Integer fromNum=0,toNum=0,itemStart=0,itemEnd=0,lenNum=0,pageAttr=0;
 		List<Map<String,Object>>resultList=new ArrayList<Map<String,Object>>();
         LinkedHashMap<String,Object>resultMap=new LinkedHashMap<String,Object>();
@@ -128,7 +129,7 @@ public class PDTAdapter {
 						//metricInfoMap.put(paramNameTemp[i], itemVal);
                         itemUnitData=itemVal.split("@@");
                         devStateMap.put("type",paramNameTemp[i]);
-                        devStateMap.put("value",itemUnitData[0]);
+                        devStateMap.put("value", paserNumerial(itemUnitData[0]));
                         devStateMap.put("company",itemUnitData.length>1?itemUnitData[1]:"");
                         devStateList.add(devStateMap);
 					}else if(lenArr[i][1]==2) {//二进制转
@@ -153,10 +154,11 @@ public class PDTAdapter {
 				}
 				//kafka  发送 设备状态上报的数据
 				if(devStateList.size()>0){
+					nodeID=paramMap.get(PLC_CONFIG.节点ID.getKey())==null?"":paramMap.get(PLC_CONFIG.节点ID.getKey()).toString();
 					System.out.println("===============kafka 发送设备状态上报数据 操作...");
 					Object resultStateJSON=JSONArray.toJSON(devStateList);
 					System.out.println("===pdtResposeParser==发送设备状态上报数据 的json结构:"+ JSONObject.toJSONString(resultStateJSON));
-					PlcProtocolsUtils.plcStateResponseSend(HEAD_TEMPLATE.getUID(),devStateList,ctx);
+					PlcProtocolsUtils.plcStateResponseSend(HEAD_TEMPLATE.getUID(),nodeID,devStateList,ctx);
 				}
                 resultList.add(paramMap);
 		}
@@ -201,6 +203,18 @@ public class PDTAdapter {
 		}
 		System.out.println("======长度字节数组(入参) 的 总字节数:" +sumNum);
 		return sumNum;
+	}
+
+	public static Object paserNumerial (String val){
+		try {
+			if(StringUtils.isNumeric(val)){
+				return Integer.parseInt(val);
+			}else{
+				return Double.parseDouble(val);
+			}
+		} catch (NumberFormatException e) {
+			return val;
+		}
 	}
 
     /**

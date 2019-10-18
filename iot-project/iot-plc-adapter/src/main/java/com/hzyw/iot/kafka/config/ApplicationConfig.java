@@ -10,8 +10,17 @@ public class ApplicationConfig {
 	@Value(value = "${iot.plc.adapter.topic.producer.plcOrder}")
 	private String  plcOrder;
 	
+	@Value(value = "${iot.plc.adapter.topic.producer.plcOrder.consumergroup}")
+	private static String  kafkaPlcConsumerGroup;
 	 
-	
+	public static String getKafkaPlcConsumerGroup() {
+		return kafkaPlcConsumerGroup;
+	}
+
+	public static void setKafkaPlcConsumerGroup(String kafkaPlcConsumerGroup) {
+		ApplicationConfig.kafkaPlcConsumerGroup = kafkaPlcConsumerGroup;
+	}
+
 	public String plcOrder() {
 		return plcOrder;
 	}
@@ -19,6 +28,5 @@ public class ApplicationConfig {
 	public void setDevInfoResponseTopic(String plcOrder) {
 		this.plcOrder = plcOrder;
 	}
-	
 
 }

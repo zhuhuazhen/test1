@@ -15,7 +15,7 @@ import com.hzyw.iot.vo.dc.ModbusInfo;
 import cn.hutool.core.date.DateUtil;
 
 public class ResponseCacheUtils {
-	private static final Logger logger = LoggerFactory.getLogger(PlcProtocolsBusiness.class);
+	private static final Logger logger = LoggerFactory.getLogger(ResponseCacheUtils.class);
 	
 	/**
 	 * 缓存hash结构：<sn+cmcCOde+cCode , msgId-gwid-nodeid-timestamp>

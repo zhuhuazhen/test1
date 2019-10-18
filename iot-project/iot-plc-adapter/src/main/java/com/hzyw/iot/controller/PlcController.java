@@ -99,7 +99,7 @@ public class PlcController {
     }
 	
 	/**
-	 * 查询SN下的组网的节点
+	 * 下发指令（通过HTTP REST）
 	 * 
 	 * @param jsonParam
 	 * @return
@@ -108,12 +108,13 @@ public class PlcController {
 	@RequestMapping(value = "/plc/request", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String _request(@RequestBody JSONObject jsonParam) {
 		JSONObject resultJsonParam = new JSONObject();
-		try{
+		try{ 
 			logger.info("param: " + jsonParam.toJSONString());
 			if(jsonParam.getString("gwId") == null){
 				logger.info("param is invalid!!! " );
 				return resultJsonParam.toJSONString();
 			}
+			PlcProtocolsBusiness.all.clear();
 			//前提是设备已经和主机建立了连接，然后已经登陆到主机
 			String requestMessageVOJSON = jsonParam.toJSONString();
 			PlcProtocolsBusiness.protocals_process(requestMessageVOJSON);

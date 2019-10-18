@@ -30,20 +30,4 @@ public class KafkaCommon extends AbstractKafkaCommon {
 		return producer;
 	}
  
-	
-	//PLC
-	public KafkaConsumer<String, String> getKafka() throws Exception {
-		Properties props = new Properties();
-        props.put("bootstrap.servers", "47.106.189.255:9092");
-        props.put("group.id", "group123");
-        props.put("enable.auto.commit", "true");
-        props.put("auto.commit.interval.ms", "1000");
-        props.put("session.timeout.ms", "30000");
-        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        //props.put("auto.offset.reset", "earliest");
-        props.put("auto.offset.reset", "latest");
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(props);
-        return consumer;
-	}
 }

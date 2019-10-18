@@ -87,12 +87,13 @@ public enum O_CODE_VAL{
              * 参数 字节长度的二维数组模板（响应类型）
              * 一维：第个参数值的固定字节长度；
              * 二维： 解析参数值方法【1:十进制转,2:二进制转 3:码映射，4：直接赋值】）
-             * 三维：属性值单位【十进制转时:1、相电压,2、相电流,3、相功率,4、相功率因数,5、电能,6、AD输入电压】; 二进制转时【转二进制保留位数】
+             * 三维：属性值单位【十进制转时:1、相电压(V)【11:毫伏电压(mV);12:AD路输入电压((mV))】,2、相电流(mA),3、相功率(W),4、相功率因数(%),5、电能(kWh)】;
+             *                 二进制转时【转二进制保留位数,为0时 默认字节8位倍数 保留位数】
              * 注：请求模板 不考虑二进制位的转换
              */
             int[][] byteLenResTemp=new int[][]{{2,1,1,0},{2,1,1,0},{2,1,1,0},{2,1,2,0},{2,1,2,0},{2,1,2,0},{2,1,3,0},{2,1,3,0},
                     {2,1,3,0},{2,1,3,0},{1,1,4,0},{1,1,4,0},{1,1,4,0},{1,1,4,0},{3,1,5,0},
-                    {1,2,3,0},{2,1,6,0},{2,1,6,0},{1,2,2,0}};
+                    {1,2,3,0},{2,1,12,0},{2,1,12,0},{1,2,2,0}};
 
             //参数属性名模板
             String[] paramNameTemp=new String[] {"A相电压","B相电压","C相电压","A相电流","B相电流","C相电流","A相功率","B相功率","C相功率","总功率","PFa","PFb","PFc",
@@ -497,17 +498,17 @@ public enum O_CODE_VAL{
              * 参数 字节长度的多维数组模板（响应类型）
              * 一维：第个参数值的固定字节长度；
              * 二维：解析参数值方法【1:十进制转(11:有符号整型进制转; 12:浮点型进制转),2:二进制转 3:码映射，4：直接赋值】）
-             * 三维：属性值单位【十进制转时:1、相电压(V),2、相电流(A),3、相功率(W),4、相功率因数(%),5、电能(kWh),6、AD输入电压(0.00V),7、毫安电流(mA),8、温度单位(.C),9、小时(h)】;
+             * 三维：属性值单位【十进制转时:1、相电压(V)【11:毫伏电压(mV);12:AD路输入电压((mV))】,2、相电流(mA),3、相功率(W)【31:输入/输出功率(0.1W)】,4、相功率因数(%),5、电能(kWh),8、温度单位(.C),9、小时(h)】;
              *                 二进制转时【转二进制保留位数,为0时 默认字节8位倍数 保留位数】
              * 四维：统计属性字段【如： 节点总数、当前帧数、总帧数】0：默认不是，1：是
              * 请求模板 不考虑二进制位的转换
              */
             //非路灯控制器设备【路灯电源】 老程序
-            int[][] byteLenResTemp_OLD=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
+            int[][] byteLenResTemp_OLD=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,11,0},{2,1,21,0},{2,1,31,0},{1,1,4,0},
                     {2,2,16,0},{1,1,0,0}};
             //非路灯控制器设备【路灯电源】 新程序
-            int[][] byteLenResTemp_NEW=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,6,0},{2,1,2,0},{2,1,3,0},{1,1,4,0},
-                    {2,2,16,0},{1,1,0,0},{1,11,8,0},{2,1,3,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
+            int[][] byteLenResTemp_NEW=new int[][]{{1,1,0,1},{6,4,0,0},{1,3,0,0},{1,3,0,0},{2,1,11,0},{2,1,21,0},{2,1,31,0},{1,1,4,0},
+                    {2,2,16,0},{1,1,0,0},{1,11,8,0},{2,1,31,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
 
             //状态: 位(bit)属性名模板
             Object[][] stateBitTemp=PLC_CONFIG.StateBitTemp();
@@ -524,20 +525,24 @@ public enum O_CODE_VAL{
                 if (PDTValidateUtil.validateResF7HPdt(cmdParam,indexNum)) {
                     String[] paramNamesTemp= (String[]) paramNameTemp[indexNum.intValue()][0];
                     int[][] byteLenResTemp= (int[][]) paramNameTemp[indexNum.intValue()][1];
+                    //响应报文 调KAFKA发送(状态上报)
                     LinkedHashMap<String,Object> pdtResposeVO=PDTAdapter.pdtResposeParser(byteLenResTemp,paramNamesTemp,cmdParam,ctx);
 
                     //处理 二进制位 属性名映射 解析
                     List<Map<String,Object>>pdtList= (List<Map<String, Object>>) pdtResposeVO.get("pdtList");
                     pdtResposeVO.put("pdtList",pdtList);
+                    //响应报文 调KAFKA发送(信号上报)
                     BitResposeParser(pdtList,stateBitTemp,ctx);
 
+                    //响应报文解析后的结构
                     MessageVO<ResponseDataVO> ResultMesssage=T_MessageResult.getResponseVO(HEAD_TEMPLATE.getUID(),c,"F7H", pdtResposeVO);
                     pdtMesg=JSONObject.toJSONString(ResultMesssage);
                     System.out.println("======解析 主动上报节点数据(f7H) 响应PDT协议报文的 结果:" +pdtMesg);
-                    //调KAFKA发送 json报文
-                    pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：成功;
+                    //pdtMesg=ConverUtil.MappCODEVal("01H"); //01H：成功;
+                    pdtMesg="";  //无需向设备响应结果
                 }else{
-                    pdtMesg=DecimalTransforUtil.toHexStr("02",1); //02H：失败; 03H：主机忙
+                    //pdtMesg=DecimalTransforUtil.toHexStr("02",1); //02H：失败; 03H：主机忙
+                    pdtMesg=""; //无需向设备响应结果
                 }
             }
             return pdtMesg;
@@ -559,21 +564,21 @@ public enum O_CODE_VAL{
              * 参数 字节长度的多维数组模板（响应类型）
              * 一维：第个参数值的固定字节长度；
              * 二维：解析参数值方法【1:十进制转(11:有符号整型进制转; 12:浮点型进制转),2:二进制转 3:码映射，4：直接赋值】）
-             * 三维：属性值单位【十进制转时:1、相电压(V),2、相电流(A),3、相功率(W),4、相功率因数(%)【41:A\B路亮度(0~200对应0~100%)】,5、电能(kWh),6、AD输入电压(0.00V),7、毫安电流(mA),8、温度单位(.C),9、小时(h)】;
+             * 三维：属性值单位【十进制转时:1、相电压(V)【11:毫伏电压(mV);12:AD路输入电压((mV))】,2、相电流(mA),3、相功率(W)【31:输入/输出功率(0.1W)】,4、相功率因数(%),5、电能(kWh),8、温度单位(.C),9、小时(h)】;
              *                 二进制转时【转二进制保留位数,为0时 默认字节8位倍数 保留位数】
              * 四维：统计属性字段【如： 节点总数、当前帧数、总帧数】0：默认不是，1：是
              * 请求模板 不考虑二进制位的转换
              */
-            /*int[][] byteLenResTemp_OLD=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
-                                                   {2,1,3,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; */
-            int[][] byteLenResTemp_OLD=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
-                    {1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; //{2,1,3,0},
-            int[][] byteLenResTemp_NEW=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
-                    {2,1,3,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0},
-                    {1,11,8,0},{2,1,3,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
-            int[][] byteLenResTemp_SINGLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,3,0},{1,1,4,0},
+            /*int[][] byteLenResTemp_OLD=new int[][]{{6,1,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,11,0},{2,1,12,0},{2,1,21,0},{2,1,21,0},
+                                                   {2,1,31,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; */
+            int[][] byteLenResTemp_OLD=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,11,0},{2,1,11,0},{2,1,21,0},{2,1,21,0},
+                    {1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}}; //{2,1,31,0},
+            int[][] byteLenResTemp_NEW=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,11,0},{2,1,11,0},{2,1,21,0},{2,1,21,0},
+                    {2,1,31,0},{1,1,4,0},{1,1,41,0},{2,2,16,0},{1,1,0,0},
+                    {1,11,8,0},{2,1,31,0},{2,1,9,0},{2,1,5,0},{2,1,9,0}};
+            int[][] byteLenResTemp_SINGLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,11,0},{2,1,21,0},{2,1,31,0},{1,1,4,0},
                     {1,1,41,0},{2,2,16,0},{1,1,0,0}};
-            int[][] byteLenResTemp_DOUBLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,6,0},{2,1,7,0},{2,1,7,0},
+            int[][] byteLenResTemp_DOUBLE=new int[][]{{6,4,0,0},{1,3,0,0},{1,3,0,0},{1,1,8,0},{2,1,11,0},{2,1,21,0},{2,1,21,0},
                     {2,1,4,0},{2,1,4,0},{1,1,41,0},{1,1,41,0},{2,2,16,0},{1,1,0,0}};
             //状态: 位(bit)属性名模板
             Object[][] stateBitTemp=PLC_CONFIG.StateBitTemp();
@@ -1731,7 +1736,7 @@ public enum O_CODE_VAL{
             if(PLCValidateUtil.rangeInDefined(codeValue.intValue(),0,111)){ //路灯电源（设备码：00H~6FH）
                 for(int j=0;j<bitTemp.length;j++){
                     signalCode=(Integer) bitTemp[j][0];
-                    if(bitChar[j]=='0' &&  signalCode>0){  //获取有报警信息的属性 0:无报警、1:有报警
+                    if(bitChar[j]=='1' &&  signalCode>0){  //获取有报警信息的属性 0:无报警、1:有报警
                         devSignalMap=new HashMap<String,Object>();  //设备信号上报的数据
                         devSignalMap.put("signal_code",signalCode);
                         devSignalList.add(devSignalMap);
@@ -1740,7 +1745,7 @@ public enum O_CODE_VAL{
             }else if(PLCValidateUtil.rangeInDefined(codeValue.intValue(),112,127)){//路灯控制器（设备码：70H~7FH）
                 for(int j=0;j<bitTemp.length;j++){
                     signalCode=(Integer) bitTemp[j][1];
-                    if(bitChar[j]=='0'){  //获取有报警信息的属性 0:无报警、1:有报警
+                    if(bitChar[j]=='1'){  //获取有报警信息的属性 0:无报警、1:有报警
                         devSignalMap=new HashMap<String,Object>();  //设备信号上报的数据
                         devSignalMap.put("signal_code",signalCode);
                         devSignalList.add(devSignalMap);

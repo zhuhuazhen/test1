@@ -50,7 +50,8 @@ public class PlcProtocolsUtils {
 
 	@Autowired
 	private ApplicationConfig applicationConfig;
-
+	
+	
 	/**
 	 * 设备是否已登陆成功
 	 * 
@@ -150,6 +151,11 @@ public class PlcProtocolsUtils {
 	public static String loggerBaseInfo(ModbusInfo modbusInfo) {
 		return ("plc_sn/cCode/cmdCode/hexMsg = /" + modbusInfo.getAddress_str() + "/" + modbusInfo.getcCode_str() + "/"
 				+ modbusInfo.getCmdCode_str() + "/" + modbusInfo.toStringBW());
+	}
+	
+	public static String loggerBaseInfo2(ModbusInfo modbusInfo) {
+		return ("plc_sn/cCode/cmdCode/ = /" + modbusInfo.getAddress_str() + "/" + modbusInfo.getcCode_str() + "/"
+				+ modbusInfo.getCmdCode_str() );
 	}
 
 	public static String getPort(Channel channel) {
@@ -368,31 +374,7 @@ public class PlcProtocolsUtils {
 		}
 
 	}
-
-	/**
-	 * setKafka处理
-	 */
-	public static void sendKafka(String messageVo, String topic) {
-		try {
-			Properties props = new Properties();
-			props.put("bootstrap.servers", "47.106.189.255:9092");
-			props.put("acks", "all");
-			props.put("retries", 0);
-			props.put("batch.size", 16384);
-			props.put("linger.ms", 1);
-			props.put("buffer.memory", 33554432);
-			props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-			props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-
-			Producer<String, String> producer = new KafkaProducer<>(props);
-
-			// Producer<String, String> producer = kafkaCommon.getKafkaProducer();
-			producer.send(new ProducerRecord<>(topic, messageVo));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
+ 
 	/**
 	 * PLC 响应 设备实时状态数据上报 发kafka
 	 * 
@@ -401,7 +383,7 @@ public class PlcProtocolsUtils {
 	 * @param definedAttrList
 	 * @throws Exception
 	 */
-	public static void plcStateResponseSend(String plc_sn, List<Map> definedAttrList, ChannelHandlerContext ctx)
+	public static void plcStateResponseSend(String plc_sn, String nodeID, List<Map> definedAttrList, ChannelHandlerContext ctx)
 			throws Exception {
 		// 获取基本属性
 		List<Map> attributers = new ArrayList<Map>();// 基本属性
@@ -410,15 +392,6 @@ public class PlcProtocolsUtils {
 				.get(plc_sn + "_defAttribute");
 		attributers.add(attribute);
 
-		String nodeID = ""; // 如果没有节点ID属性,gwId(集中器ID)属性值替代
-		for (int j = 0; j < definedAttrList.size(); j++) {
-			Map<String, String> itemMap = definedAttrList.get(j);
-			if (itemMap.containsKey(PLC_CONFIG.节点ID.getKey())) {
-				nodeID = itemMap.get(PLC_CONFIG.节点ID.getKey());
-				itemMap.remove(PLC_CONFIG.节点ID.getKey());
-				break;
-			}
-		}
 		if(!"".equals(nodeID) && nodeID!=null){
 			nodeID=ConverUtil.isNumeric(nodeID)?nodeID:nodeID.toUpperCase();
 			nodeID = (String)IotInfoConstant.allDevInfo.get((insocket.getPort()) + "").get(nodeID+"_defAttribute")
@@ -441,18 +414,7 @@ public class PlcProtocolsUtils {
 				DataType.MetricInfoResponse.getMessageType(), metricInfoResponseDataVO);
 
 		// kafka处理
-		Properties props = new Properties();
-		props.put("bootstrap.servers", "47.106.189.255:9092");
-		props.put("acks", "all");
-		props.put("retries", 0);
-		props.put("batch.size", 16384);
-		props.put("linger.ms", 1);
-		props.put("buffer.memory", 33554432);
-		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		System.out.println("===pdtResposeParser=====plcStateResponseSend==发送设备状态上报数据 的json结构:"+ JSON.toJSONString(messageVo));
-		Producer<String, String> producer = new KafkaProducer<>(props);
-		producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+		SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
 	}
 
 	/**
@@ -487,18 +449,7 @@ public class PlcProtocolsUtils {
 				devSignlResponseDataVO);
 
 		// kafka处理
-		Properties props = new Properties();
-		props.put("bootstrap.servers", "47.106.189.255:9092");
-		props.put("acks", "all");
-		props.put("retries", 0);
-		props.put("batch.size", 16384);
-		props.put("linger.ms", 1);
-		props.put("buffer.memory", 33554432);
-		props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		System.out.println("===pdtResposeParser=====plcSignlResponseSend==发送设备信号上报数据 的json结构:"+ JSON.toJSONString(messageVo));
-		Producer<String, String> producer = new KafkaProducer<>(props);
-		producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+		SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
 	}
 
     /**
@@ -542,18 +493,7 @@ public class PlcProtocolsUtils {
                 devResponseDataVO);
 
         // kafka处理
-        Properties props = new Properties();
-        props.put("bootstrap.servers", "47.106.189.255:9092");
-        props.put("acks", "all");
-        props.put("retries", 0);
-        props.put("batch.size", 16384);
-        props.put("linger.ms", 1);
-        props.put("buffer.memory", 33554432);
-        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        System.out.println("===pdtResposeParser=====plcACKResponseSend==发送PLC ACK响应数据 的json结构:"+ JSON.toJSONString(messageVo));
-        Producer<String, String> producer = new KafkaProducer<>(props);
-        producer.send(new ProducerRecord<>("iot_topic_dataAcess", JSON.toJSONString(messageVo)));
+        SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
     }
 
 	/**
@@ -1151,7 +1091,7 @@ public class PlcProtocolsUtils {
 					+ ",ccode=" + modbusInfo.getcCode_str() + ",exception1！", e);
 			excuSeccess = false;
 		}
-		return excuSeccess;
+		return excuSeccess; 
 
 	}
 

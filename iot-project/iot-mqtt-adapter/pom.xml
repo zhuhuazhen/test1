@@ -134,12 +134,6 @@
 			<version>0.0.1</version>
 		</dependency>
 		
-		 <dependency>
-			<groupId>com.iot</groupId>
-			<artifactId>iot-plc-adapter</artifactId>
-			<version>0.0.1</version>
-		</dependency>
-		
 	</dependencies>
  
   

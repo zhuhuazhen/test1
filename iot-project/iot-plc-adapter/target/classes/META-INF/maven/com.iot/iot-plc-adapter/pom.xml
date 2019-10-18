@@ -10,6 +10,9 @@
   <artifactId>iot-plc-adapter</artifactId>
   <name>iot-plc-adapter</name>
 	<dependencies>
+	
+	<!-- mongoDb -->
+ 
 	    <!-- netty -->
 	    <dependency>
             <groupId>io.netty</groupId>

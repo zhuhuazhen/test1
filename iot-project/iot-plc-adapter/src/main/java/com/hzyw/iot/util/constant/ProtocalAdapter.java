@@ -33,7 +33,7 @@ public class ProtocalAdapter{
      * @param paramBody 命令参数
      * @return
      */
-    public static String  generaMessage(String uuid,String code, String cmd, String paramBody,ChannelHandlerContext ctx) throws Exception {
+    public static synchronized String  generaMessage(String uuid,String code, String cmd, String paramBody,ChannelHandlerContext ctx) throws Exception {
         //有控制码指定控制码，没有默认模板的控制码(应对"xxH"多控制码入参选择)
         if(code!=null && !"".equals(code)) {
             //如果是响应方法(messageRespose)调过来的，这里设值自动无效，以 响应方法里设置为准
@@ -51,10 +51,13 @@ public class ProtocalAdapter{
         System.out.println("================待生成[指令参数]十六进制值的原值入参:"+paramBody);
         //根据指令调PDT模板，生成相应指令参数
         paramBody=O_CODE_VAL.PDTTemplate(code,cmd,paramBody,ctx);
-        System.out.println("===========根据指令调PDT模板 生成[指令参数]的十六进制值:"+paramBody);
+        System.out.println("=======cmd: "+cmd+",====根据指令调PDT模板 生成[指令参数]的十六进制值:"+paramBody);
+
+        if("80H".equals(code) && "".equals(paramBody)) return "";  //上报或响应过来的，若无需返回的直接返回空串(paramBody为空:表示不需响应)
+
         HEAD_TEMPLATE.setPDT(paramBody);
 
-        String L_SIZE=CLAC_L_SIZE(O_CODE_VAL.CmdValueMethod(cmd),paramBody);
+        String L_SIZE=CLAC_L_SIZE(O_CODE_VAL.CmdValueMethod(cmd),paramBody); //统计后字节数 是16进制形式
         //计算“数据域”中所有数据的字节数；L=0 表示无数据域
         HEAD_TEMPLATE.setL(L_SIZE);
 
@@ -68,7 +71,8 @@ public class ProtocalAdapter{
         //校验生成的协议报文是否有错误
         byte[] resp=ConverUtil.hexStrToByteArr(reqMessage);
         boolean validateRes=ValidateProtocalMessage(resp);
-        if (!validateRes) log.error("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
+        if (!validateRes) //log.error("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文!");
+        throw new Exception("主机->设备 的 协议报文的格式或校验有错误! 无法生成报文! ");
         return reqMessage;
     }
 
@@ -187,14 +191,13 @@ public class ProtocalAdapter{
      */
     public static String  messageRespose(byte[] resp, ChannelHandlerContext ctx) throws Exception {
         log.info("=============messageResposen 入参:"+ConverUtil.convertByteToHexString(resp));
-        String paramBody="";
         if(resp.length<13) throw new Exception("协议报文长度有错误！总字节长度范围：13~267!");
         C_CODE_VAL.CMethod("80H");
         String uuid=ConverUtil.unpackContent(resp,1,7);
         System.out.println("=====提取的入参设备UUID:"+uuid);
         HEAD_TEMPLATE.setUID(uuid); //设备ID
         //校验集中器- 返回的协议报文 (01H: 成功 02H: 失败, 03H：主机忙  或 协议报文有错误)
-        paramBody=ValidateResponseMessage(resp);
+        String paramBody=ValidateResponseMessage(resp);
         //从 集中器 返回的报文 中 提取入参
         String code=ConverUtil.convertByteToHexStr(resp[8])+"H"; //控制码
         String cmd=ConverUtil.convertByteToHexStr(resp[10])+"H";  //指令码
@@ -217,7 +220,7 @@ public class ProtocalAdapter{
             //协议报文 校验是否成功? 01H: 成功 02H: 失败
             paramBody=validateRes? "01":"02";
         } catch (Exception e) {
-            System.out.println("=====集中器->主机 的 协议报文的格式或校验有错误! 无法生成报文!");
+            log.error("=====集中器->主机 的 协议报文的格式或校验有错误! 无法生成报文!");
             paramBody="03"; //主机忙 或异常错误
             //throw new Exception("协议报文的格式或校验有错误! 无法生成报文!");
             e.printStackTrace();
@@ -243,15 +246,15 @@ public class ProtocalAdapter{
         message=ConverUtil.hexStrToByteArr(byteToHexStr); //16进制字符串转字节数组
         System.out.println("======协议报文总字节长度:"+message.length);
         if(!rangeInDefined(message.length,13,267)) {
-            System.out.println("协议报文长度有错误！总字节长度范围：13~267!");
+            log.error("协议报文长度有错误！总字节长度范围：13~267!");
             return false;
         }
         if(!checkDataArea(message)) {
-            System.out.println("协议报文模板的L(数据长度),CS(校验码) 与实际数据域长度不匹配!");
+            log.error("协议报文模板的L(数据长度),CS(校验码) 与实际数据域长度不匹配!");
             return false;
         }
         if(!checkFixedValue(message)){
-            System.out.println("协议报文模板的H,C,T 固定值有错误!");
+            log.error("协议报文模板的H,C,T 固定值有错误!");
             return false;
         }
         return true;
@@ -265,7 +268,7 @@ public class ProtocalAdapter{
     private static String CLAC_L_SIZE(String... params){
         byte[] byteArry=null;
         String sizeVal="00";
-        Integer calcSum=0;
+        Integer calcSum=0;  //累加字节统计后 是10进制值的
         try {
             if(params.length>0){
                 for(int i=0;i<params.length;i++){
@@ -274,12 +277,13 @@ public class ProtocalAdapter{
                     System.out.println("第"+(i+1)+"个数据域字节长度是"+byteArry.length);
                     calcSum=byteArry.length+calcSum;
                 }
-                System.out.println("数据域 字节数计算和："+calcSum);
-                if(String.valueOf(calcSum).length()>2){
+                System.out.println("数据域 字节数计算和(L)："+calcSum);
+                sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(calcSum),1); //10进制转16进制
+                /*if(String.valueOf(calcSum).length()>2){
                     sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(calcSum),false)),1);
                 }else {
                     sizeVal = DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(calcSum), true)), 1);
-                }
+                }*/
                 if(StringUtils.isNumeric(sizeVal)){
                     sizeVal=new DecimalFormat("00").format(Integer.parseInt(sizeVal));
                 }
@@ -300,6 +304,7 @@ public class ProtocalAdapter{
         String csStr=HEAD_TEMPLATE.H.getValue().concat(HEAD_TEMPLATE.UID.getValue().concat(HEAD_TEMPLATE.H.getValue().concat("%s%s%s%s")));
         System.out.println("计算 校验码和 模板："+csStr);
         if(params.length==4){
+            //String L_SIZE=String.valueOf(DecimalTransforUtil.toHexStr(params[1],1)); //10进制转16进制
             csStr=String.format(csStr,params[0],params[1],params[2],params[3]);
             System.out.println("计算 校验码和 原值："+csStr);
             System.out.println("计算 校验码和 CS："+ConverUtil.makeChecksum(csStr));
@@ -326,7 +331,8 @@ public class ProtocalAdapter{
      * @return
      */
     public static boolean checkDataArea(byte[] message){
-        String L=StringUtils.lowerCase(ConverUtil.convertByteToHexStr(message[9])); //L
+        String L=StringUtils.lowerCase(ConverUtil.convertByteToHexStr(message[9])); //L 16进制的
+        //L=String.valueOf(DecimalTransforUtil.hexToLong(L,true)); //16进制转10进制
         System.out.println("====检查协议报文的数据长度，校验码=L:"+L);
         String CS=StringUtils.lowerCase(ConverUtil.convertByteToHexStr(message[message.length-2]));  //CS
         System.out.println("====检查协议报文的数据长度，校验码=CS:"+CS);
@@ -342,11 +348,19 @@ public class ProtocalAdapter{
         }
         System.out.println("====检查协议报文的数据长度，校验码=paramBody:"+paramBody);
         //计算“数据域”中所有数据的字节数；L=0 表示无数据域
-        String L_SIZE=StringUtils.lowerCase(CLAC_L_SIZE(O_CODE_VAL.CmdValueMethod(cmd),paramBody));
+        String L_SIZE=StringUtils.lowerCase(CLAC_L_SIZE(O_CODE_VAL.CmdValueMethod(cmd),paramBody)); //统计后 返回的是 16进制的
+        //if(!StringUtils.isNumeric(L_SIZE))L_SIZE=String.valueOf(DecimalTransforUtil.hexToLong(L_SIZE,true)); //16进制转10进制
         System.out.println("====检查协议报文的数据长度，校验码=L_SIZE:"+L_SIZE);
         //计算校验码(CS): 从“帧起始符”到校验码之前的所有字节的模256的和，即各字节二进制算术和，不计超过256 的溢出值
         String CS_SIZE=StringUtils.lowerCase(CLAC_CS_SUM(C_CODE_VAL.CValueMethod(code),L_SIZE,O_CODE_VAL.CmdValueMethod(cmd),paramBody));
-        System.out.println("====检查协议报文的数据长度，校验码 比较结果:"+L_SIZE);
+        System.out.println("====检查协议报文的数据长度CS 比较结果: CS:"+CS+"和 CS_SIZE:"+CS_SIZE);
+        if(StringUtils.isNumeric(L)){
+            L=new DecimalFormat("00").format(Integer.parseInt(L));
+        }else if(L.length()<2){
+            L+="0".concat(L);
+        }
+        System.out.println("====检查协议报文的数据长度L 比较结果: L:"+L+"和 L_SIZE:"+L_SIZE);
+        System.out.println("====检查协议报文的数据长度L 最大字节数范围不能超过10进制的255: "+Integer.parseInt(L,16));
         return L.equals(L_SIZE) && Integer.parseInt(L,16)<=255 && CS.equals(CS_SIZE);
     }
 

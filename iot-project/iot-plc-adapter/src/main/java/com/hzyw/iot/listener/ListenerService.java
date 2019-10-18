@@ -2,6 +2,8 @@ package com.hzyw.iot.listener;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -14,6 +16,7 @@ import com.hzyw.iot.config.NettyConfig;
 import com.hzyw.iot.kafka.KafkaCommon;
 import com.hzyw.iot.netty.RTUPortListener;
 import com.hzyw.iot.redis.IoTService;
+import com.hzyw.iot.service.GateWayService;
 import com.hzyw.iot.service.RedisService;
 
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -38,6 +41,10 @@ public class ListenerService implements CommandLineRunner {
     
     @Autowired
 	private RedisService redisService; //redis工具类
+    
+    @Autowired
+	private GateWayService gateWayService; 
+    
 
     @Override
     public void run(String... args) throws Exception {
@@ -72,5 +79,28 @@ public class ListenerService implements CommandLineRunner {
 				}
 			} 
          );*/
+        Scheduled();
+        
     }
+    
+    /**
+     * 启动定时任务，调度接口查询节点详情并作为状态类型的数据上报
+     */
+    public void Scheduled() {
+		Runnable runnable = new Runnable() {
+			public void run() {
+				try{
+					//启动定时任务，调度接口查询节点详情并作为状态类型的数据上报
+			        gateWayService.getPLCMetricInfo();
+				}catch(Exception e){
+					System.out.println("============Scheduled：：查询节点详情=,异常==============");
+
+					e.printStackTrace();
+				}
+			}
+		};
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		//第二个参数为首次执行的延时时间，第三个参数为定时执行的间隔时间
+		service.scheduleAtFixedRate(runnable, 10, 10*3, TimeUnit.SECONDS); 
+	} 
 }

@@ -46,7 +46,6 @@ public enum C_CODE_VAL{
             e.printStackTrace();
         }
         System.out.println("传查询参数 code： " + code);
-        String resCode="";
         for (C_CODE_VAL cf : C_CODE_VAL.values()) {
             if (cf.name().endsWith(code)) {
                 System.out.println("查询到 "+cf.name()+" 的对应控件码值： " + cf.value);

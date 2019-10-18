@@ -20,7 +20,7 @@ import redis.clients.jedis.Jedis;
 public class TestRequest {
 		public static void main(String[] args) {
 			Properties props = new Properties();
-	        props.put("bootstrap.servers", "47.106.189.255:9092");
+	        props.put("bootstrap.servers", "192.168.3.183:9901,192.168.3.183:9902,192.168.3.183:9903");//47.106.189.255:9092
 	        props.put("acks", "all");
 	        props.put("retries", 0);
 	        props.put("batch.size", 16384);
@@ -67,7 +67,7 @@ public class TestRequest {
 	        mapVo.put("type", "request");
 	        mapVo.put("timestamp",1566205651);
 	        mapVo.put("msgId", "1db179ce-c81e-4499-bff2-29e8a954af97");
-	        mapVo.put("gwId", "1001-d8b38d288d431464-3001-ffff-9ac9");//000000000100-1010-d8b38d288d431464-3001-ffff-36cf
+	        mapVo.put("gwId", "2000-d8b38d288d431464-3001-ffff-c8f0");//000000000100-1010-d8b38d288d431464-3001-ffff-36cf
 	        mapVo.put("data", setListMap);
 	        ProtocalAdapter protocalAdapter = new ProtocalAdapter();
 	        JSONObject jsonObject = JSONUtil.parseObj(mapVo);

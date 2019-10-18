@@ -13,7 +13,7 @@ public class IotInfoMethod {
   
  public static final	String[] plc_methods = {"operator_70:70",
     			"operator_71:71",
-    			"operator_73:73",
+    			"sel_plc_state:73", //查询集中器状态
     			"operator_82:82",
     			"operator_83:83",
     			"operator_84:84",
@@ -33,8 +33,8 @@ public class IotInfoMethod {
     			"operator_f6:f6",
     			"set_brightness:42",  //调灯光
     			"set_onoff:42",       //开关
-    			"operator_f7:f7",
-    			"operator_45:45",
+    			"auto_report_node:f7", //主动上报节点数据
+    			"sel_detail_node:45", //查询节点详细数据
     			"operator_fb:fb",
     			"operator_fc:fc",
     			"operator_fd:fd",

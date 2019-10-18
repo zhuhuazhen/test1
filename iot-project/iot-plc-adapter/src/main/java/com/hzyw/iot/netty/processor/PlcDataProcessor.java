@@ -108,7 +108,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	             
 	            // ====登陆、设备配置过程=======start >>===
 	            boolean isLogin = PlcProtocolsUtils.isLogin(modbusInfo);   //是否已登陆
-	            boolean isConfig =true;//PlcProtocolsUtils.isConfig(modbusInfo,redisService); //true;//是否已配置设备
+	            boolean isConfig = PlcProtocolsUtils.isConfig(modbusInfo,redisService); //true;//是否已配置设备
 	            if(!isLogin && "f0".equals(modbusInfo.getCmdCode_str().toLowerCase())){
 	            	//isLogin = true;
 	            	boolean seccess = PlcProtocolsUtils.resonseLogin(ctx, modbusInfo);//通知设备已成功登陆
@@ -160,12 +160,13 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	            	PlcProtocolsBusiness.protocals_process_Response(ctx, modbusInfo);
 	            }else{
 	            	System.out.println("--------------2-----------" + modbusInfo.getCmdCode_str());
-						source.resetReaderIndex();
+					//if(!"f7".equalsIgnoreCase(modbusInfo.getCmdCode_str())) {
+					    source.resetReaderIndex();
 						byte[] requestBytes = new byte[source.readableBytes()];
 						source.readBytes(requestBytes);
-						ProtocalAdapter.messageRespose(requestBytes,ctx);
+						ProtocalAdapter.messageRespose(requestBytes, ctx);
+					//}
 	            }
-	            
 			}catch(Exception e){
 				LOGGER.error("translate exception,",e); 
 			}

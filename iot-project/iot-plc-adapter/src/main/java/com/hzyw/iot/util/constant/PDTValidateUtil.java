@@ -76,10 +76,11 @@ public class PDTValidateUtil {
                 bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
             }
             String hh = new String(bitChar); //ISO8859-1
-            String newDevCode=DecimalTransforUtil.BinaryString2hexString("0".concat(hh));//二进制数据转化为16进制字符串
+            System.out.println("============bit15~bit9新老程序状态位(新程序:10001000):"+hh.concat("0"));
+            String newDevCode=DecimalTransforUtil.BinaryString2hexString(hh.concat("0"));//二进制数据转化为16进制字符串
             System.out.println("========主动上报节点数据(F7H)==区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(88为新程序):"+newDevCode);
             if(StringUtils.isNumeric(newDevCode)){
-                if(Integer.valueOf(newDevCode)==88){
+                if(Integer.valueOf(newDevCode)==88){//88------10001000
                     indexNum.set(1); //bit15~bit9:0Xf0，则为新程序(1)
                 }else{
                     indexNum.set(0); //bit15~bit9:0x00,为老程序(0)
@@ -126,11 +127,12 @@ public class PDTValidateUtil {
                 bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
             }
             String hh = new String(bitChar); //ISO8859-1
-            String newDevCode=DecimalTransforUtil.BinaryString2hexString("0".concat(hh));//二进制数据转化为16进制字符串
+            System.out.println("============bit15~bit9新老程序状态位(新程序:11110000):"+hh.concat("0"));
+            String newDevCode=DecimalTransforUtil.BinaryString2hexString(hh.concat("0"));//二进制数据转化为16进制字符串
             System.out.println("========查询节点详细数据(45H)=区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(f0为新程序):"+newDevCode);
             if(StringUtils.isNumeric(newDevCode)){
                 indexNum.set(0); //bit15~bit9:0x00,为老程序(0)
-            }else if("f0".equals(newDevCode.toLowerCase())){
+            }else if("f0".equals(newDevCode.toLowerCase())){//f0-----11110000
                 indexNum.set(1); //bit15~bit9:0Xf0，则为新程序(1)
             }
         }

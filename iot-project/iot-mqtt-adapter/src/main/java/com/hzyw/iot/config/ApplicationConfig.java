@@ -8,7 +8,6 @@ public class ApplicationConfig {
 	//iot.mqtt.adapter.serviceid=service_00001
 	/*@Value(value = "${iot.mqtt.adapter.kafkatopic}")
 	private String  kafkaTopic;
-	
 	*/
 	@Value(value = "${iot.mqtt.adapter.serviceid}")
 	private String  serviceId;

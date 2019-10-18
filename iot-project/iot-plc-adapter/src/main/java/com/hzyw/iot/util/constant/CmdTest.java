@@ -22,8 +22,8 @@ public class CmdTest {
 //            System.out.println("========清除定时任务（84H）请求测试 结果: "+ProtocalAdapter.testRequestCode("00H","84H"));
 //            System.out.println("========设置集中器时间（8CH）请求测试 结果: "+ProtocalAdapter.testRequestCode("00H","8CH"));
 
-            JSONObject jsonObject=RequestVO.getReqVO();
-            System.out.println("========节点调光(42H)请求测试 结果: "+ProtocalAdapter.messageRequest(jsonObject));
+            /*JSONObject jsonObject=RequestVO.getReqVO();
+            System.out.println("========节点调光(42H)请求测试 结果: "+ProtocalAdapter.messageRequest(jsonObject));*/
 
             //System.out.println("========查询节点详细数据(45H) 请求测试 结果: "+ProtocalAdapter.testRequestCode("01H","45H"));
 
@@ -56,8 +56,8 @@ public class CmdTest {
             System.out.println("========集中器继电器关（71H）响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
 
             //查询集中器状态(73H)   ok  // 成功： 返回VO, 02H:失败
-        /*  responseParam="6800000000000168802273089808B608FC27102648251C086C085D0873193C62626362003DB3010EA622BA02E316";
-            System.out.println("========查询集中器状态（73H）响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));*/
+          responseParam="6800000000000168802273089808B608FC27102648251C086C085D0873193C62626362003DB3010EA622BA02E316";
+            System.out.println("========查询集中器状态（73H）响应测试 结果: "+ProtocalAdapter.testResponseCode(responseParam));
 
             //主动上报节点数据(F7H)   ok  // 成功： 返回VO, 02H:失败
             //1、路灯电源（设备码：00H~6FH）    2、路灯控制器（设备码：70H~7FH）

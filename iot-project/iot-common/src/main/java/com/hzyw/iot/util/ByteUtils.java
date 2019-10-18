@@ -2,7 +2,7 @@ package com.hzyw.iot.util;
 
 import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.util.constant.ConverUtil;
-
+ 
 /**
  * @author TheEmbers Guo
  * @version 1.0
@@ -58,11 +58,11 @@ public class ByteUtils {
      * @param bytes
      * @return
      */
-    public static long byteArrayToLong(byte[] bytes) {
+    public static long byteArrayToLong(byte[] bytes) {  
         long result = 0;
         int len = bytes.length;
         if (len == 1) {
-            byte ch = (byte) (bytes[0] & 0xff);
+            long ch = (long) (bytes[0] & 0xff);
             result = ch;
         } else if (len == 2) {
             int ch1 = bytes[0] & 0xff;
@@ -96,7 +96,7 @@ public class ByteUtils {
      * @return
      */
     public static byte[] varIntToByteArray(long value) {
-        Long l = new Long(value);
+        Long l = new Long(value); 
         byte[] valueBytes = null;
         if (l == l.byteValue()) {  //这里有点问题，如果是小于 255的int 会返回两个字节的数值哦 ，这里应该是当有符号的数值来处理了
             valueBytes = toBytes(value, 1);
@@ -118,7 +118,14 @@ public class ByteUtils {
         result[3] = (byte)(i & 0xFF);
         return result;
     } 
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
+    	String hex = "c8";
+    	 
+    	byte[] temp = ConverUtil.hexStrToByteArr(hex); 
+		long _temp14 = ByteUtils.byteArrayToLong(temp);  
+		System.out.println("-------1--------------="+_temp14);
+		 
+    	
     	int plc_node_a_brightness = 118593;
     	System.out.println("-1-" + plc_node_a_brightness);
     	//System.out.println("-2-" + ConverUtil.convertByteToHexStr(x) );
@@ -153,10 +160,10 @@ public class ByteUtils {
 		 
 		
         //int
-        int iMax = 200 ;
+        int iMax = 36 ;
         int iMin = Integer.MIN_VALUE;
         long i_max_v = byteArrayToLong(varIntToByteArray(iMax));
-        System.out.println(ConverUtil.convertByteToHexString(varIntToByteArray(iMax)));
+        System.out.println("--------"+ConverUtil.convertByteToHexString(varIntToByteArray(iMax)));
         check(iMax, i_max_v, "int");
         long i_min_v = byteArrayToLong(varIntToByteArray(iMin));
         check(iMin, i_min_v, "int");
@@ -170,7 +177,7 @@ public class ByteUtils {
         check(lMin, l_min_v, "long");
          
         
-    } 
+    } */
     private static void check(long s, long r, String tag) {
         if (s == r) {
             System.out.println(tag + "[result:" + r + "]");

@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,9 +81,9 @@ public class T_ParamTest {
                 String onoff= StringUtils.trimToNull(pdtMap.get("onoff")+"");  //0:关灯; 1: 开灯
                 String dim=StringUtils.trimToNull(pdtMap.get("level")+"");
                 dim="0".equals(onoff)? "0":(ConverUtil.parseNumeric(dim)==0)? "100":dim;
+                BigDecimal dimNum = new BigDecimal(dim).multiply(new BigDecimal(2));
+                System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim+",对应(0~200)值:"+dimNum);
 
-                System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim);
-                int dimNum=Integer.parseInt(dim)*2;
                 dim=DecimalTransforUtil.toHexStr(String.valueOf(dimNum),1);
                 pdtMap.put("level",dim+"H");
 

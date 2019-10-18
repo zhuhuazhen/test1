@@ -19,6 +19,7 @@ import com.hzyw.iot.kafka.config.ApplicationConfig;
 import com.hzyw.iot.netty.channelhandler.CommandHandler;
 import com.hzyw.iot.service.GateWayService;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
+import com.hzyw.iot.utils.SendKafkaUtils;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
@@ -58,9 +59,10 @@ public class DataSendDownConsumer implements Runnable {
 	@SuppressWarnings("static-access")
 	public void consumerProcess() {
 		String topic = applicationConfig.plcOrder(); //  "testbyzhu" ;
+		String consumerGroup = applicationConfig.getKafkaPlcConsumerGroup();
 		try {
 			//获取kafka主题
-			KafkaConsumer<String, String> consumer =  kafkaCommon.getKafka();
+			KafkaConsumer<String, String> consumer = SendKafkaUtils.getKafka(consumerGroup);
 			consumer.subscribe(Arrays.asList(topic));//订阅主题
 			
 			for(;;){
@@ -91,7 +93,7 @@ public class DataSendDownConsumer implements Runnable {
 					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(value));
 					System.out.println("111111111111111拼装好的指令:"+plcTest);
 					//CommandHandler.writeCommandByRequestMessageVO(plcTest);
-					//CommandHandler.writeCommand("12345000000000100", plcTest, 2);
+					CommandHandler.writeCommand("12345000000000100", plcTest, 2);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -100,15 +102,10 @@ public class DataSendDownConsumer implements Runnable {
 				//已验证成功开关灯   可以通过测试类KafkaProducerExampleByzhu发起调试即可
 			}
 		}
-		
-		
 	}
 
 	@Override
 	public void run() {
 		this.consumerProcess();
 	}
-	
-
-
 }

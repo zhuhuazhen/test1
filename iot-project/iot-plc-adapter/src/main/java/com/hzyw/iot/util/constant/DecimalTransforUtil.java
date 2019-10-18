@@ -1,5 +1,7 @@
 package com.hzyw.iot.util.constant;
 
+import java.math.BigInteger;
+
 public class DecimalTransforUtil {
 	public static byte CARD_NUM_BIT = 8;
 	
@@ -15,6 +17,26 @@ public class DecimalTransforUtil {
         }
         return false;
     }
+
+    /**
+     * 10进制转16进制 (有符号)
+     * @param var
+     * @return
+     */
+    public static String toHexStrSign(int var){
+        return Integer.toHexString(var);
+    }
+
+    /**
+     * 16进制转10进制(有符号)
+     * @param hex
+     * @return
+     */
+    public static long hexToLongSign(String hex){
+        BigInteger bi = new BigInteger(hex, 16);
+        return bi.intValue();
+    }
+
  
     /**
      * 10进制转16进制，并补齐指定位数
@@ -287,13 +309,15 @@ public class DecimalTransforUtil {
         String hexString = BinaryString2hexString(str);
         System.out.println("转换为十六进制：\n"+hexString);*/
 
-        String aa="000002000533";
+       /* String aa="000002000533";
 
         String bb=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(aa), true)), 6);
 
         String cc=DecimalTransforUtil.toHexStr(aa,6);
         System.out.println(bb);
-        System.out.println(bb);
+        System.out.println(bb);*/
+
+
 
         /*String aa="1b"; //7F
         Integer hh=1;
@@ -310,7 +334,23 @@ public class DecimalTransforUtil {
             System.out.println("===333333===:"+bb);
         }*/
 
+           /* int var = -23243;
+            String hex = toHexStrSign(var);
+            System.out.println(hex);
+            System.out.println(hexToLongSign(hex));*/
 
+           //hexToLong: 16->10 x
+           //toHexStr:10->16
+           //true:纯数字按16进制处理
+
+            //String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(200),false)),1);
+             // String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(20),false)),1);
+        String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(200),1);
+            //String sizeVal = DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(200), true)), 1);
+
+        //long sizeVal =DecimalTransforUtil.hexToLong("200",false);
+
+        System.out.println(sizeVal);
     }
 
 }

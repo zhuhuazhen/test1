@@ -7,6 +7,7 @@ import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 import io.netty.channel.ChannelHandlerContext;
 
 import java.net.InetSocketAddress;
+import java.util.UUID;
 
 /**
  * PLC 响应 消息头
@@ -23,7 +24,7 @@ public class T_ResponseResult {
      * @throws Exception
      */
     public static <T> MessageVO<T> getResponseVO(ChannelHandlerContext ctx, String plc_sn, String type, T data)throws Exception{
-        String msgId="31a8c447-5079-4e91-a364-1769ac06fd5c";  //暂时固定值，后面考虑怎么生成获取消息ID  消息ID 请求那边生成的带的
+        String msgId="31a8c447-5079-4e91-a364-"+ UUID.randomUUID();  // -1769ac06fd5c
         MessageVO<T> mesVO = new MessageVO<T>();
         DataType enumType = DataType.getByValue(type);
         System.out.println("============getResponseVO 方法， 消息type: "+type);

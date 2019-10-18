@@ -6,7 +6,7 @@ package com.hzyw.iot.util.constant;
 public enum PLC_METHOD_CMD_CONFIG {
     opera1("70H"), //集中器继电器开
     opera2("71H"), //集中器继电器关
-    opera3("73H"), //查询集中器状态
+    sel_plc_state("73H"), //查询集中器状态
     opera4("82H"), //下发定时任务
     opera5("83H"), //查询定时任务
     opera6("84H"), //清除定时任务
@@ -26,8 +26,8 @@ public enum PLC_METHOD_CMD_CONFIG {
     opera20("F6H"), //报警能使查询
     set_onoff("42H"), //开关灯
     set_brightness("42H"), //节点调光
-    opera22("F7H"), //主动上报节点数据
-    opera23("45H"), //查询节点详细数据
+    auto_report_node("F7H"), //主动上报节点数据
+    sel_detail_node("45H"), //查询节点详细数据
     opera24("FBH"), //查询和上传历史数据
     opera25("FCH"), //设置集中器远程更新IP和端口
     opera26("FDH"), //查询集中器远程更新IP和端口
