@@ -69,7 +69,7 @@ public class PlcProtocolsBusiness {
 	}
 	
 	public static String getPortByPlcID(String plc_id) throws Exception {
-		return "12345"; //后面从数据里面查找即可
+		return IotInfoConstant.plc_relation_plcIDToPort.get(plc_id);
 	}
 	 
 	public static String getPlcNodeSnByPlcNodeID(String plc_node_id) throws Exception {
@@ -287,8 +287,8 @@ public class PlcProtocolsBusiness {
 				temp1 = ConverUtil.hexStrToByteArr(plc_node_SN);
 			}
 			modbusInfo.setPdt(temp1);
-			logger.info("=====>>>protocols_45    下发查询节点详情...===============/" + plc_node_SN);
-			ctxWriteAndFlush(channel,modbusInfo,"protocols_45 下发查询节点详情/" + plc_node_SN ,0);
+			logger.info("=====>>>api_45    下发查询节点详情...===============/" + plc_node_SN);
+			ctxWriteAndFlush(channel,modbusInfo,"api_45 下发查询节点详情/" + plc_node_SN ,0);
 			result.put("msg", "seccess");
 			result.put("data", "执行指令,请求发送完毕 ");
 		} catch (Exception e) {
@@ -373,7 +373,7 @@ public class PlcProtocolsBusiness {
 		}
 		if ("9a".equals(cCmdCode)  		//查询组网个数
 			|| "97".equals(cCmdCode)    //查询节点列表
-			|| "45".equals(cCmdCode)   //查询节点详情
+			//|| "45".equals(cCmdCode)   //查询节点详情
 			) {		   
 			 flag = true;
 		}
@@ -482,17 +482,6 @@ public class PlcProtocolsBusiness {
 		return type;
 	}
   
-	/**
-	 * 获取节点详情
-	 * 
-	 * 日志跟踪提示：
-	 * 	    关键字protocols_45  可同时观察请求指令 和响应指令 过程
-	 *    plcsn ,nodesn  跟踪具体的设备
-	 *  
-	 * @param ctx
-	 * @param modbusInfo
-	 * @return
-	 */
 	public static boolean protocols_API_45_Response(ChannelHandlerContext ctx, ModbusInfo modbusInfo) {
 		String cCode = modbusInfo.getcCode_str()!=null?modbusInfo.getcCode_str().trim():"";
 		String cCmdCode = modbusInfo.getCmdCode_str()!=null?modbusInfo.getCmdCode_str():"";
@@ -502,10 +491,10 @@ public class PlcProtocolsBusiness {
 		String _temp1= null;
 		try {
 			//返回结果到到POST请求
-			all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
+			//all.remove(plcsn+"_"+cCmdCode+"_"+cCode);//清除临时缓存
 			Map<Integer,String> nodeTreeMap = new TreeMap<Integer,String>();
 			
-			//logger.info("=====>>>protocols_45  获取节点详情返回   ...==============="); //此方法查询条件必须控制为按节点来查询，因为返回的节点列表没有指定节点总数，不好解
+			logger.info("=====>>>api_45  获取节点详情返回   ...==============="); //此方法查询条件必须控制为按节点来查询，因为返回的节点列表没有指定节点总数，不好解
 			String plc_id = getPlcIdByPlcSn(modbusInfo.getAddress_str(),PlcProtocolsUtils.getPort(ctx.channel()));
 			byte[] allpdt = modbusInfo.getPdt();
  			byteBuf = Unpooled.wrappedBuffer(allpdt,0,allpdt.length);//所有节点
@@ -568,46 +557,46 @@ public class PlcProtocolsBusiness {
 				}
 				
 				_temp1 = ConverUtil.convertByteToHexString(temp1);//节点ID
-				logger.info("=====>>>protocols_45 ---返回节点详情 ----plc_sn/plc_node_sn=----" +plcsn+"/" + _temp1);
+				logger.info("=====>>>api_45 ---获取节点详情返回 ----plc_sn/plc_node_sn=----" +plcsn+"/" + _temp1);
 				nodeid = getPlcNodeIdByPlcNodeSn(_temp1,PlcProtocolsUtils.getPort(ctx.channel()));
-				addMetric("protocols_45/"+plcsn+"/"+_temp1, "isNew=" + isNew , null ,metricinfo);//此项只用于跟踪问题,可直接在KAFKA客户端工具搜索跟踪
+				addMetric("api_45/"+plcsn+"/"+_temp1, "isNew=" + isNew , null ,metricinfo);//此项只用于跟踪问题,可直接在KAFKA客户端工具搜索跟踪
 				addMetric(IotInfoConstant.dev_plc_node_sn, _temp1 , null ,metricinfo);
 				String _temp2 = ConverUtil.convertByteToHexString(temp2);//设备码  列如:19是100W
 				addMetric(IotInfoConstant.dev_plc_node_devCode, _temp2 , null ,metricinfo);
 				String _temp3 = ConverUtil.convertByteToHexString(temp3);//在线状态   00H：不在线;    01H：在线
 				addMetric(IotInfoConstant.dev_plc_node_a_status, _temp3 , null ,metricinfo);
 				
-				double _temp4 = ByteUtils.byteArrayToLong(temp4);  // 温度	单位 ℃
-				addMetric(IotInfoConstant.dev_plc_node_temperature, _temp4 ,IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_temperature) ,metricinfo);
+				long _temp4 = ByteUtils.byteArrayToLong(temp4);  // 温度	单位 ℃
+				addMetric2(IotInfoConstant.dev_plc_node_temperature, _temp4,temp4 ,IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_temperature) ,metricinfo);
 				//addMetric("温度", _temp4 , "℃" ,metricinfo);
 
-				double _temp5 = ByteUtils.byteArrayToLong(temp5) * 0.1;  //输入电压	单位0.1V
-				addMetric(IotInfoConstant.dev_plc_node_voltage_in, _temp5 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_voltage_in) ,metricinfo);
-				double _temp6 = ByteUtils.byteArrayToLong(temp6) * 0.1;  //输出电压	单位0.1V (路灯控制器无该项) 默认值给00
-				addMetric(IotInfoConstant.dev_plc_node_voltage_out, _temp6 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_voltage_out) ,metricinfo);
+				long _temp5 = ByteUtils.byteArrayToLong(temp5) * 100;  //输入电压	单位0.1V  ==>需要转化为mV 且不带精度，这里所有的上报值都会返回整形
+				addMetric2(IotInfoConstant.dev_plc_node_voltage_in, _temp5,temp5 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_voltage_in) ,metricinfo);
+				long _temp6 = ByteUtils.byteArrayToLong(temp6) * 100;  //输出电压	单位0.1V (路灯控制器无该项) 默认值给00
+				addMetric2(IotInfoConstant.dev_plc_node_voltage_out, _temp6,temp6 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_voltage_out) ,metricinfo);
 
 				
 				long _temp7 = ByteUtils.byteArrayToLong(temp7);          //A路输入电流	单位mA
-				addMetric(IotInfoConstant.dev_plc_node_a_electri_in, _temp7 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_a_electri_in) ,metricinfo);
+				addMetric2(IotInfoConstant.dev_plc_node_a_electri_in, _temp7,temp7 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_a_electri_in) ,metricinfo);
 				long _temp8 = ByteUtils.byteArrayToLong(temp8);          //B路输入电流	单位mA
-				addMetric(IotInfoConstant.dev_plc_node_b_electri_in, _temp8 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_b_electri_in) ,metricinfo);
+				addMetric2(IotInfoConstant.dev_plc_node_b_electri_in, _temp8,temp8 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_b_electri_in) ,metricinfo);
 				long _temp9 = ByteUtils.byteArrayToLong(temp9);          // 输出电流	单位mA
-				addMetric(IotInfoConstant.dev_plc_node_electri_out, _temp9 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_electri_out) ,metricinfo);
+				addMetric2(IotInfoConstant.dev_plc_node_electri_out, _temp9,temp9 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_electri_out) ,metricinfo);
 				
-				double _temp10 = ByteUtils.byteArrayToLong(temp10) * 0.1*1000;  // A路有功功率	单位0.1W  转化为物联网平台要求的=>mW
-				addMetric(IotInfoConstant.dev_plc_node_a_power, _temp10 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_a_power) ,metricinfo);
-				double _temp11 = ByteUtils.byteArrayToLong(temp11) * 0.1*1000;  //   B路有功功率	单位0.1W
-				addMetric(IotInfoConstant.dev_plc_node_b_power, _temp11 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_b_power) ,metricinfo);
+				long _temp10 = ByteUtils.byteArrayToLong(temp10) * 100;  // A路有功功率	单位0.1W  转化为物联网平台要求的=> mW  *1000
+				addMetric2(IotInfoConstant.dev_plc_node_a_power, _temp10,temp10 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_a_power) ,metricinfo);
+				long _temp11 = ByteUtils.byteArrayToLong(temp11) * 100;  //   B路有功功率	单位0.1W
+				addMetric2(IotInfoConstant.dev_plc_node_b_power, _temp11,temp11 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_b_power) ,metricinfo);
 				
 				long _temp12 = ByteUtils.byteArrayToLong(temp12);          // A路功率因数	0~100对应0~100%
-				addMetric(IotInfoConstant.dev_plc_node_a_pf, _temp12 , "%" ,metricinfo);     
+				addMetric2(IotInfoConstant.dev_plc_node_a_pf, _temp12 ,temp12, "%" ,metricinfo);     
 				long _temp13 = ByteUtils.byteArrayToLong(temp13);          // B路功率因数	0~100对应0~100%
-				addMetric(IotInfoConstant.dev_plc_node_b_pf, _temp13 , "%" ,metricinfo);       
+				addMetric2(IotInfoConstant.dev_plc_node_b_pf, _temp13 ,temp13, "%" ,metricinfo);       
 				
 				long _temp14 = ByteUtils.byteArrayToLong(temp14);          // A路亮度	0~200对应0~100%
-				addMetric(IotInfoConstant.dev_plc_node_a_brightness, _temp14 , "%" ,metricinfo);     
+				addMetric2(IotInfoConstant.dev_plc_node_a_brightness, _temp14/2,temp14 , "%" ,metricinfo);     
 				long _temp15 = ByteUtils.byteArrayToLong(temp15);          // B路亮度	0~200对应0~100%
-				addMetric(IotInfoConstant.dev_plc_node_b_brightness, _temp15 , "%" ,metricinfo);     
+				addMetric2(IotInfoConstant.dev_plc_node_b_brightness, _temp15/2,temp15 , "%" ,metricinfo);     
 				
 				//String _temp16 = ConverUtil.byteArrToBinStr(temp16); //状态   转化位二进制串 
 				//parseSinglAndSendKafka_new(_temp16,temp2, plc_id, nodeid,_temp1,nodeTreeMap);  此protocols_API_45_Response只是状态数据上报F7报文功能的补充，这里不做这部分的重复上报了
@@ -626,14 +615,14 @@ public class PlcProtocolsBusiness {
 					long _temp17 = ByteUtils.byteArrayToLong(temp17);//灯具温度 ,   温度范围从-127℃~+127℃，单位为1℃
 					//addMetric(IotInfoConstant.dev_plc_node_temperature, _temp17 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_temperature) ,metricinfo);
 					addMetric(IotInfoConstant.dev_plc_node_temperature_li, _temp17 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_temperature) ,metricinfo);
-					double _temp18 = ByteUtils.byteArrayToLong(temp18)*0.1*1000;//输出功率      ,   单位0.1W 转化为物联网平台要求的=>mW
-					addMetric(IotInfoConstant.dev_plc_node_power, _temp18 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_power) ,metricinfo);
+					long _temp18 = ByteUtils.byteArrayToLong(temp18)*100;//输出功率      ,   单位0.1W 转化为物联网平台要求的=>mW
+					addMetric2(IotInfoConstant.dev_plc_node_power, _temp18,temp18 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_power) ,metricinfo);
 					long _temp19 = ByteUtils.byteArrayToLong(temp19);  //灯具运行时长
-					addMetric(IotInfoConstant.dev_plc_node_runtime, _temp19 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_runtime) ,metricinfo);
-					double _temp20 = ByteUtils.byteArrayToLong(temp20)*0.1;  //电能          0.1KW
-					addMetric(IotInfoConstant.dev_plc_node_electri_energy, _temp20 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_electri_energy) ,metricinfo);
+					addMetric2(IotInfoConstant.dev_plc_node_runtime, _temp19,temp19 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_runtime) ,metricinfo);
+					long _temp20 = ByteUtils.byteArrayToLong(temp20)*100;  //电能          0.1KW  ==>W   0.1*1000 = *100
+					addMetric2(IotInfoConstant.dev_plc_node_electri_energy, _temp20,temp20, IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_electri_energy) ,metricinfo);
 					long _temp21 = ByteUtils.byteArrayToLong(temp21); //故障时长   1小时
-					addMetric(IotInfoConstant.dev_plc_node_error_runtime, _temp21 , IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_error_runtime) ,metricinfo);
+					addMetric2(IotInfoConstant.dev_plc_node_error_runtime, _temp21 ,temp21, IotInfoConstant.getUnit(IotInfoConstant.dev_plc_node_error_runtime) ,metricinfo);
 				}
 				    
 				//构造一条状态数据上报
@@ -666,7 +655,7 @@ public class PlcProtocolsBusiness {
 	    	}
  		} catch (Exception e) {
  			if (byteBuf != null)ReferenceCountUtil.release(byteBuf);
-			logger.error(">>>protocols_45(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode=,"+cCmdCode+",cCode="+cCode
+			logger.error(">>>initstep(" + modbusInfo.getAddress_str() + ")响应设备,cmdCode=,"+cCmdCode+",cCode="+cCode
 					+ ",plcsn=" +plcsn+",nodeSn=" + _temp1+" ,exception ！", e);
 			excuSeccess = false;
 		}
@@ -1144,6 +1133,14 @@ public class PlcProtocolsBusiness {
 		Map<String,Object> metric = new HashMap<String,Object>();
 		metric.put("type", type);
 		metric.put("value", value);
+		metric.put("company", unit);
+		metricinfo.add(metric);
+	}
+	public static void addMetric2(String type,Object value ,byte[] oldvalue ,String unit ,List<Map> metricinfo){
+		Map<String,Object> metric = new HashMap<String,Object>();
+		metric.put("type", type);
+		metric.put("value", value);
+		metric.put("hexValue", ConverUtil.convertByteToHexString(oldvalue));//源报文上报的16进制值
 		metric.put("company", unit);
 		metricinfo.add(metric);
 	}

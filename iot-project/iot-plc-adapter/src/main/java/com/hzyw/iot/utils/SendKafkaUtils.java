@@ -17,7 +17,7 @@ public class SendKafkaUtils {
 	static String servers = null;
     static {
 		// 手动加载加载配置文件
-		InputStream in = JedisPoolUtils.class.getClassLoader().getResourceAsStream("kafka.consumer.properties");
+		InputStream in = JedisPoolUtils.class.getClassLoader().getResourceAsStream("kafka.consumer_plc.properties");
 		Properties pro = new Properties();
 		try {
 			pro.load(in);
@@ -40,19 +40,21 @@ public class SendKafkaUtils {
 	 * setKafka发送
 	 */
 	public static void sendKafka(String topic,String messageVo) {
+		Producer<String, String> producer = new KafkaProducer<>(props);
 		try {
-			Producer<String, String> producer = new KafkaProducer<>(props);
 			// Producer<String, String> producer = kafkaCommon.getKafkaProducer();
 			producer.send(new ProducerRecord<>(topic, messageVo));
 		} catch (Exception e) {
 			e.printStackTrace();
+		}finally {
+			producer.close();
 		}
 	}
 	
 	public static KafkaConsumer<String, String> getKafka(String consumerGroup) throws Exception {
 		Properties props = new Properties();
         props.put("bootstrap.servers", servers);
-        props.put("group.id", consumerGroup); //group123
+        props.put("group.id", consumerGroup); //group123 consumerGroup
         props.put("enable.auto.commit", "true");
         props.put("auto.commit.interval.ms", "1000");
         props.put("session.timeout.ms", "30000");

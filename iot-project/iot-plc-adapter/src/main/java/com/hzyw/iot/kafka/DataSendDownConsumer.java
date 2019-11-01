@@ -14,18 +14,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.hzyw.iot.config.ApplicationConfig;
 import com.hzyw.iot.kafka.KafkaCommon;
-import com.hzyw.iot.kafka.config.ApplicationConfig;
 import com.hzyw.iot.netty.channelhandler.CommandHandler;
 import com.hzyw.iot.service.GateWayService;
+import com.hzyw.iot.service.RedisService;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.utils.SendKafkaUtils;
+import com.hzyw.iot.utils.TpsCountUtils;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dataaccess.RequestDataVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 
 /**
@@ -42,15 +44,18 @@ public class DataSendDownConsumer implements Runnable {
 	
 	
 	private GateWayService gateWayService;
+	
+	private RedisService redisService;
 
 	public DataSendDownConsumer() {
 	}
 
 	public DataSendDownConsumer(KafkaCommon kafkaCommon, ApplicationConfig applicationConfig,
-			 GateWayService gateWayService) {
+			 GateWayService gateWayService,RedisService redisService) {
 		this.kafkaCommon = kafkaCommon;
 		this.applicationConfig = applicationConfig;
 		this.gateWayService = gateWayService;
+		this.redisService = redisService;
 	}
 
 	/**
@@ -58,48 +63,38 @@ public class DataSendDownConsumer implements Runnable {
 	 */
 	@SuppressWarnings("static-access")
 	public void consumerProcess() {
+		//获取kafka主题和消费组
 		String topic = applicationConfig.plcOrder(); //  "testbyzhu" ;
 		String consumerGroup = applicationConfig.getKafkaPlcConsumerGroup();
 		try {
-			//获取kafka主题
 			KafkaConsumer<String, String> consumer = SendKafkaUtils.getKafka(consumerGroup);
-			consumer.subscribe(Arrays.asList(topic));//订阅主题
-			
+			consumer.subscribe(Arrays.asList(topic));//消费主题
 			for(;;){
-				logger.info(">>>DataSendDownConsumer::consumerProcess waiting... " );
 				ConsumerRecords<String, String> records = consumer.poll(1024);
 				process(records);
-				try {
-					Thread.currentThread().sleep(1000 * 5);
-				} catch (InterruptedException e) {
-					logger.error(">>>DataSendDownConsumer::consumerProcess::process; currentThread().sleep exception!",e);
-				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
 			logger.error(">>>DataSendDownConsumer::consumerProcess; kafkaCommon.getKafkaConsumer() exception!",e);
 		}
 	}
 	//通过netty发送到plc设备
 	public void process(ConsumerRecords<String, String> records){
 		String value;
+		DataSendDownHandler dataSendDownHandler = new DataSendDownHandler();
 		for (ConsumerRecord<String, String> record : records) {
+			//logger.info("====dataSendDownConsumer_request==clean data==>");
+			//if(true)continue;
 			value = record.value();
 			if(ObjectUtil.isNotNull(value)) {
-				
-				ProtocalAdapter protocalAdapter = new ProtocalAdapter();
-				try {
-					System.out.println(JSON.parseObject(value));
-					String plcTest = protocalAdapter.messageRequest(JSON.parseObject(value));
-					System.out.println("111111111111111拼装好的指令:"+plcTest);
-					//CommandHandler.writeCommandByRequestMessageVO(plcTest);
-					CommandHandler.writeCommand("12345000000000100", plcTest, 2);
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if(dataSendDownHandler.executor.getQueue().size() > 200){
+					logger.warn("====dataSendDownConsumer_request_==下发指令消费==  线程池> 200告警   ====");
+					try {
+						Thread.currentThread().sleep(100);//延迟 防止撑爆线程池
+					} catch (InterruptedException e) {
+						logger.error("DataSendDownHandler::process, Thread.currentThread exception!",e);
+					}
 				}
-				System.out.println("=========================进入下发流程==========================================");
-				//已验证成功开关灯   可以通过测试类KafkaProducerExampleByzhu发起调试即可
+				dataSendDownHandler.process(value,redisService);//异步处理
 			}
 		}
 	}

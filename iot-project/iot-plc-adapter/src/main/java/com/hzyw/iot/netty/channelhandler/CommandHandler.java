@@ -1,12 +1,6 @@
 package com.hzyw.iot.netty.channelhandler;
-
-import com.hzyw.iot.util.ByteUtils;
-import com.hzyw.iot.util.constant.ConverUtil;
-import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.vo.dc.GlobalInfo;
-import com.hzyw.iot.vo.dc.RTUCommandInfo;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -16,71 +10,42 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
 /**
- * 指令下发
- *
- * @author TheEmbers Guo
- * @version 1.0
- * createTime 2018-11-09 13:35
+ * 指令下发到設備
  */
 @Sharable
 public class CommandHandler extends MessageToByteEncoder<ByteBuf> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(CommandHandler.class);
 
     @Override
     protected void encode(ChannelHandlerContext ctx, ByteBuf msg, ByteBuf out) throws Exception {
-    	System.out.println(">>>>>>>>CommandHandler::encode -------out.writeBytes(msg)--");
+    	logger.info(">>>>>>>>CommandHandler::encode -------out.writeBytes(msg)--");
         out.writeBytes(msg);
     }
     
-    public static void writeCommand(String sn, String command, int commandType) {
-       
-        if (GlobalInfo.SN_CHANNEL_INFO_MAP.containsKey(sn)) {
-            Channel channel = GlobalInfo.SN_CHANNEL_INFO_MAP.get(sn).getChannel();//获取要下发的sn设备对应的channel
-            LOGGER.info("\n command: ({}) \n type: ({}) \n sn: ({})", command, commandType, sn);
-
-            ByteBuf byteBuf = Unpooled.buffer();
-            if (commandType == 1) {
-                byteBuf.writeBytes(command.getBytes());
-            } else if (commandType == 2) {
-                try {
-                    //byteBuf.writeBytes(ByteUtils.hex2byte(command));
-                	byteBuf.writeBytes(com.hzyw.iot.util.constant.ConverUtil.hexStrToByteArr(command));
-                } catch (Exception e) {
-                    LOGGER.error("bad command to hex: {} ", command,e);
-                    return;
-                }
-            }
-            
-            
-            System.out.println("下发报文:"+command);
-            System.out.println("下发channel:"+channel);
-            try {
-				//channel.write(ConverUtil.hexStrToByteArr(command));
-				channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！
-	                if (future.isSuccess()) {
-	                	System.out.println("-----------seccess!!!------");
-	                	 
-	                } else {
-	                	System.out.println("send data to client exception occur: {}"+future.cause());
-	                }
-	            });
-				
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-            /*channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！(执行结果，不是响应)
+    /**
+     * @param key  =当前服务开放给此设备的端口+集中器地址 
+     * @param command  下发指令
+     * @param messageId  提供消息ID，根据 dataSendDownConsumer_request_+messageId 来跟踪下发结果
+     */
+    public static void writeCommand(String key, String command,String messageId){
+        Channel channel = GlobalInfo.SN_CHANNEL_INFO_MAP.get(key).getChannel();//获取要下发的sn设备对应的channel
+        try {
+        	ByteBuf byteBuf = Unpooled.buffer();
+        	byteBuf.writeBytes(com.hzyw.iot.util.constant.ConverUtil.hexStrToByteArr(command));
+        	logger.info("====dataSendDownConsumer_request_"+messageId+"====下发成功!!!!==== ,messageId="+messageId+"/command="+command);
+			channel.writeAndFlush(byteBuf).addListener((ChannelFutureListener) future -> { //监听下发的请求执行是否成功！
                 if (future.isSuccess()) {
-                    LOGGER.info("ok");
+                	logger.info("====dataSendDownConsumer_request_"+messageId+"====下发成功!!!!==== ,messageId="+messageId+"/command="+command);
+                	 
                 } else {
-                    LOGGER.error("send data to client exception occur: {}", future.cause());
+                	logger.info("====dataSendDownConsumer_request_"+messageId+" ===下发失败:"+future.cause() + ",command="+command);
                 }
-            });*/
-        } else {
-            LOGGER.warn("no channel in global channelInfo by this sn:{}", sn);
-        }
+            });
+		}catch (Exception e) {
+			logger.error("====dataSendDownConsumer_request_"+messageId+"==下发异常channel.writeAndFlush, command={} ", command,e);
+		}
     }
     
     

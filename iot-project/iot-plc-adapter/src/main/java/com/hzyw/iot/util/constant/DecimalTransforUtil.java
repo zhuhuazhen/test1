@@ -345,12 +345,13 @@ public class DecimalTransforUtil {
 
             //String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(200),false)),1);
              // String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(20),false)),1);
-        String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(200),1);
+        //String sizeVal=DecimalTransforUtil.toHexStr(String.valueOf(200),1);
             //String sizeVal = DecimalTransforUtil.toHexStr(String.valueOf(DecimalTransforUtil.hexToLong(String.valueOf(200), true)), 1);
 
         //long sizeVal =DecimalTransforUtil.hexToLong("200",false);
 
-        System.out.println(sizeVal);
+       String aa6= toHexStr("255",6);
+        System.out.println("===:"+aa6);
     }
 
 }

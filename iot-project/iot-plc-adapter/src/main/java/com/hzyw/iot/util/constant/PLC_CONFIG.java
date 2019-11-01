@@ -41,13 +41,13 @@ public enum PLC_CONFIG {
     在线状态(0,"plc_node_a_status"),
     温度(0,"plc_node_temperature"),
     输入电压(0,"plc_node_voltage_in"),
-    输出电压(0,"voltage"), //plc_node_voltage_out
+    输出电压(0,"plc_node_voltage_out"), //voltage 电压
     A路输入电流(0,"plc_node_a_electri_in"),
     B路输入电流(0,"plc_node_b_electri_in"),
     输入电流(0,"plc_node_electri_in"),
-    输出电流(0,"plc_node_electri_out"),
+    输出电流(0,"plc_node_electri_out"),  //电流
     输入功率(0,"plc_node_power_in"),
-    A路有功功率(0,"capacity"), //plc_node_a_power
+    A路有功功率(0,"capacity"), //plc_node_a_power  功率
     B路有功功率(0,"plc_node_b_power"),
     A路功率因数(0,"plc_node_a_pf"),
     B路功率因数(0,"plc_node_b_pf"),
@@ -65,7 +65,10 @@ public enum PLC_CONFIG {
     电能(0,"plc_elect_energy"),
     故障时长(0,"plc_node_trouble_time"),
 
-    时间(0,"plc_node_time");
+    时间(0,"plc_node_time"),
+
+    //读取节点 属性
+    节点所属组号(0,"plc_node_group");
 
 
     private Integer code;
@@ -97,12 +100,16 @@ public enum PLC_CONFIG {
     }
     /***********************查询节点详细数据(45H) 集中器->主机***BEGIN***************************/
     //参数属性名模板(非路灯控制器设备【路灯电源】 老程序) bit15~bit9:0x00,为老程序
+    static String[] paramNameTemp_OLD=new String[] {PLC_CONFIG.节点ID.key,PLC_CONFIG.设备码.key,PLC_CONFIG.在线状态.key,PLC_CONFIG.温度.key,
+            PLC_CONFIG.输入电压.key,PLC_CONFIG.输出电压.key,PLC_CONFIG.A路输入电流.key,PLC_CONFIG.B路输入电流.key,PLC_CONFIG.输出电流.key,
+            PLC_CONFIG.A路有功功率.key,PLC_CONFIG.B路有功功率.key,PLC_CONFIG.A路功率因数.key,PLC_CONFIG.B路功率因数.key,PLC_CONFIG.A路亮度.key,
+            PLC_CONFIG.B路亮度.key,PLC_CONFIG.状态.key,PLC_CONFIG.异常状态.key};
     /*static String[] paramNameTemp_OLD=new String[] {PLC_CONFIG.节点ID.key,PLC_CONFIG.设备码.key,PLC_CONFIG.在线状态.key,PLC_CONFIG.温度.key,
             PLC_CONFIG.输入电压.key,PLC_CONFIG.输出电压.key,PLC_CONFIG.输入电流.key,PLC_CONFIG.输出电流.key,
-            PLC_CONFIG.输入功率.key,PLC_CONFIG.功率因数.key,PLC_CONFIG.调光亮度.key,PLC_CONFIG.状态.key,PLC_CONFIG.异常状态.key};*/
+            PLC_CONFIG.输入功率.key,PLC_CONFIG.功率因数.key,PLC_CONFIG.调光亮度.key,PLC_CONFIG.状态.key,PLC_CONFIG.异常状态.key};
     static String[] paramNameTemp_OLD=new String[] {PLC_CONFIG.节点ID.key,PLC_CONFIG.设备码.key,PLC_CONFIG.在线状态.key,PLC_CONFIG.温度.key,
             PLC_CONFIG.输入电压.key,PLC_CONFIG.输出电压.key,PLC_CONFIG.输入电流.key,PLC_CONFIG.输出电流.key,
-            PLC_CONFIG.功率因数.key,PLC_CONFIG.调光亮度.key,PLC_CONFIG.状态.key,PLC_CONFIG.异常状态.key};
+            PLC_CONFIG.功率因数.key,PLC_CONFIG.调光亮度.key,PLC_CONFIG.状态.key,PLC_CONFIG.异常状态.key};*/
     //参数属性名模板(非路灯控制器设备【路灯电源】 新程序) bit15~bit9:0Xf0，则为新程序
     static String[] paramNameTemp_NEW=new String[] {PLC_CONFIG.节点ID.key,PLC_CONFIG.设备码.key,PLC_CONFIG.在线状态.key,PLC_CONFIG.温度.key,
             PLC_CONFIG.输入电压.key,PLC_CONFIG.输出电压.key,PLC_CONFIG.输入电流.key,PLC_CONFIG.输出电流.key,PLC_CONFIG.输入功率.key,
@@ -137,4 +144,10 @@ public enum PLC_CONFIG {
         return paramNameTemps;
     }
     /***********************主动上报节点数据(f7H) 集中器->主机***END***************************/
+    /***********************读取节点(97H) 集中器->主机******************************/
+    static String[] paramNameTemp97H=new String[] {PLC_CONFIG.帧总数.key,PLC_CONFIG.帧数.key,PLC_CONFIG.节点ID.key,PLC_CONFIG.节点所属组号.key,PLC_CONFIG.设备码.key};
+    public static String[] paramNameT97HTemp(){
+        return paramNameTemp97H;
+    }
+    /***********************读取节点(97H) 集中器->主机**END****************************/
 }

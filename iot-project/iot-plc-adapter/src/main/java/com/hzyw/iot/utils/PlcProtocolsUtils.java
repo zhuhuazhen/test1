@@ -1,7 +1,6 @@
 package com.hzyw.iot.utils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.hzyw.iot.kafka.config.ApplicationConfig;
 import com.hzyw.iot.util.constant.PLC_CONFIG;
 import com.hzyw.iot.util.constant.PLC_METHOD_CMD_CONFIG;
 import com.hzyw.iot.util.constant.T_ResponseResult;
@@ -19,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.alibaba.fastjson.JSON;
+import com.hzyw.iot.config.ApplicationConfig;
 import com.hzyw.iot.kafka.KafkaCommon;
 import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.service.RedisService;
@@ -59,7 +59,7 @@ public class PlcProtocolsUtils {
 	 * @return
 	 */
 	public static boolean isLogin(ModbusInfo modbusInfo) {
-		String flag = gloable_dev_status.get(modbusInfo.getAddress_str() + "_login"); // 1表示已登陆
+		String flag = gloable_dev_status.get(modbusInfo.getAddress_str() + _login); // 1表示已登陆
 		// 0
 		// 表示未登陆
 		// （通过心跳判断是否掉线来设置）
@@ -68,8 +68,18 @@ public class PlcProtocolsUtils {
 		}
 		return false;
 	}
-
+	
+	/**
+	 * 设置设备登陆状态
+	 * @param plcSN
+	 * @param status
+	 */
+	public static void setLoginStatus(String plcSN,String status) {
+		gloable_dev_status.put(plcSN + _login,status); // 1表示已登陆,0未登陆
+	}
+	public static final String _login = "_login";
 	public static final String rediskey_plc_isconfig_ = "plc_isconfig_";
+	
 	/**
 	 * 设备是否已配置好
 	 * 
@@ -77,7 +87,6 @@ public class PlcProtocolsUtils {
 	 * @return
 	 */
 	public static boolean isConfig(ModbusInfo modbusInfo,RedisService redisService) {
-		//String flag = gloable_dev_status.get(modbusInfo.getAddress_str() + "_config");// 1表示已下发配置到存储
 		String flag = (String)redisService.get(rediskey_plc_isconfig_+modbusInfo.getAddress_str());
 		// 0表示未下发配置过（只需要配置一次即可，配置以后才能控灯）
 		if (flag != null && flag.equals("1")) {
@@ -352,8 +361,6 @@ public class PlcProtocolsUtils {
 				}
 				definedAttributersNode.add(typeValueNode);
 			}
-			
-			
 			//构造消息模型并上报到KAFKA
 			DevInfoDataVO devInfoDataVoNode = new DevInfoDataVO();
 			devInfoDataVoNode.setId(deviceId);
@@ -407,6 +414,13 @@ public class PlcProtocolsUtils {
 
 		MetricInfoResponseDataVO metricInfoResponseDataVO = new MetricInfoResponseDataVO();
 		metricInfoResponseDataVO.setId(nodeID);
+		//增加forLogTag，方便跟踪，此字段没有业务含义，只是为了跟踪问题
+		/*if(definedAttrList != null){
+			Map<String,String> forLogTag = new HashMap<String,String>();
+			forLogTag.put("type", "api_f7/plcSn/plcNodeSn");
+			forLogTag.put("value", "api_f7/"+plc_sn+"/"+nodeID);
+			definedAttrList.add(forLogTag);
+		}*/
 		metricInfoResponseDataVO.setDefinedAttributers(definedAttrList);
 		metricInfoResponseDataVO.setTags(tags);
 		// 消息结构

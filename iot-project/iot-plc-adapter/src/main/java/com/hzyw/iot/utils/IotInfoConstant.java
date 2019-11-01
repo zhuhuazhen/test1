@@ -11,7 +11,7 @@ public class IotInfoConstant {
  
 
     /**
-     * 端口 - 设备  关系
+     * 缓存‘端口/设备属性方法  ’关系
      *          
      *     1：allDevInfo= Map<port, Map<sn设备地址_attribute, Map<key设备字段, value设备字段默认值>>>
      *     1：allDevInfo= Map<port, Map<sn设备地址_defAttribute, Map<key设备字段, value设备字段默认值>>>
@@ -25,7 +25,8 @@ public class IotInfoConstant {
     
     
     /**
-     * 根据port, plc_sn 查询 plc下对应的节点列表和详细信息
+     * 缓存‘端口/plcSN/node详情’ 对应关系
+     * --用于支持根据port, plc_sn 查询 plc下对应的节点列表和详细信息
      * Map<port, Map<plc_sn, Map<节点属性, 值>>>   
      */
     public static final Map<String, Map<String, List<Map<String,String>>>> plc_relation_plcsnToNodelist = new HashMap<String, Map<String, List<Map<String,String>>>>();//plc和node关联关系
@@ -36,12 +37,15 @@ public class IotInfoConstant {
      * 
      * Map<Map<id,  sn> deviceID肯定是唯一的
      */
-    public static final Map<String, String> plc_relation_deviceToSn = new HashMap<String, String>();//plc和node关联关系
+    public static final Map<String, String> plc_relation_deviceToSn = new HashMap<String, String>();//缓存plc和node对应关系
+    
+    public static final Map<String, String> plc_relation_plcIDToPort = new HashMap<String, String>();//缓存plc_id和端口对应关系
 
     //=================接入PLC 初始化信息========start=========
      
     //公共
     public static final String base_plc_port = "12345";
+    public static final String ftp_server_port = "ftp_server_port"; //开放端口
     public static final String dev_plc_dataaccess_key = "agreement"; //接入类型
     public static final String dev_plc_dataaccess_value = "plc";      //每种接入，初始化数据的时候应该要指定接入类型
     
@@ -107,7 +111,7 @@ public class IotInfoConstant {
     public static final String dev_plc_cfg_step5_groupAtuo ="plc_cfg_step5_groupAtuo"; //组网个数   
     
     static String[] plc_def_attributers_initcfg={ dev_plc_cfg_longitude, dev_plc_cfg_latitude, dev_plc_cfg_sq ,dev_plc_cfg_gksd_start 
-    		,dev_plc_cfg_gksd_end,dev_plc_cfg_systime ,dev_plc_cfg_step5_groupAtuo };
+    		,dev_plc_cfg_gksd_end,dev_plc_cfg_systime ,dev_plc_cfg_step5_groupAtuo,ftp_server_port};
      
     private static final Map<String, String > plc_unit_ = new HashMap<String, String>();
     
@@ -190,7 +194,7 @@ public class IotInfoConstant {
     	
     	plc_unit_.put(dev_plc_node_power, "mW");
     	plc_unit_.put(dev_plc_node_runtime, "h");
-    	plc_unit_.put(dev_plc_node_electri_energy, "kW");
+    	plc_unit_.put(dev_plc_node_electri_energy, "W");
     	plc_unit_.put(dev_plc_node_error_runtime, "h");
     	
     	//集中器
@@ -255,6 +259,7 @@ public class IotInfoConstant {
             	String vendor_code = (String)jsonObject.get("vendor_code");  
             	String model = (String)jsonObject.get("model");
             	String device_type_code_plc = (String)jsonObject.get("device_type_code");
+            	String server_port = (String)jsonObject.get("ftp_server_port");
             	
             	//----new一个集中器 并put到plc_iotInfo_
             	//基本属性
@@ -282,6 +287,8 @@ public class IotInfoConstant {
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_systime, plc_cfg_step2_timestamp); 
             	plc_iotInfo_.get(plc_sn+"_defAttribute").put(dev_plc_cfg_step5_groupAtuo, plc_cfg_step5_groupAtuo);  
             	//---->其他def属性
+            	plc_iotInfo_.get(plc_sn+"_defAttribute").put(ftp_server_port, server_port); 
+            	
             	//...
             	
             	IotInfo.initMethod(plc_iotInfo_, plc_sn+"_method", IotInfoMethod.plc_methods); //方法
@@ -292,6 +299,7 @@ public class IotInfoConstant {
             	
             	//---deviceId和SN关系
             	plc_relation_deviceToSn.put(plc_id, plc_sn);  
+            	plc_relation_plcIDToPort.put(plc_id, server_port);
             	
             	//集中器和节点关系
             	List<Map<String, String>> nodelist = new ArrayList<Map<String, String>>();

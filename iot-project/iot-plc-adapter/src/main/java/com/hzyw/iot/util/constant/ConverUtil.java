@@ -4,7 +4,6 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,7 +16,6 @@ public class ConverUtil {
 	/**
 	 * 将表示16进制值的字符串转换为byte数组， 和public static String byteArr2HexStr(byte[] arrB)
 	 * 互为可逆的转换过程
-	 *
 	 * @param strIn 需要转换的字符串
 	 * @return 转换后的byte数组
 	 * @throws Exception 本方法不处理任何异常，所有异常全部抛出
@@ -274,7 +272,7 @@ public class ConverUtil {
 			return "";
 		if (code.endsWith("H")) {
 			code = code.substring(0, code.lastIndexOf("H"));
-			System.out.println("====映射 码的16进制值:" + code);
+			//System.out.println("====映射 码的16进制值:" + code);
 			code = isNumeric(code) ? code : code.toLowerCase();
 			byte[] codeByte = hexStrToByteArr(code); // 转换时 验证值是否在16进制范围内
 			if (codeByte.length > 1)
@@ -300,9 +298,7 @@ public class ConverUtil {
 	 */
 	public static String MappCODE(String code) throws Exception {
 		byte[] codeByte = hexStrToByteArr(code); // 转换时 验证值是否在16进制范围内
-		if (codeByte.length > 1)
-			throw new Exception("PDT协议 解析失败！值映射转码超过一个1B长度");
-		;
+		if (codeByte.length > 1) throw new Exception("PDT协议 解析失败！值映射转码超过一个1B长度");
 		code = convertByteToHexString(codeByte);
 		return code.concat("H");
 	}
@@ -334,19 +330,19 @@ public class ConverUtil {
 					bi1=bi1.multiply(new BigDecimal(0.1)).setScale(2,RoundingMode.HALF_UP);
 					bi1=bi1.multiply(new BigDecimal(1000));
 					numVal=bi1.toString().concat("@@mV");
-					System.out.println("====毫伏电压:"+numVal);
+					log.debug("====毫伏电压:"+numVal);
 					break;
 				}case 12:{//AD路输入电压(mV)  注： 11与12 的毫伏 对应 文档上实例，换算有区别
 					//bi1 = bi1.divide(new BigDecimal(1000), 2, RoundingMode.HALF_UP);
 					bi1 = bi1.divide(new BigDecimal(1000));
 					numVal=bi1.toString().concat("@@V"); //文档实例上是V
-					System.out.println("====毫伏电压:"+numVal);
+					log.debug("====毫伏电压:"+numVal);
 					break;
 				}
 				default:{//相电压(0.1V)
 					bi1=bi1.multiply(new BigDecimal(0.1)).setScale(2,RoundingMode.HALF_UP);
 					numVal=bi1.toString().concat("@@V");
-					System.out.println("====相电压值:"+numVal);
+					log.debug("====相电压值:"+numVal);
 				}
 			}
 		}else if(type==2 || type==21) {//电流
@@ -355,13 +351,13 @@ public class ConverUtil {
 			switch (type){
 				case 21: {//输入输出电流(mA)
 					numVal = bi1.toString().concat("@@mA");
-					System.out.println("====输入/输出毫安电流值:" + numVal);
+					log.debug("====输入/输出毫安电流值:" + numVal);
 					break;
 				}
 				default: {//相电流(mA)
 						bi1 = bi1.divide(new BigDecimal(1000), 2, RoundingMode.HALF_UP);
 						numVal = bi1.toString().concat("@@mA");
-						System.out.println("====相 毫安电流值:" + numVal);
+						log.debug("====相 毫安电流值:" + numVal);
 					}
 				}
 		}else if(type==3 || type==31) {//功率
@@ -371,12 +367,12 @@ public class ConverUtil {
 				case 31:{//输入/输出功率(0.1W)
 					bi1=bi1.multiply(new BigDecimal(0.1)).setScale(2,RoundingMode.HALF_UP);
 					numVal=bi1.toString().concat("@@W");
-					System.out.println("====输入/输出功率:"+numVal);
+					log.debug("====输入/输出功率:"+numVal);
 					break;
 				}
 				default:{//相功率(W)
 					numVal=decimalVal.toString().concat("@@W");
-					System.out.println("====相功率值:"+numVal);
+					log.debug("====相功率值:"+numVal);
 				}
 			}
 		}else if(type==4 || type==41) {//4:相功率因数、41:AB路亮度
@@ -385,13 +381,13 @@ public class ConverUtil {
 			switch (type){
 				case 41:{//AB路亮度(0~200对应0~100%)
 					bi1 = bi1.divide(new BigDecimal(2));
-					numVal=String.format("%d@@%%", bi1.toString());
-					System.out.println("====AB路亮度:"+numVal);
+					numVal=String.format("%s@@%%", String.valueOf(bi1));
+					log.debug("====AB路亮度:"+numVal);
 					break;
 				}
 				default:{//相功率因数(0~100对应0~100%)
 					numVal=String.format("%d@@%%", decimalVal);
-					System.out.println("====相功率因数值:"+numVal);
+					log.debug("====相功率因数值:"+numVal);
 				}
 			}
 		}else if(type==5) {//电能(0.1kWh)
@@ -399,12 +395,12 @@ public class ConverUtil {
 			BigDecimal bi1 = new BigDecimal(decimalVal.toString());
 			bi1=bi1.multiply(new BigDecimal(0.1)).setScale(2,RoundingMode.HALF_UP);
 			numVal=bi1.toString().concat("@@kWh");
-			System.out.println("====电能:"+numVal);
+			log.debug("====电能:"+numVal);
 		}else if(type==8){//温度单位(℃) 要优化
 			decimalVal=DecimalTransforUtil.hexToLongSign(val); //16进制转10进制
 			if(rangeInDefined(decimalVal.intValue(),-127,127)){
 				numVal=decimalVal.toString().concat("@@℃");
-				System.out.println("====温度值:"+numVal);
+				log.debug("====温度值:"+numVal);
 			}else{
 				log.error("==单位转换时====当前温度值:"+decimalVal+", 超出了-127~127范围!");
 				numVal="0";
@@ -413,7 +409,7 @@ public class ConverUtil {
 			decimalVal=DecimalTransforUtil.hexToLong(val,true); //16进制转10进制
 			if(rangeInDefined(decimalVal.intValue(),0,24)){
 				numVal=decimalVal.toString().concat("@@h");
-				System.out.println("====小时值:"+numVal);
+				log.debug("====小时值:"+numVal);
 			}else{
 				log.error("==单位转换时====当前小时值:"+decimalVal+", 超出了24小时范围!");
 				numVal="0";
@@ -445,7 +441,7 @@ public class ConverUtil {
         for(int i=begin;i<end; i++) {
             contents.append(ConverUtil.convertByteToHexStr(resp[i]));
         }
-        System.out.println("=====从字节数组中提取字符串:"+contents);
+        //System.out.println("=====从字节数组中提取字符串:"+contents);
         return contents.toString();
     }
 
@@ -487,24 +483,37 @@ public class ConverUtil {
 		return Math.max(min, current) == Math.min(current, max);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
 		/*String sizeVal= ConverUtil.toHex(23);  //10进制转16进制值
 		String sizeVals=DecimalTransforUtil.toHexStr(String.valueOf(23),1); //10进制转16进制值
 
-		System.out.println("=========sizeVal:"+sizeVal);
+		//System.out.println("=========sizeVal:"+sizeVal);
 		System.out.println("======aaaa===sizeVals:"+sizeVals);*/
 
-		String aa="680000000001006803094200000200053e03c8";
-		System.out.println("==============:"+makeChecksum(aa));
+//		String aa="680000000001006803094200000200053e03c8";
+//		System.out.println("==============:"+makeChecksum(aa));
 		/*String[] arr=new String[]{"ID","AB","DIM"};
 		Arrays.fill(arr,0,1,"aa");       //使用fill()方法对数组进行初始化
 		for(int i=0;i<arr.length;i++){
 		System.out.println("第"+i+"个元素是："+arr[i]);*/
 
-		Map<String,String>amap=new HashMap<String,String>();
-		amap.put("aa_bb_001","aaaaa");
-		System.out.println("=====:"+amap.get("aa_bb_001"));
+//		Map<String,String>amap=new HashMap<String,String>();
+//		amap.put("aa_bb_001","aaaaa");
+
+		//Long time_out=Math.round(1000456/1000);
+//		String a1=null;
+//		String aa=String.valueOf(a1);
+
+		String code="1111";
+		String codes="22222";
+
+		code=codes="666666AAA";
+
+		//double time_out=(double) Math.round(34534645464654l)/1000;
+
+		System.out.println("===code:"+code);
+		System.out.println("===codes:"+StringUtils.lowerCase(code));
 	}
 
 }

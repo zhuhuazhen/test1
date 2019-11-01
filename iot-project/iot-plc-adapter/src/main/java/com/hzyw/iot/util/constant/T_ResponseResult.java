@@ -5,7 +5,8 @@ import com.hzyw.iot.vo.dataaccess.DataType;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dataaccess.ResultMessageVO;
 import io.netty.channel.ChannelHandlerContext;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.net.InetSocketAddress;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import java.util.UUID;
  * PLC 响应 消息头
  */
 public class T_ResponseResult {
+    private static final Logger log = LoggerFactory.getLogger(T_ResponseResult.class);
     /**
      * PLC 上报数据 消息头
      * @param ctx Netty上下文
@@ -64,7 +66,7 @@ public class T_ResponseResult {
     public static <T> ResultMessageVO<T> getACKResponseVO(String plc_sn,String nodeID,Integer resultCode,String messageID, String type,T data)throws Exception{
         //消息结构
         ResultMessageVO<T> messageVo = new ResultMessageVO<T>();
-        System.out.println("============getResponseVO 方法， 消息type: "+type);
+        log.debug("============getResponseVO 方法， 消息type: "+type);
         //消息结构
         messageVo.setType(type);
         messageVo.setTimestamp(System.nanoTime());//消息上报时间

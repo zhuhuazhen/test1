@@ -62,7 +62,7 @@ public class CRCUtils {
      
     
     public static void main(String[] s) {
-    	String cshex = "68 00 00 00 00 01 00 68 01 09 42 00 00 02 00 04 ee 03 c8";
+    	String cshex = "68 00 00 00 00 01 00 68 01 07 45 00 00 02 00 04 E8";
     	String[] fulldata = cshex.split(" ");
     	byte[] b = new byte[fulldata.length];
     	int p = 0;

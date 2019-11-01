@@ -12,7 +12,7 @@ import java.util.*;
 public class T_MessageResult {
 
     public static MessageVO<ResponseDataVO> getResponseVO(String uuid, String code, String cmd, LinkedHashMap<String,Object> pdt){
-        String msgId="31a8c447-5079-4e91-a364-1769ac06fd5c";  //暂时固定值，后面考虑怎么生成获取消息ID
+        String msgId="31a8c447-5079-4e91-a364-1769ac06fd5c-response";  //暂时固定值，后面考虑怎么生成获取消息ID
         MessageVO<ResponseDataVO> mesVO=new MessageVO<ResponseDataVO>();
         mesVO.setType(DataType.Response.getMessageType());
         mesVO.setTimestamp(System.nanoTime());

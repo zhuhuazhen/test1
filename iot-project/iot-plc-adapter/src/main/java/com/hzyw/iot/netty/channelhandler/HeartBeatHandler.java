@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.fastjson.JSON;
 import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
+import com.hzyw.iot.utils.SendKafkaUtils;
 import com.hzyw.iot.vo.dataaccess.DevOnOffline;
 import com.hzyw.iot.vo.dataaccess.MessageVO;
 import com.hzyw.iot.vo.dc.GlobalInfo;
@@ -91,7 +92,7 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
 			devOnline.setTags(tags); 
 			//消息结构
 			MessageVO messageVo = getMessageVO(devOnline,"devOffline",System.currentTimeMillis(),UUID.randomUUID().toString(),gwid);
-			//sendKafka(JSON.toJSONString(messageVo).toString(),applicationConfig.getDataAcessTopic());
+			SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
 			//获取PLC下的灯具节点，并上报各个灯具的在线和离线状态
 			List<Map<String, String>> nodelist = IotInfoConstant.plc_relation_plcsnToNodelist.get(currentPort).get(plc_sn);
 			for (int i = 0; i < nodelist.size(); i++) {
@@ -105,17 +106,19 @@ public class HeartBeatHandler extends ChannelInboundHandlerAdapter {
 				devOnline.setTags(tags); 
 				//消息结构
 				messageVo = getMessageVO(devOnline,"devOffline",System.currentTimeMillis(),UUID.randomUUID().toString(),gwid);
-				//kafkaUtils.sendKafka(JSON.toJSONString(messageVo).toString(),applicationConfig.getDataAcessTopic());
+				SendKafkaUtils.sendKafka("iot_topic_dataAcess", JSON.toJSONString(messageVo));
 			}
 			logger.info(">>>>>心跳HeartBeatHandler,handlerBusiness:: 离线并上报离线消息成功!!!" );
     	}catch(Exception e){
     		logger.error("---------心跳HeartBeatHandler,handlerBusiness处理异常 !!!" ,e);
-    		PlcProtocolsUtils.gloable_dev_status.put(plc_sn + "_login", "0"); // 1 --上线   0--离线
     	}
     	//超过10*2秒没有心跳则会被认为客户端不在线
     	ctx.channel().close();
-        logger.info(">>>>>>检测到心跳超时,主机强迫关闭了一个现有的连接(plc_sn="+plc_sn+"/channelid="+channelId+") ! >>>>>>>>"  );
+        logger.info(">>>>>>heartbeat--检测到心跳超时,主机强迫关闭了一个现有的连接(plc_sn="+plc_sn+"/channelid="+channelId+") ! >>>>>>>>"  );
+        logger.info(">>>>>>heartbeat--设置登陆状态为未登陆......(plc_sn="+plc_sn+"/channelid="+channelId+") ! >>>>>>>>"  );
+        PlcProtocolsUtils.setLoginStatus(plc_sn + PlcProtocolsUtils._login, "0");  // 1 --上线   0--离线
     }
+     
     
 	public <T> MessageVO<T>  getMessageVO(T data,String type,Object timestamp,String msgId,String Plcid) {
 		//消息结构

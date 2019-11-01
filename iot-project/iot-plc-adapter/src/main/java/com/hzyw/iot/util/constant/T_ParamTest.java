@@ -1,27 +1,26 @@
 package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONObject;
-import org.apache.commons.lang3.ArrayUtils;
+import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import org.apache.commons.lang3.StringUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 测试类
  * 指令测试参数封装
  */
 public class T_ParamTest {
-    public static List getPdtParams(String cmd, Map<String,Object> pdtMap){
+    private static final Logger log = LoggerFactory.getLogger(T_ParamTest.class);
+    public static List getPdtParams(String cmd, List<Map<String,Object>> pdtMapList)throws Exception{
         List pdtList=new ArrayList<>();
         switch(cmd){
-            case "70H": //集中器继电器开
+            case "70H"://集中器继电器开
                 pdtList.add(new String[]{"03"});
                 break;
-            case "71H": //集中器继电器关
+            case "71H"://集中器继电器关
                 pdtList.add(new String[]{"03"});
                 break;
             case "73H": //查询集中器状态
@@ -45,19 +44,49 @@ public class T_ParamTest {
             case "8FH": //查询集中器参数
                 pdtList.add(new String[]{"03"});
                 break;
-            case "96H": //下发节点
-                pdtList.add(new String[]{"03"});
+            case "96H": {//下发节点
+                pdtList=new ArrayList<>();
+                String[] paramTemp = new String[]{"nodeID", "groupID", "devType"};
+                try {
+                    String[] paramTemps;
+                    Map<String, Object> pdtMap;
+                    for (int i = 0; i < pdtMapList.size(); i++) {
+                        paramTemps=new String[]{};
+                        pdtMap=new HashMap<String, Object>();
+                        pdtMap = pdtMapList.get(i);
+                        pdtMap.put("nodeID",StringUtils.lowerCase(PlcProtocolsBusiness.getPlcNodeSnByPlcNodeID(pdtMap.get("nodeID").toString())));
+                        paramTemps = getPdtParamVal(paramTemp, pdtMap);
+                        pdtList.add(paramTemps);
+                    }
+                } catch (Exception e) {
+                    log.error("=========请求'下发节点'指令 的入参格式适配转换异常!");
+                    throw new Exception("=========请求'下发节点'指令 的入参格式适配转换异常!"+e.getMessage());
+                }
                 break;
-            case "97H": //读取节点
+            }case "97H": //读取节点
                 pdtList.add(new String[]{"03"});
                 break;
             case "98H": //配置节点
-                pdtList.add(new String[]{"03"});
+                pdtList=new ArrayList<>();
+                //pdtList.add(new String[]{"03"});
                 break;
-            case "99H": //删除节点
-                pdtList.add(new String[]{"03"});
+            case "99H": {//删除节点
+                pdtList = new ArrayList<>();
+                try {
+                    String[] paramTemp = new String[]{"ID"};
+                    String[] paramTemps = new String[]{};
+                    Map<String, Object> pdtMap = new HashMap<String, Object>();
+                    if (pdtMapList.size() > 0) {
+                        pdtMap = pdtMapList.get(0);
+                        paramTemps = getPdtParamVal(paramTemp, pdtMap);
+                        pdtList.add(paramTemps);
+                    }
+                } catch (Exception e) {
+                    log.error("=========请求'删除节点'指令 的入参格式适配转换异常!");
+                    throw new Exception("=========请求'下发节点'指令 的入参格式适配转换异常!" + e.getMessage());
+                }
                 break;
-            case "F0H": //集中器登录
+            }case "F0H": //集中器登录
                // pdtList.add(new String[]{"03"});
                 break;
             case "F1H": //集中器与主机保持连接心跳
@@ -77,14 +106,27 @@ public class T_ParamTest {
                 break;
             case "F6H": //报警能使查询
                 break;
-            case "42H": {//节点调光
+            case "42H":{//节点调光
+                pdtList=new ArrayList<>();
+                Integer cmdType=0; //指令参数类型(0:关灯指令;1:开灯指令;2:调光灯指令)
+                Map<String,Object> pdtMap=pdtMapList.get(0);
                 String onoff= StringUtils.trimToNull(pdtMap.get("onoff")+"");  //0:关灯; 1: 开灯
+                if("null".equals(onoff)){ //onoff为空,表示调光灯指令, 否则为 开关灯灯指令
+                    cmdType=2;
+                }else{
+                    cmdType=Integer.parseInt(onoff);
+                }
                 String dim=StringUtils.trimToNull(pdtMap.get("level")+"");
-                dim="0".equals(onoff)? "0":(ConverUtil.parseNumeric(dim)==0)? "100":dim;
-                BigDecimal dimNum = new BigDecimal(dim).multiply(new BigDecimal(2));
-                System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim+",对应(0~200)值:"+dimNum);
+                dim=cmdType==0?"0":cmdType==1?(ConverUtil.parseNumeric(dim)==0)?"100":dim:
+                                              (ConverUtil.parseNumeric(dim)==0)?"0":dim;
+                BigDecimal dimNum = new BigDecimal(dim);
+                if(dimNum.compareTo(new BigDecimal(100))==1) dimNum=new BigDecimal(100);
+                log.info("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim+",对应(0~100)值:"+dimNum);
+                //System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光值:"+dim+",对应(0~100)值:"+dimNum);
 
                 dim=DecimalTransforUtil.toHexStr(String.valueOf(dimNum),1);
+                log.info("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光转换后的16进制值:"+dim);
+                //System.out.println("=================开关灯操作onoff(0:关灯,1:开灯):"+onoff+", 当前调光转换后的16进制值:"+dim);
                 pdtMap.put("level",dim+"H");
 
                 String[] paramTemp=new String[]{"ID","ab","level"};
@@ -92,14 +134,15 @@ public class T_ParamTest {
                 pdtList.add(paramTemp);
                 //pdtList.add(new String[]{"","03H","8CH"});
                 break;
-            }
-            case "45H": //查询节点详细数据
+            }case "45H": {//查询节点详细数据
+                pdtList=new ArrayList<>();
                 String[] paramTemp=new String[]{"ID"};
+                Map<String,Object> pdtMap=pdtMapList.get(0);
                 paramTemp=getPdtParamVal(paramTemp,pdtMap);
                 pdtList.add(paramTemp);
-                //pdtList.add(new String[]{"000001000156"});
                 break;
-            case "F7H": //主动上报节点数据
+            }case "F7H": //主动上报节点数据
+                pdtList=new ArrayList<>();
                 //pdtList.add(new String[]{"03"});
                 break;
             case "FBH": //查询和上传历史数据
@@ -192,14 +235,17 @@ public class T_ParamTest {
      * @return
      */
     private static String[] getPdtParamVal(String[] paramTemp,Map<String,Object> pdtMap){
+        String[] paramTempResult=Arrays.copyOfRange(paramTemp,0,paramTemp.length);
         for(int i=0;i<paramTemp.length; i++){
-            if(pdtMap.containsKey(paramTemp[i])){
-                Arrays.fill(paramTemp,i,i+1,pdtMap.get(paramTemp[i]));
+            if(pdtMap.containsKey(paramTempResult[i])){
+                Arrays.fill(paramTempResult,i,i+1,pdtMap.get(paramTempResult[i]));
             }else{
-                Arrays.fill(paramTemp,i,i+1,"");
+                continue;
+                //Arrays.fill(paramTempResult,i,i+1,"");
             }
         }
-        System.out.println("==========getPdtParamVal==PLC 下发请求 组装后的 指令入参:"+ JSONObject.toJSONString(paramTemp));
-        return paramTemp;
+        log.debug("==========getPdtParamVal==PLC 下发请求 组装后的 指令入参:"+ JSONObject.toJSONString(paramTemp));
+        //System.out.println("==========getPdtParamVal==PLC 下发请求 组装后的 指令入参:"+ JSONObject.toJSONString(paramTemp));
+        return paramTempResult;
     }
 }

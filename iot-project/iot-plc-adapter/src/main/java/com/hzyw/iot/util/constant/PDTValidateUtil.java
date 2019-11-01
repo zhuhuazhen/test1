@@ -2,7 +2,8 @@ package com.hzyw.iot.util.constant;
 
 import com.alibaba.fastjson.JSONArray;
 import org.apache.commons.lang3.StringUtils;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * pdt 指令参数校验
  */
 public class PDTValidateUtil {
+    private static final Logger log = LoggerFactory.getLogger(PDTValidateUtil.class);
     /**
      * 通用校验 公共  响应类型
      * @param cmdParam
@@ -57,7 +59,7 @@ public class PDTValidateUtil {
         byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
         if(bytePdtArrs.length>250 || bytePdtArrs.length==0 || bytePdtArrs==null) {
             resBoolean = false;
-            System.out.println("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节 或指令参数为空!");
+            log.error("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节 或指令参数为空!");
         }
         String code=ConverUtil.convertByteToHexStr(bytePdtArrs[8])+"H"; //设备码
         System.out.println("============主动上报节点数据(F7H)=路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
@@ -76,9 +78,11 @@ public class PDTValidateUtil {
                 bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
             }
             String hh = new String(bitChar); //ISO8859-1
-            System.out.println("============bit15~bit9新老程序状态位(新程序:10001000):"+hh.concat("0"));
+            log.debug("============bit15~bit9新老程序状态位(新程序:10001000):"+hh.concat("0"));
+            //System.out.println("============bit15~bit9新老程序状态位(新程序:10001000):"+hh.concat("0"));
             String newDevCode=DecimalTransforUtil.BinaryString2hexString(hh.concat("0"));//二进制数据转化为16进制字符串
-            System.out.println("========主动上报节点数据(F7H)==区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(88为新程序):"+newDevCode);
+            log.debug("========主动上报节点数据(F7H)==区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(88为新程序):"+newDevCode);
+            //System.out.println("========主动上报节点数据(F7H)==区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(88为新程序):"+newDevCode);
             if(StringUtils.isNumeric(newDevCode)){
                 if(Integer.valueOf(newDevCode)==88){//88------10001000
                     indexNum.set(1); //bit15~bit9:0Xf0，则为新程序(1)
@@ -103,12 +107,15 @@ public class PDTValidateUtil {
         byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
         if(bytePdtArrs.length>250 || bytePdtArrs.length==0 || bytePdtArrs==null) {
             resBoolean = false;
-            System.out.println("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节!");
+            log.error("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节!");
+            //System.out.println("======解析 '主动上报节点数据'(F7H)响应的PDT报文错误！字节长度超过250个字节!");
         }
         String code=ConverUtil.convertByteToHexStr(bytePdtArrs[7])+"H"; //设备码
-        System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
+        log.debug("============查询节点详细数据(45H)=【路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
+        //System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:70H~7FH)==【路灯电源】(设备码:00H~6FH)==新老程序对应=设备码:"+code);
         Long codeValue=DecimalTransforUtil.hexToLong(D_CODE_VAL.DValueMethod(code),true);
-        System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:112~127)===【路灯电源】(设备码:0~111)===新老程序对应=10进制设备码值:"+codeValue);
+        log.debug("============查询节点详细数据(45H)=【路灯控制器】(设备码:112~127)===【路灯电源】(设备码:0~111)===新老程序对应=10进制设备码值:"+codeValue);
+        //System.out.println("============查询节点详细数据(45H)=【路灯控制器】(设备码:112~127)===【路灯电源】(设备码:0~111)===新老程序对应=10进制设备码值:"+codeValue);
         if(PLCValidateUtil.rangeInDefined(codeValue.intValue(),112,127)) {//路灯控制器（设备码：70H~7FH）
             //单灯控制器设备(2)  73H  ---115; 双灯控制器设备(3) 7AH  ---122
             if(codeValue.intValue()==122){//双灯控制器设备
@@ -127,9 +134,11 @@ public class PDTValidateUtil {
                 bitChar=Arrays.copyOfRange(bitChar,9,16); //截取 bit15~bit9 转16进制串
             }
             String hh = new String(bitChar); //ISO8859-1
-            System.out.println("============bit15~bit9新老程序状态位(新程序:11110000):"+hh.concat("0"));
+            log.debug("============bit15~bit9新老程序状态位(新程序:11110000):"+hh.concat("0"));
+            //System.out.println("============bit15~bit9新老程序状态位(新程序:11110000):"+hh.concat("0"));
             String newDevCode=DecimalTransforUtil.BinaryString2hexString(hh.concat("0"));//二进制数据转化为16进制字符串
-            System.out.println("========查询节点详细数据(45H)=区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(f0为新程序):"+newDevCode);
+            log.debug("========查询节点详细数据(45H)=区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(f0为新程序):"+newDevCode);
+            //System.out.println("========查询节点详细数据(45H)=区分新老设备(路灯电源设备)截取 bit15~bit9 转化为16进制值(f0为新程序):"+newDevCode);
             if(StringUtils.isNumeric(newDevCode)){
                 indexNum.set(0); //bit15~bit9:0x00,为老程序(0)
             }else if("f0".equals(newDevCode.toLowerCase())){//f0-----11110000
@@ -174,8 +183,25 @@ public class PDTValidateUtil {
         byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
         if(bytePdtArrs.length>33) {
             resBoolean = false;
-            System.out.println("======解析 '查询集中器状态'(73H)响应的PDT报文错误！字节长度超过33个字节!");
+            log.error("======解析 '查询集中器状态'(73H)响应的PDT报文错误！字节长度超过33个字节!");
             //throw new Exception(" 解析 '查询集中器状态'(73H)响应的PDT报文错误！字节长度超过33个字节!");
+        }
+        return resBoolean;
+    }
+
+    /**
+     * 读取节点(97H) 响应报文校验
+     * @param cmdParam
+     * @return
+     * @throws Exception
+     */
+    public static boolean validateResT97HPdt(String cmdParam) throws Exception {
+        boolean resBoolean=true;
+        if ("02".equals(cmdParam) || "03".equals(cmdParam)) return false; //02 (02H) 表示报文校验有错误，返回错误码:02; 03: 系统忙
+        byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
+        if(bytePdtArrs.length>242) {
+            resBoolean = false;
+            log.error("======解析 '查询集中器状态'(97H)响应的PDT报文错误！字节长度超过242个字节!");
         }
         return resBoolean;
     }
@@ -201,7 +227,7 @@ public class PDTValidateUtil {
         byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(cmdParam);
         if(bytePdtArrs.length>250) {
             resBoolean = false;
-            System.out.println("======解析 '下发定时任务'(82H)响应的PDT报文错误！字节长度超过250个字节!");
+            log.error("======解析 '下发定时任务'(82H)响应的PDT报文错误！字节长度超过250个字节!");
         }
         return resBoolean;
     }
@@ -235,18 +261,47 @@ public class PDTValidateUtil {
         if(paramList.size()>0){
             JSONArray paramValArray=JSONArray.parseArray(JSONArray.toJSONString(paramList.get(0)));
             for (int h = 0; h < paramValArray.size(); h++) {
-                System.out.print("======解析'节点调光(42H)===Array:" + paramValArray.getString(h));
+                System.out.println("======解析'节点调光(42H)===Array:" + paramValArray.getString(h));
                 pdtParam+=ConverUtil.MappCODEVal(paramValArray.getString(h),true);
                 System.out.println("=====解析'节点调光(42H)==11111====cmdParam:" +pdtParam);
             }
             byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(pdtParam);
             int pdtLen=bytePdtArrs.length;
             if(!PLCValidateUtil.rangeInDefined(pdtLen,2,8)) {
-                System.out.println("======解析'节点调光(42H)'请求的PDT报文长度有错误！字节长度范围：2~8字节!");
+                log.error("======解析'节点调光(42H)'请求的PDT报文长度有错误！字节长度范围：2~8字节!");
                 return false;
             }
             byte[] byteNodeID=Arrays.copyOfRange(bytePdtArrs,0,pdtLen-2); //截取节点ID 参数值
             paramValArray.set(0,validateNodeID(c,byteNodeID));
+            paramList=new JSONArray();
+            paramList.add(paramValArray);
+            cmdParam.replace(0,cmdParam.length(),JSONArray.toJSONString(paramList));
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 删除节点(99H)请求报文校验
+     * @param c
+     * @param cmdParam
+     * @return
+     * @throws Exception
+     */
+    public static boolean validateReqT99HPdt(String c,StringBuffer cmdParam)throws Exception{
+        if("".equals(c)) return false;
+        List<Object> paramList= JSONArray.parseArray(cmdParam.toString());
+        String pdtParam="";
+        if(paramList.size()>0){
+            JSONArray paramValArray=JSONArray.parseArray(JSONArray.toJSONString(paramList.get(0)));
+            System.out.println("======解析'删除节点(99H)===Array:" + paramValArray.getString(0));
+            pdtParam+=paramValArray.getString(0);
+            byte[] bytePdtIDArrs=ConverUtil.hexStrToByteArr(pdtParam);
+            if(!PLCValidateUtil.rangeInDefined(bytePdtIDArrs.length,0,6)) {
+                log.error("======解析'删除节点(99H)'请求的PDT报文 ID 入参长度有错误！字节长度范围：0~6字节!");
+                return false;
+            }
+            paramValArray.set(0,validateNodeID(c,bytePdtIDArrs));
             paramList=new JSONArray();
             paramList.add(paramValArray);
             cmdParam.replace(0,cmdParam.length(),JSONArray.toJSONString(paramList));
@@ -276,7 +331,7 @@ public class PDTValidateUtil {
             byte[] bytePdtArrs=ConverUtil.hexStrToByteArr(pdtParam);
             int pdtLen=bytePdtArrs.length;
             if(!PLCValidateUtil.rangeInDefined(pdtLen,0,6)) {
-                System.out.println("======解析'查询节点详细数据(45H)'请求的PDT 指令参数(ID)长度有错误！字节长度范围：0~6字节!");
+                log.error("======解析'查询节点详细数据(45H)'请求的PDT 指令参数(ID)长度有错误！字节长度范围：0~6字节!");
                 return false;
             }
             paramValArray.set(0,validateNodeID(c,bytePdtArrs));
@@ -286,6 +341,32 @@ public class PDTValidateUtil {
             return true;
         }
         return true;
+    }
+
+    public static boolean validateReqT96HPdt(String c,StringBuffer cmdParam) throws Exception{
+        if("".equals(c)) return false;
+        List<Object> paramList= JSONArray.parseArray(cmdParam.toString());
+        Integer firstGroup=0;
+        if(paramList.size()>0) {
+            JSONArray paramValArray= JSONArray.parseArray(JSONArray.toJSONString(paramList.get(0)));
+            firstGroup=paramValArray.getInteger(1); //组号
+            for(int i=0;i<paramList.size();i++){
+                paramValArray = JSONArray.parseArray(JSONArray.toJSONString(paramList.get(i)));
+                Integer groupNum=paramValArray.getInteger(1); //组号
+                if(!ConverUtil.rangeInDefined(groupNum,1,255)){ //组号范围:1~255
+                   log.error("=======指令(96H),下发 节点时,组号超过了范围(1~255)!");
+                   return false;
+                }
+                if("02H".equals(c)) { //下发 一组节点
+                    if (firstGroup != groupNum) {
+                        log.error("=======指令(96H),下发一组节点时,每个节点设置所属组号必须相同!");
+                        return false;
+                    }
+                }//下发 全部节点(多组) 同上外 无其它校验
+            }
+            return true;
+        }
+        return false;
     }
 
     /**

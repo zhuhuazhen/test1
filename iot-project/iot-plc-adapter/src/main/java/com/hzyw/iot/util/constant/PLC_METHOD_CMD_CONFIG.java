@@ -13,10 +13,10 @@ public enum PLC_METHOD_CMD_CONFIG {
     opera7("8CH"), //设置集中器时间
     opera8("8EH"), //设置集中器参数
     opera9("8FH"), //查询集中器参数
-    opera10("96H"), //下发节点
-    opera11("97H"), //读取节点
-    opera12("98H"), //配置节点
-    opera13("99H"), //删除节点
+    put_node_list("96H"), //下发节点
+    read_node_list("97H"), //读取节点
+    save_node("98H"), //配置节点
+    del_node("99H"), //删除节点
     opera14("F0H"), //集中器登录
     opera15("F1H"), //集中器与主机保持连接心跳
     opera16("F2H"), //系统控制

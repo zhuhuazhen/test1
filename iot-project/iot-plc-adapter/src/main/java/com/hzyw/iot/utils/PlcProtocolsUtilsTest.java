@@ -71,7 +71,7 @@ public class PlcProtocolsUtilsTest {
 	public static void main(String[] a) {
 		//testOpenLight();
 		//testGetBW();  //PDT为空
-		//testSendDown(new MessageVO()); //构造带PDT内容的报文
+		testSendDown(new MessageVO()); //构造带PDT内容的报文
 		/*testGetBW(); //手工构造一条没有PDT的报文
 		init1_config_jzq(null,"000000000100");
 		init8_sendNode();//下发节点
@@ -80,7 +80,7 @@ public class PlcProtocolsUtilsTest {
 		
 		
 		
-		protocols_API_F7_Response(null,null);  //数据上报报文解析调试
+		//protocols_API_F7_Response(null,null);  //数据上报报文解析调试
 	}
 
 	 
@@ -102,11 +102,11 @@ public class PlcProtocolsUtilsTest {
 			ModbusInfo modbusInfo_42h = new ModbusInfo();
 			// 1,devId,cCode,cmdCode
 			modbusInfo_42h.setAddress(ConverUtil.hexStrToByteArr("000000000100"));//设备ID
-			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("01"));// 广播  01单点      02 组      03广播
+			modbusInfo_42h.setcCode(ConverUtil.hexStrToByteArr("02"));// 广播  01单点      02 组      03广播
 			modbusInfo_42h.setCmdCode(ConverUtil.hexStrToByteArr("42"));
 			
 			// 2,Pdt部分
-			String nodeID = "000002000533"; //无节点？   0000020004ee     000002000001   000000000001
+			String nodeID = "000000000001"; //无节点？   0000020004ee     000002000001   0000020004E8
 			String operator_AB = "03"; 		// 01H-a灯           02H -B灯                   03H -A,B灯
 			int light_value = 0;       		// 范围00H~C8H(十进制：0~200)，对应亮度为0~100%
 			byteBuf = Unpooled.buffer(8); 	// 必须等于要拼接的内容的长度，否则byteBuf.array()得到的长度就不准确

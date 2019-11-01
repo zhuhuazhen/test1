@@ -1,5 +1,6 @@
 package com.hzyw.iot.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -38,7 +39,8 @@ public class PlcController {
 	 * 入参：
 	 *  {
 			"plc_sn":"xxxxxxxxx",
-			"isConfig":"0"   0-未配置  1-已配置
+			"isConfig":"0"   0-未配置  1-已配置  留空则不做设置
+			"isLogin":"0"    0-未登陆  1-已登陆  留空则不做设置
 		}
 	 * 
 	 * @return
@@ -57,15 +59,22 @@ public class PlcController {
 					+ redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn"))
 					+ " /sn=" + jsonParam.getString("plc_sn"));
 			
-			redisService.set(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn") , jsonParam.getString("isConfig"));
-			PlcProtocolsUtils.gloable_dev_status.put(jsonParam.getString("plc_sn") + "_login",jsonParam.getString("isConfig"));
+			//设置是否已配置
+			if(jsonParam.getString("isConfig")!=null && !"".equals(jsonParam.getString("isConfig").trim())){
+				redisService.set(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn") , jsonParam.getString("isConfig"));
+			}
+			//设置是否已登陆
+			if(jsonParam.getString("isLogin")!=null  && !"".equals(jsonParam.getString("isLogin").trim())){
+				PlcProtocolsUtils.gloable_dev_status.put(jsonParam.getString("plc_sn") + PlcProtocolsUtils._login,jsonParam.getString("isLogin"));
+			}
 			
 			logger.info("curent plc update seccess, isconfig="
 					+ redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn"))
 					+ " /sn=" + jsonParam.getString("plc_sn")); 
-			
+			String data = "isconfig="+redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn"));
+			data = data + "/isLogin=" + PlcProtocolsUtils.gloable_dev_status.get(jsonParam.getString("plc_sn") + PlcProtocolsUtils._login);
  		    resultJsonParam.put("msg", "seccess");
-		    resultJsonParam.put("data", redisService.get(PlcProtocolsUtils.rediskey_plc_isconfig_ + jsonParam.getString("plc_sn")));
+		    resultJsonParam.put("data", data);
 		}catch(Exception e){
 			logger.warn("PlcController::resetConfigStatusByPlcId ; curent plc update exception" + " /sn=" + jsonParam.getString("plc_sn") ,e); 
 			resultJsonParam.put("msg", "fail");
@@ -75,13 +84,14 @@ public class PlcController {
     }
 	
 	/**
+	 * 查询所有设备信息
 	 * 查询初始化的集中器和灯具的数据
 	 * 
 	 * @param jsonParam
 	 * @return
 	 */
 	@ResponseBody
-	@RequestMapping(value = "/plc/initData/queryAllDevices", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+	@RequestMapping(value = "/plc/initData/allDevInfo", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public String queryAllDevices(@RequestBody JSONObject jsonParam) {
 		JSONObject resultJsonParam = new JSONObject();
 		try{
@@ -90,6 +100,54 @@ public class PlcController {
 			Map<String, Map<String, Map<String, Object>>> alldevices = IotInfoConstant.allDevInfo;
  		    resultJsonParam.put("msg", "seccess");
 		    resultJsonParam.put("data", alldevices);
+		}catch(Exception e){
+			logger.error(""   ,e); 
+			resultJsonParam.put("msg", "fail");
+		    resultJsonParam.put("data", "exception :"+e.getMessage());
+		}
+	    return resultJsonParam.toJSONString();
+    }
+	
+	/**
+	 * 查询PLCID和SN关系
+	 * 
+	 * @param jsonParam
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/plc/initData/plc_relation_deviceToSn", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public String plc_relation_deviceToSn(@RequestBody JSONObject jsonParam) {
+		JSONObject resultJsonParam = new JSONObject();
+		try{
+			//前提是设备已经和主机建立了连接，然后已经登陆到主机
+			String requestMessageVOJSON = jsonParam.toJSONString();
+			Map<String, String> plc_relation_deviceToSn = IotInfoConstant.plc_relation_deviceToSn;
+ 		    resultJsonParam.put("msg", "seccess");
+		    resultJsonParam.put("data", plc_relation_deviceToSn);
+		}catch(Exception e){
+			logger.error(""   ,e); 
+			resultJsonParam.put("msg", "fail");
+		    resultJsonParam.put("data", "exception :"+e.getMessage());
+		}
+	    return resultJsonParam.toJSONString();
+    }
+	
+	/**
+	 * 查询PLC下的节点详情列表
+	 * 
+	 * @param jsonParam
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping(value = "/plc/initData/plc_relation_plcsnToNodelist", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public String plc_relation_plcsnToNodelist(@RequestBody JSONObject jsonParam) {
+		JSONObject resultJsonParam = new JSONObject();
+		try{
+			//前提是设备已经和主机建立了连接，然后已经登陆到主机
+			String requestMessageVOJSON = jsonParam.toJSONString();
+			Map<String, Map<String, List<Map<String,String>>>> rs = IotInfoConstant.plc_relation_plcsnToNodelist;
+ 		    resultJsonParam.put("msg", "seccess");
+		    resultJsonParam.put("data", rs);
 		}catch(Exception e){
 			logger.error(""   ,e); 
 			resultJsonParam.put("msg", "fail");
@@ -127,6 +185,21 @@ public class PlcController {
 		    resultJsonParam.put("data", PlcProtocolsBusiness.all);
 		}catch(Exception e){
 			logger.error("===手工====执行指令,exception" + " /sn=" + jsonParam.getString("plc_sn") ,e); 
+			resultJsonParam.put("msg", "fail");
+		    resultJsonParam.put("data", "exception :"+e.getMessage());
+		}
+	    return resultJsonParam.toJSONString();
+    }
+	
+	@ResponseBody
+	@RequestMapping(value = "/plc/request/return", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public String _request_return(@RequestBody JSONObject jsonParam) {
+		JSONObject resultJsonParam = new JSONObject();
+		try{ 
+			logger.info("param: " + jsonParam.toJSONString());
+ 		    resultJsonParam.put("msg", "seccess");
+		    resultJsonParam.put("data", PlcProtocolsBusiness.all);
+		}catch(Exception e){
 			resultJsonParam.put("msg", "fail");
 		    resultJsonParam.put("data", "exception :"+e.getMessage());
 		}
@@ -350,7 +423,9 @@ public class PlcController {
 	 @RequestMapping(value = "/plc/generatorId", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
 	    public String generatorId(@RequestBody JSONObject jsonParam) {
 	    	JSONObject json = new JSONObject();
-	    	String id = DeviceIdGenerator.generatorId(jsonParam.getString("plc_node_sn"),4112,12289);
+	    	String flagId=jsonParam.getString("flagId"); //4112
+	    	String manufacturer=jsonParam.getString("manufacturer");//12289
+	    	String id = DeviceIdGenerator.generatorId(jsonParam.getString("plc_node_sn"),Integer.parseInt(flagId),Integer.parseInt(manufacturer));
 	    	json.put("plc_node_id", id);
 	    	return json.toJSONString();
 	    }

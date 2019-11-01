@@ -9,13 +9,13 @@ public enum HEAD_TEMPLATE {
     /* 帧结束符 */
     T("16"),
     /* 数据长度 */
-    L("null"),
+    L(null),
     /* 校验码 */
-    CS("null"),
+    CS(null),
     /* 帧数据域 */
-    PDT("null"),
+    PDT(null),
     /* 地址域 暂固定值,测试用*/
-    UID("null");
+    UID(null);
     private String value;
 
     public String getValue() {

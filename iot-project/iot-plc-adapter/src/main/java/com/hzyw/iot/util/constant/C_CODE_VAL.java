@@ -18,7 +18,7 @@ public enum C_CODE_VAL{
     /* 某种操作或请求的应答 */
     T80H("80"),
     /* 指定控制码 */
-    TxxH("null");
+    TxxH(null);
 
     private String value;
     C_CODE_VAL(String value) {
@@ -26,35 +26,11 @@ public enum C_CODE_VAL{
     }
 
     public String getValue() {
-    	return C_CODE_VAL.TxxH.value!=null && !"".equals(C_CODE_VAL.TxxH.value)?C_CODE_VAL.TxxH.value:this.value;     
+    	return this.value;
     }
 
     public void setValue(String value) {
         this.value = value;
-    }
-
-    /**
-     * 动态指定控制码值
-     * @param code
-     * @return
-     */
-    public static synchronized void CMethod(String code){
-        code=code==null?"NONE":code;
-        try {
-            code=code.toUpperCase();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println("传查询参数 code： " + code);
-        for (C_CODE_VAL cf : C_CODE_VAL.values()) {
-            if (cf.name().endsWith(code)) {
-                System.out.println("查询到 "+cf.name()+" 的对应控件码值： " + cf.value);
-                C_CODE_VAL.TxxH.setValue(cf.value);  // 注意: 考虑并发情况 控制码值会不会覆盖!  “synchronized” 锁 方法解决并发线程
-                System.out.println("动态控制码赋值给TxxH");
-                break;
-            }
-        }
-        System.out.println("查询控件码 end");
     }
 
     /**
@@ -78,22 +54,12 @@ public enum C_CODE_VAL{
         }
         return resCode;
     }
-
     private String msg;
     private String status;
     private String code;
-
     C_CODE_VAL(String msg, String status, String code) {
         this.msg = msg;
         this.status = status;
         this.code = code;
-    }
-
-    public String toJson() throws Exception {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("msg",this.msg);
-        jsonObject.put("status",this.status);
-        jsonObject.put("code",this.code);
-        return jsonObject.toJSONString();
     }
 }

@@ -1,39 +1,27 @@
 package com.hzyw.iot.netty.processor;
 
-import com.alibaba.fastjson.JSON;
-import com.hzyw.iot.netty.channelhandler.ChannelManagerHandler;
 import com.hzyw.iot.netty.channelhandler.CommandHandler;
 import com.hzyw.iot.netty.processor.Impl.IDataProcessor;
 import com.hzyw.iot.netty.processor.Impl.IplcDataProcessor;
 import com.hzyw.iot.netty.processor.Impl.ProcessorAbstract;
 import com.hzyw.iot.service.RedisService;
-import com.hzyw.iot.util.ByteUtils;
 import com.hzyw.iot.util.constant.ConverUtil;
 import com.hzyw.iot.util.constant.ProtocalAdapter;
 import com.hzyw.iot.utils.CRCUtils;
 import com.hzyw.iot.utils.IotInfoConstant;
 import com.hzyw.iot.utils.PlcProtocolsBusiness;
 import com.hzyw.iot.utils.PlcProtocolsUtils;
-import com.hzyw.iot.vo.dc.GlobalInfo;
 import com.hzyw.iot.vo.dc.ModbusInfo;
 import com.hzyw.iot.vo.dc.RTUInfo;
 import com.hzyw.iot.vo.dc.enums.ERTUChannelFlag;
-
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
-import javax.xml.ws.Response;
+import java.util.UUID;
 
 /**
  * ===PLC设备接入的消息处理：==== 1，协议报文 转化成 ModbusInfo 2，CRC校验数据 3，把modbusInfo.getData
@@ -69,7 +57,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	 */
 	@Override
 	public void translate(ChannelHandlerContext ctx, ByteBuf source, RTUInfo rtuInfo) throws Exception {
-		System.out.println("------PlcDataProcessor---------type=----"+this.type);
+		System.out.println("------设备接入类型(端口)-------------"+this.type);
 		if (checkAndToProcess(this.type))
 		{  
 			try{
@@ -92,7 +80,7 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 	            // 头部、尾部校验
 	            if(!"68".equals(modbusInfo.getHeadStart_str()) && !"68".equals(modbusInfo.getHeadEnd_str()) && !"16".equals(modbusInfo.getEnd_str())){
 	            	//取命令码、应答码、然后响应
-	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】命令码无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
+	            	LOGGER.warn("设备【"+modbusInfo.getAddress_str()+"】头部、尾部报文无效!" + PlcProtocolsUtils.loggerBaseInfo(modbusInfo));
 	            	return;
 	            }
 	            // 验证当前命令码、控制码是否存在，不存在直接响应失败
@@ -156,17 +144,29 @@ public class PlcDataProcessor extends ProcessorAbstract implements IDataProcesso
 				*/
 	            boolean flag = PlcProtocolsBusiness.transformTemplateSelect(ctx, modbusInfo);
 	            if(flag){
-	            	System.out.println("-------------1------------" + modbusInfo.getCmdCode_str());
 	            	PlcProtocolsBusiness.protocals_process_Response(ctx, modbusInfo);
 	            }else{
-	            	System.out.println("--------------2-----------" + modbusInfo.getCmdCode_str());
-					//if(!"f7".equalsIgnoreCase(modbusInfo.getCmdCode_str())) {
+	            	String cmd_strs=modbusInfo.getCmdCode_str();
+					//if(!"45".equalsIgnoreCase(cmd_strs) && !"f7".equalsIgnoreCase(cmd_strs)){
+                   // if("42".equalsIgnoreCase(cmd_strs)) {
+					//if("f7".equalsIgnoreCase(cmd_strs)) {
+					//if("96".equalsIgnoreCase(cmd_strs) || "97".equalsIgnoreCase(cmd_strs)
+					//	|| "98".equalsIgnoreCase(cmd_strs) || "99".equalsIgnoreCase(cmd_strs)) {
 					    source.resetReaderIndex();
 						byte[] requestBytes = new byte[source.readableBytes()];
 						source.readBytes(requestBytes);
-						ProtocalAdapter.messageRespose(requestBytes, ctx);
-					//}
-	            }
+						long FIRST_TIME=System.currentTimeMillis();
+						String resposeMesg=ProtocalAdapter.messageRespose(requestBytes, ctx);
+						LOGGER.info("*******指令码:"+modbusInfo.getCmdCode_str()+",******上报指令,调协义模板 (上报和响应的)messageRespose方法,消耗时间(s):"+
+								Math.round(System.currentTimeMillis()-FIRST_TIME)/1000);
+						if(!"".equals(resposeMesg)){//设备->主机 上报数据后，主机->设备 的响应结果(如果返回为空,说明不用响应报文)
+							String mesgID=UUID.randomUUID().toString();
+							LOGGER.info("=======指令码:"+modbusInfo.getCmdCode_str()+",=====主机 向 设备 的响应报文:"+resposeMesg+", 对应的消息ID: "+mesgID);
+							CommandHandler.writeCommand("12345000000000100", resposeMesg,mesgID );
+							//CommandHandler.writeCommand("12345000000000100", resposeMesg, 2,mesgID );
+						}
+					}
+	            //}
 			}catch(Exception e){
 				LOGGER.error("translate exception,",e); 
 			}
