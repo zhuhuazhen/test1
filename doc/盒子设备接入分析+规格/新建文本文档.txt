@@ -1,0 +1,94 @@
+{
+	"type":	"devInfoResponse",
+	"timestamp":	1568082713,
+	"msgId":	"d58eaf1a-2fb3-419b-8632-c9072ac8fe78",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
+	"data":	{
+		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+		"attributers":	[{
+				"uuid":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
+				"sn":	"CLCC40002B8A",
+				"device_type_name":	"LED screen",
+				"device_type_code":	4144,
+				"vendor_name":	"Colorlight interconnection",
+				"vendor_code":	8205,
+				"model":	"c4",
+				"version_software":	"1.52.6",
+				"version_hardware":	"c4-1.52.6",
+				"date_of_production":	"2019-08-27",
+				"up_time":	0,
+				"ipaddr_v4":	"192.168.3.161",
+				"ipaddr_v6":	"2001:0db8:85a3:08d3:1319:8a2e:0370:7344",
+				"mac_addr":	"C1:B2:B2:C2:0B:0A",
+				"malfunction":	0
+			}],
+		"methods":	["reboot", "set_time", "set_brightness", "set_onoff", "set_screenshot", "set_clean_program", "set_download_program", "set_switch_program"],
+		"definedAttributers":	[{
+				"type":	"on_play",
+				"value":	"1",
+				"company":	""
+			}, {
+				"type":	"on_off",
+				"value":	"1",
+				"company":	""
+			}, {
+				"type":	"brightness",
+				"value":	"26",
+				"company":	"cd"
+			}, {
+				"type":	"screen_width",
+				"value":	"192",
+				"company":	"pix"
+			}, {
+				"type":	"screen_height",
+				"value":	"320",
+				"company":	"pix"
+			}, {
+				"type":	"uptime",
+				"value":	"417765",
+				"company":	"ms"
+			}, {
+				"type":	"mem_total",
+				"value":	"1073741824",
+				"company":	"byte"
+			}, {
+				"type":	"mem_free",
+				"value":	"800419840",
+				"company":	"byte"
+			}, {
+				"type":	"storage_total",
+				"value":	"5878841344",
+				"company":	"byte"
+			}, {
+				"type":	"storage_free",
+				"value":	"800419840",
+				"company":	"byte"
+			}, {
+				"type":	"colortemp",
+				"value":	"4100",
+				"company":	"k"
+			}, {
+				"type":	"volume",
+				"value":	"14",
+				"company":	""
+			}, {
+				"type":	"fps",
+				"value":	"60",
+				"company":	"frame"
+			}, {
+				"type":	"hsync",
+				"value":	"10",
+				"company":	"pclk"
+			}, {
+				"type":	"dclk",
+				"value":	"4682926",
+				"company":	"hz"
+			}],
+		"definedMethods":	[],
+		"signals":	[{
+				"screen_offline":	1060865
+			}],
+		"tags":	{
+	}
+	}
+}

@@ -1,0 +1,24 @@
+{
+	"type": "request",
+		"timestamp": 1566205651,
+		"msgId": "31a8c447-5079-4e91-a364-1769ac06fd5c",
+		"gwId":"1000-f82d132f9bb018ca-2001-ffff-d28a",
+		"data": 
+		{
+			"id": "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7",
+			"methods": 
+				[
+				{
+					"method": "set_onoff",
+					"in": 
+						[
+						{
+							"onoff":1,
+							"level":1
+
+						}
+						]
+				}
+				]
+		}
+}

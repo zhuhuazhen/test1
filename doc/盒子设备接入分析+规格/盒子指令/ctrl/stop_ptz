@@ -1,0 +1,21 @@
+{
+	"type": "request",
+		"timestamp": 1566205651,
+		"msgId": "d5983c86-e381-4a45-a39a-73fe5078b453",
+		"gwId":"1000-f82d132f9bb018ca-2001-ffff-d28a",
+		"data": 
+		{
+			"id": "1020-f82d132f9bb018ca-2004-ffff-ed35",
+			"methods": 
+				[
+				{
+					"method": "stop_ptz",
+					"in": 
+						[
+						{
+						}
+						]
+				}
+				]
+		}
+}

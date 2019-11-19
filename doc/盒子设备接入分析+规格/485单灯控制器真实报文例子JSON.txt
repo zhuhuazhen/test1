@@ -1,0 +1,196 @@
+485单灯控制器上线(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"devOnline",
+	"timestamp":	1573032728,
+	"msgId":	"20ccf04e-72ac-4218-8676-b97102d1973f",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"status":	"online",
+		"tags":	{
+	}
+	}
+}
+
+485单灯控制器下线(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"devOnline",
+	"timestamp":	1573032718,
+	"msgId":	"6ba31632-a90c-4a35-863b-dd9b61c3f85a",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"status":	"offline",
+		"tags":	{
+	}
+	}
+}
+
+485单灯控制器属性上报(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"devInfoResponse",
+	"timestamp":	1573032734,
+	"msgId":	"a0497b6d-6214-46fc-9472-ea093b59d2ec",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"attributers":	[{
+				"uuid":	"1010-ca336f1017432081-2010-ffff-7623",
+				"sn":	"ab299f05-161f-40be-9aae-362280d07e82",
+				"device_type_name":	"Light controller",
+				"device_type_code":	4112,
+				"vendor_name":	"InnoSmart",
+				"vendor_code":	8208,
+				"model":	"ODC_500_HP1",
+				"version_software":	"",
+				"version_hardware":	"",
+				"date_of_production":	"2019-10-18",
+				"up_time":	0,
+				"ipaddr_v4":	"",
+				"ipaddr_v6":	"",
+				"mac_addr":	"",
+				"malfunction":	0
+			}],
+		"methods":	["set_time", "set_brightness", "set_onoff", "set_time_plan_task", "clean_time_plan_task", "set_ctrl_mode"],
+		"definedAttributers":	[{
+				"type":	"on_off",
+				"value":	1,
+				"company":	""
+			}, {
+				"type":	"brightness",
+				"value":	100,
+				"company":	""
+			}, {
+				"type":	"voltage",
+				"value":	228000,
+				"company":	"mV"
+			}, {
+				"type":	"current",
+				"value":	0,
+				"company":	"mA"
+			}, {
+				"type":	"capacity",
+				"value":	0,
+				"company":	"mW"
+			}, {
+				"type":	"timing",
+				"value":	0,
+				"company":	""
+			}, {
+				"type":	"policy_mode",
+				"value":	0,
+				"company":	""
+			}, {
+				"type":	"ctrl_mode",
+				"value":	0,
+				"company":	""
+			}],
+		"definedMethods":	[],
+		"signals":	[{
+				"lamp_offline":	1052673
+			}],
+		"tags":	{
+	}
+	}
+}
+
+485单灯控制器状态上报(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"metricInfoResponse",
+	"timestamp":	1573032771,
+	"msgId":	"73c77f8a-8a80-4efa-99b8-01035ac5935d",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"attributers":	[],
+		"definedAttributers":	[{
+				"type":	"on_off",
+				"value":	0,
+				"company":	""
+			}, {
+				"type":	"brightness",
+				"value":	0,
+				"company":	""
+			}, {
+				"type":	"voltage",
+				"value":	228000,
+				"company":	"mV"
+			}],
+		"tags":	{
+	}
+	}
+}
+
+485单灯控制器信号上报(真实报文): 
+topic : hzyw/001/device/1000-f82d132f9bb018ca-2001-ffff-d28a
+message : 
+{
+	"type":	"devSignalResponse",
+	"timestamp":	1573033106,
+	"msgId":	"dbeb8156-75b2-41ef-a837-2872f62a88ed",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"signals":	[{
+				"signal_code":	1052673
+			}],
+		"tags":	{
+	}
+	}
+}
+
+控制命令下发到485单灯控制器(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"request",
+	"timestamp":	"1573032754",
+	"msgId":	"4557e4c0-ea7d-4fe5-becb-3f6c9da4c7d9",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"messageCode":	0,
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"attributers":	[],
+		"methods":	[{
+				"method":	"set_onoff",
+				"in":	[{
+						"onoff":	1,
+						"level":	10
+					}],
+				"out":	[]
+			}],
+		"definedAttributers":	[],
+		"definedMethods":	[],
+		"signals":	[],
+		"tags":	{
+	}
+	}
+}
+
+485单灯控制器控制命令回复(真实报文): 
+topic : hzyw/001/device/1010-ca336f1017432081-2010-ffff-7623
+message : 
+{
+	"type":	"response",
+	"timestamp":	1573032758,
+	"msgId":	"4557e4c0-ea7d-4fe5-becb-3f6c9da4c7d9",
+	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28a",
+	"messageCode":	0,
+	"data":	{
+		"id":	"1010-ca336f1017432081-2010-ffff-7623",
+		"methods":	[{
+				"method":	"set_onoff",
+				"out":	[]
+			}],
+		"tags":	{
+	}
+	}
+}
