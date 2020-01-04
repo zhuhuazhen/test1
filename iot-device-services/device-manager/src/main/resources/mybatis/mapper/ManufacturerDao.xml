@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.device.ManufacturerDao">
+    <resultMap id="ManufacturerInfoMap" type="com.hzyw.iot.platform.devicemanager.domain.device.ManufacturerDO">
+        <id column="manufacturer_code" jdbcType="INTEGER" property="manufacturerCode"/>
+        <result column="manufacturer_name" jdbcType="VARCHAR" property="manufacturerName"/>
+        <result column="address" jdbcType="VARCHAR" property="address"/>
+        <result column="contact_info" jdbcType="VARCHAR" property="contactInfo"/>
+    </resultMap>
+
+
+    <select id="getManufacturerInfo" resultMap="ManufacturerInfoMap">
+        SELECT manufacturer_code,
+        manufacturer_name,
+        address,
+        contact_info
+        FROM DEVICE_MANUFACTURER_T
+        <where>
+            1=1
+            <if test="manufacturerCode!=null">
+                AND manufacturer_code=#{manufacturerCode}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insertManufacturer" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.ManufacturerDO">
+    insert into DEVICE_MANUFACTURER_T
+    (MANUFACTURER_CODE, MANUFACTURER_NAME, ADDRESS, CONTACT_INFO)
+    values
+    (#{manufacturerCode},#{manufacturerName},#{address},#{contactInfo})
+    </insert>
+
+    <update id="updateManufacturer" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.ManufacturerDO">
+        update DEVICE_MANUFACTURER_T
+        <set>
+            MANUFACTURER_NAME=#{manufacturerName},
+            <if test="address!=null">ADDRESS=#{address},</if>
+            <if test="contactInfo!=null">CONTACT_INFO=#{contactInfo}</if>
+        </set>
+        where MANUFACTURER_CODE=#{manufacturerCode}
+    </update>
+
+</mapper>

@@ -1,0 +1,49 @@
+package rules
+import com.hzyw.iot.platform.droolsmanager.domain.RuleResult;
+/*
+rule "Linkage"
+	when
+		Light( lightpower == 1 );
+		b:BigScreen( brightness==1,power == 1);
+	then
+	    b.setBrightness(100);
+	    //b.setName("xxxxxx");
+	    System.err.println("执行规则后Linkage：亮度变为"+b.getBrightness());
+	    //System.err.println("执行规则后Linkage：名称变为"+b.getName());
+
+end
+
+
+rule "linkage_bigscreentolight1"
+  	when
+  		Light( lightpower == 0 )
+  		b:BigScreen( screenpower == 1,lightness ==1  )
+  	then
+  		b.setLightness(60);
+  		System.err.println("执行规则linkage_bigscreentolight1：亮度变为"+b.getLightness());
+end
+
+
+rule "singleLinkage2"
+	when
+		$r:RuleResult( onoff == 1, level < 80, sourceDeviceId == "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7" );
+	then
+	    $r.setExecuteActionName("{\"method\": \"set_onoff\",\"in\": [{\"onoff\":1},{\"level\":80}]}");
+	    $r.setTargetDeviceId("1030-3c474cf77e1a0376-200d-ffff-74a8");
+end
+
+rule "singleLinkage3"
+   	when
+   		$r:RuleResult( onoff == -1, level > 80,sourceDeviceId == "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7" );
+   	then
+   	    $r.setExecuteActionName("{\"method\": \"set_brightness\",\"in\": [{\"level\":100}]}");
+   	    $r.setTargetDeviceId("1030-3c474cf77e1a0376-200d-ffff-74a8");
+   end
+
+rule "singleLinkage4"
+   	when
+   		$r:RuleResult( onoff == 1, level >= 80 , sourceDeviceId == "1010-3f7b3eb6bffe6fb1-2009-ffff-0be7" );
+   	then
+   	    $r.setExecuteActionName("{\"method\": \"set_onoff\",\"in\": [{\"onoff\":1},{\"level\":100}]}");
+   	    $r.setTargetDeviceId("1030-3c474cf77e1a0376-200d-ffff-74a8");
+   end*/

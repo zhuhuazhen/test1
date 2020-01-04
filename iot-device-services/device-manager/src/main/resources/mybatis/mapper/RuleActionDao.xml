@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.rule.RuleActionDao">
+    <resultMap id="RuleActionMap" type="com.hzyw.iot.platform.devicemanager.domain.rule.RuleActionDO">
+        <id column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="DEVICE_TYPE" jdbcType="INTEGER" property="deviceType"/>
+        <result column="DEVICE_ID" jdbcType="VARCHAR" property="deviceId"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="content" jdbcType="VARCHAR" property="content"/>
+        <result column="creater" jdbcType="VARCHAR" property="creater"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime" javaType="java.util.Date"/>
+        <result column="updater" jdbcType="VARCHAR" property="updater"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" javaType="java.util.Date"/>
+    </resultMap>
+
+    <resultMap id="DeviceMethodMap" type="com.hzyw.iot.platform.devicemanager.domain.rule.MethodComboBoxDO">
+        <id column="method_id" jdbcType="VARCHAR" property="methodId"/>
+        <result column="method_name" jdbcType="VARCHAR" property="methodName"/>
+        <result column="method_in" jdbcType="VARCHAR" property="methodIn"/>
+    </resultMap>
+
+    <!--下拉框 动作规则设置, 查条件动作名 deviceId:按设备ID查询(不通用); deviceDomain:按大类查询(通用)-->
+    <select id="selDeviceMethod" resultMap="DeviceMethodMap" parameterType="java.lang.String">
+        SELECT
+        t1.method_id,t1.method_name,t1.method_in
+        FROM DEVICE_METHOD_T t1
+        INNER JOIN DEVICE_INFO_T t2 ON t1.device_type=t2.device_type
+        <where>
+            1=1
+            <if test="deviceId!=null and deviceId!=''">
+                AND t2.device_id=#{deviceId}
+            </if>
+            <if test="deviceDomain!=null and deviceDomain!=''">
+                AND t1.device_domain=#{deviceDomain}
+            </if>
+        </where>
+    </select>
+
+    <!--查看规则动作信息-->
+    <select id="getOneRuleAction" resultMap="RuleActionMap" parameterType="java.lang.String">
+        SELECT
+            <include refid="base_column_list"></include>
+        FROM RULE_ACTION_T
+        <where>
+            1=1
+            <if test="code!=null and code!=''">
+                AND code=#{code}
+            </if>
+        </where>
+    </select>
+
+    <insert id="saveRuleAction" parameterType="com.hzyw.iot.platform.devicemanager.domain.rule.RuleActionDO">
+        <selectKey keyProperty="code" resultType="String" order="BEFORE">
+            select replace(uuid(),'-','') from dual
+        </selectKey>
+        insert into RULE_ACTION_T(code,DEVICE_TYPE, CONTENT, DESCRIPTION, DEVICE_ID, creater,create_time)
+        values (#{code,jdbcType=VARCHAR},#{deviceType},#{content}, #{description}, #{deviceId}, #{creater},now())
+    </insert>
+
+    <select id="findRuleActionList" parameterType="com.hzyw.iot.platform.devicemanager.domain.rule.RuleActionDO" resultMap="RuleActionMap">
+        select
+        <include refid="base_column_list"></include>
+        from RULE_ACTION_T
+        <where>
+            1=1
+            <if test="code!=null and code!=''">
+                and code=#{code,jdbcType=VARCHAR}
+            </if>
+            <if test="deviceType!=null and deviceType!='' and deviceType!=0">
+                and DEVICE_TYPE=#{deviceType,jdbcType=INTEGER}
+            </if>
+            <if test="deviceId!=null and deviceId!=''">
+                and DEVICE_ID=#{deviceId,jdbcType=VARCHAR}
+            </if>
+            <if test="content!=null and content!=''">
+                and CONTENT like concat('%',#{content},'%')
+            </if>
+            <if test="description!=null and description!=''">
+                and DESCRIPTION like concat('%',#{description},'%')
+            </if>
+        </where>
+    </select>
+
+    <update id="updateRuleAction" parameterType="com.hzyw.iot.platform.devicemanager.domain.rule.RuleActionDO">
+        update RULE_ACTION_T
+        <set>
+            <if test="deviceType!= null and deviceType!=''">DEVICE_TYPE = #{deviceType},</if>
+            CONTENT = #{content},
+            DESCRIPTION = #{description},
+            DEVICE_ID = #{deviceId},
+            updater = #{updater},
+            update_time =  now()
+        </set>
+        where code =#{code}
+    </update>
+
+    <delete id="batchDelete" parameterType="java.util.List">
+        delete from RULE_ACTION_T  where code in
+        <foreach collection="list" item="params" index="index" open="(" separator="," close=")">
+            #{params.code,jdbcType=VARCHAR}
+        </foreach>
+    </delete>
+
+    <delete id="deleteById" parameterType="com.hzyw.iot.platform.devicemanager.domain.rule.RuleActionDO">
+         delete from RULE_ACTION_T where code = #{code}
+     </delete>
+
+    <sql id="base_column_list">
+       code,DEVICE_TYPE,CONTENT,DESCRIPTION,DEVICE_ID,creater,create_time,updater,update_time
+    </sql>
+</mapper>

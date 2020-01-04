@@ -179,7 +179,7 @@ message :
 	"timestamp":	"1568082747",
 	"msgId":	"53cf79f0-9c06-4b33-8743-afba418e9c99",
 	"gwId":	"1000-f82d132f9bb018ca-2001-ffff-d28b",
-	"messageCode":	0,
+	
 	"data":	{
 		"id":	"1030-3c474cf77e1a0376-200d-ffff-74a8",
 		"attributers":	[],

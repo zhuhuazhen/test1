@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.device.DeviceMethodDao">
+    <resultMap id="DeviceMethodMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceMethodDO">
+        <id column="METHOD_ID" jdbcType="INTEGER" property="methodId"/>
+        <result column="METHOD_NAME" jdbcType="VARCHAR" property="methodName"/>
+        <result column="METHOD_IN" jdbcType="VARCHAR" property="methodIn"/>
+        <result column="METHOD_OUT" jdbcType="INTEGER" property="methodOut"/>
+        <result column="METHOD_DESCRIPTION" jdbcType="VARCHAR" property="methodDescription"/>
+        <result column="DEVICE_TYPE" jdbcType="VARCHAR" property="deviceType"/>
+    </resultMap>
+
+    <select id="selectMethodById" parameterType="java.lang.Integer" resultMap="DeviceMethodMap">
+        select METHOD_ID, METHOD_NAME, METHOD_IN, METHOD_OUT, METHOD_DESCRIPTION, DEVICE_TYPE
+        from DEVICE_METHOD_T
+        where METHOD_ID = #{methodId}
+    </select>
+
+    <select id="getMethodsByDeviceType" parameterType="java.lang.String" resultMap="DeviceMethodMap">
+        select METHOD_ID, METHOD_NAME, METHOD_IN, METHOD_OUT, METHOD_DESCRIPTION, DEVICE_TYPE
+        from DEVICE_METHOD_T
+        where DEVICE_TYPE = #{typeId}
+    </select>
+
+    <insert id="insertMethod" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceMethodDO">
+        <!--        <selectKey keyProperty="aaa" resultType="int" order="BEFORE">-->
+        <!--            select count(1) as aaa from DEVICE_METHOD_T where METHOD_NAME =#{methodName} and DEVICE_TYPE=#{deviceType} and-->
+        <!--            METHOD_IN=#{methodIn} and METHOD_OUT=#{methodOut};-->
+        <!--        </selectKey>-->
+        <!--        <if test='aaa==0'>-->
+        insert into DEVICE_METHOD_T(METHOD_ID, METHOD_NAME, METHOD_IN, METHOD_OUT, METHOD_DESCRIPTION, DEVICE_TYPE
+        )
+        values (#{methodId}, #{methodName}, #{methodIn}, #{methodOut}, #{methodDescription}, #{deviceType});
+        <!--        </if>-->
+    </insert>
+
+    <update id="updateMethod" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceMethodDO">
+        update DEVICE_METHOD_T
+        set METHOD_ID=#{methodId},
+            METHOD_NAME=#{methodName},
+            METHOD_IN=#{methodIn},
+            METHOD_OUT=#{methodOut},
+            METHOD_DESCRIPTION=#{methodDescription},
+            DEVICE_TYPE=#{deviceType}
+        where METHOD_ID = #{methodId};
+    </update>
+
+
+</mapper>

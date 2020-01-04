@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.DeviceConfigMapper">
+    <resultMap id="getDeviceAttributeInfoMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceAttributeDO">
+        <result column="attr_key" jdbcType="VARCHAR" property="attrKey"/>
+        <result column="attr_name" jdbcType="VARCHAR" property="attrName"/>
+        <result column="unit" jdbcType="VARCHAR" property="unit"/>
+        <result column="value_type" jdbcType="VARCHAR" property="valueType"/>
+        <result column="metadata" jdbcType="VARCHAR" property="meta"/>
+    </resultMap>
+
+    <resultMap id="methodListResultMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceMethodDO">
+        <id column="method_id" jdbcType="VARCHAR" property="methodId"/>
+        <result column="method_name" jdbcType="VARCHAR" property="methodName"/>
+        <result column="method_in" jdbcType="DATE" property="methodIn"/>
+        <result column="method_out" jdbcType="VARCHAR" property="methodOut"/>
+        <result column="method_description" jdbcType="VARCHAR" property="methodDescription"/>
+    </resultMap>
+
+    <resultMap id="typeResultMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+        <id column="type_id" jdbcType="VARCHAR" property="typeId"/>
+        <result column="type_code" jdbcType="VARCHAR" property="deviceType"/>
+        <result column="type_name" jdbcType="VARCHAR" property="deviceName"/>
+        <result column="device_domain" jdbcType="INTEGER" property="deviceDomain"/>
+        <result column="manufacturer_code" jdbcType="VARCHAR" property="manufacturerCode"/>
+        <result column="specifications" jdbcType="VARCHAR" property="specifications"/>
+        <result column="communication_ports" jdbcType="VARCHAR" property="communicationPorts"/>
+        <result column="support_protocols" jdbcType="VARCHAR" property="supportProtocols"/>
+        <collection property="methodList" resultMap="methodListResultMap"/>
+        <collection property="deviceModelList" resultMap="getDeviceAttributeInfoMap"/>
+    </resultMap>
+
+    <select id="getDeviceAttributeInfo" resultMap="getDeviceAttributeInfoMap">
+        select attr_key,
+                attr_name,
+                value_type,
+                unit,
+                metadata
+                from DEVICE_ATTRIBUTE_T
+    </select>
+
+    <select id="getDeviceTypeInfo" resultMap="typeResultMap">
+        select T.type_id,
+                T.type_code,
+                T.type_name,
+                T.device_domain,
+                T.manufacturer_code,
+                T.SOFTWARE_VERSION,
+                T.communication_ports,
+                T.support_protocols,
+                M.method_id,
+                M.method_name,
+                M.method_in,
+                M.method_out,
+                M.method_description,
+                D.attr_key,
+                D.attr_name,
+                D.value_type,
+                D.unit,
+                D.metadata
+              from DEVICE_TYPE_T T,DEVICE_METHOD_T M,DEVICETYPE_ATTR_REL_T A,DEVICE_ATTRIBUTE_T D
+              where T.type_id=M.device_type and T.type_id=A.type_id and A.attr_key=D.attr_key
+    </select>
+
+
+</mapper>

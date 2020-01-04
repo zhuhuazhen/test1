@@ -1,0 +1,67 @@
+{
+  "groups": [
+    {
+      "name": "sdk",
+      "type": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties"
+    },
+    {
+      "name": "sdk.server",
+      "type": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$Server",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties",
+      "sourceMethod": "getServer()"
+    },
+    {
+      "name": "sdk.callback",
+      "type": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$CallBack",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties",
+      "sourceMethod": "getCallBack()"
+    },
+    {
+      "name": "sdk.handler",
+      "type": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$Handlers",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties",
+      "sourceMethod": "getHandlers()"
+    }
+  ],
+  "properties": [
+    {
+      "name": "sdk.prefer-url",
+      "type": "java.lang.Boolean",
+      "description": "choose url or ribbon name first",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "sdk.callback.url",
+      "type": "java.lang.String",
+      "description": "self base url, which could receive callback message from iot platform.",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$CallBack"
+    },
+    {
+      "name": "sdk.callback.name",
+      "type": "java.lang.String",
+      "description": "self discover name for callback,(if it's discovery center are similar to platform's)",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$CallBack"
+    },
+    {
+      "name": "sdk.handlers.include",
+      "type": "java.lang.String",
+      "description": "no description.",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$Handlers"
+    },
+    {
+      "name": "sdk.server.name",
+      "type": "java.lang.String",
+      "description": "platform service discover name, which found in discovery center(eg:eureka). ",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$Server"
+    },
+    {
+      "name": "sdk.server.url",
+      "type": "java.lang.String",
+      "description": "platform service base url(eg:http://ip:port/contextPath).",
+      "sourceType": "com.hzyw.iot.platform.sdk.config.PlatformSdkProperties$Server"
+    }
+  ],
+  "hints": []
+}

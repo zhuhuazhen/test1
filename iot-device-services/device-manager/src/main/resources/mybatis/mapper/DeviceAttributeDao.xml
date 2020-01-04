@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.device.DeviceAttributeDao">
+    <resultMap id="DeviceAttributeMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceAttributeDO">
+        <id column="ATTR_KEY" jdbcType="VARCHAR" property="attrKey"/>
+        <result column="ATTR_NAME" jdbcType="VARCHAR" property="attrName"/>
+        <result column="VALUE_TYPE" jdbcType="VARCHAR" property="valueType"/>
+        <result column="UNIT" jdbcType="VARCHAR" property="unit"/>
+        <result column="METADATA" jdbcType="VARCHAR" property="metaData"/>
+        <result column="STDUNIT" jdbcType="VARCHAR" property="stdUnit"/>
+        <result column="RATIO" jdbcType="INTEGER" property="ratio"/>
+    </resultMap>
+
+    <!--查询设备属性定义-->
+    <select id="getDeviceAttribute" resultMap="DeviceAttributeMap" parameterType="java.lang.String">
+        SELECT ATTR_KEY, ATTR_NAME, VALUE_TYPE, UNIT, METADATA,STDUNIT,RATIO
+        FROM DEVICE_ATTRIBUTE_T
+        <where>
+            1=1
+            <if test="attrKey!=null and attrKey!=''">
+                AND attr_key=#{attrKey}
+            </if>
+        </where>
+    </select>
+
+    <!--    新增设备属性定义-->
+    <insert id="insertDeviceAttribute"
+            parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceAttributeDO">
+        insert into DEVICE_ATTRIBUTE_T
+            (ATTR_KEY, ATTR_NAME, VALUE_TYPE, UNIT, METADATA, STDUNIT, RATIO)
+        values (#{attrKey}, #{attrName}, #{valueType}, #{unit}, #{metaData},#{stdUnit},#{ratio});
+    </insert>
+
+    <!--    更新设备属性定义-->
+    <update id="updateDeviceAttribute"
+            parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceAttributeDO">
+        update DEVICE_ATTRIBUTE_T
+        <set>
+            <if test="attrName!=null">ATTR_NAME=#{attrName},</if>
+            <if test="valueType!= null">VALUE_TYPE=#{valueType},</if>
+            <if test="unit!= null">UNIT=#{unit},</if>
+            <if test="stdUnit!= null">STDUNIT=#{stdUnit}</if>
+            <if test="ratio!= null">RATIO=#{ratio}</if>
+            <if test="metaData!= null">METADATA=#{metaData}</if>
+        </set>
+        where ATTR_KEY=#{attrKey}
+    </update>
+
+    <!--    删除设备属性定义（@Delete）-->
+
+    <!--根据设备型号查询设备属性定义 -->
+    <select id="searchDeviceAttrByType" resultMap="DeviceAttributeMap">
+        select ATTR_KEY, ATTR_NAME, VALUE_TYPE, UNIT, METADATA, STDUNIT, RATIO
+        from DEVICE_ATTRIBUTE_T
+        where ATTR_KEY in
+              (select ATTR_KEY from DEVICETYPE_ATTR_REL_T where TYPE_ID = #{typeId})
+    </select>
+
+    <!--    跟新属性与设备型号的关系  -->
+    <insert id="saveAttrTypeRelation" parameterType="java.lang.String">
+        <selectKey keyProperty="count" resultType="int" order="BEFORE">
+            select count(1) from DEVICETYPE_ATTR_REL_T where TYPE_ID =#{typeId} and ATTR_KEY=#{attrKey};
+        </selectKey>
+        <choose>
+            <when test='count==0'>
+                insert into DEVICETYPE_ATTR_REL_T(TYPE_ID,ATTR_KEY) values (#{typeId},#{attrKey});
+            </when>
+            <otherwise>
+                update DEVICETYPE_ATTR_REL_T set TYPE_ID=#{typeId},ATTR_KEY=#{attrKey} where TYPE_ID=#{typeId} and
+                ATTR_KEY=#{attrKey};
+            </otherwise>
+        </choose>
+    </insert>
+
+    <select id="listAllDevicesAttr" parameterType="java.lang.Integer" resultMap="DeviceAttributeMap">
+        select ATTR_KEY, ATTR_NAME, VALUE_TYPE, UNIT, METADATA, STDUNIT, RATIO
+        from DEVICE_ATTRIBUTE_T
+        limit #{currIndex} , #{pageSize}
+    </select>
+</mapper>

@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.hzyw.iot.platform.sdk.config.PlatformSdkAutoConfiguration
+

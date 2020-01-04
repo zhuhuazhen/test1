@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.hzyw.iot.platform.devicemanager.mapper.device.DeviceTypeDao">
+    <resultMap id="DeviceTypeMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+        <result column="type_code" jdbcType="VARCHAR" property="typeCode"/>
+        <result column="type_name" jdbcType="VARCHAR" property="typeName"/>
+        <result column="device_domain" jdbcType="INTEGER" property="deviceDomain"/>
+        <result column="manufacturer_code" jdbcType="INTEGER" property="manufacturerCode"/>
+        <result column="software_version" jdbcType="VARCHAR" property="softwareVersion"/>
+        <result column="hardware_version" jdbcType="VARCHAR" property="hardwareVersion"/>
+        <result column="communication_ports" jdbcType="VARCHAR" property="communicationPorts"/>
+        <result column="support_protocols" jdbcType="VARCHAR" property="supportProtocols"/>
+        <result column="meta" jdbcType="VARCHAR" property="meta"/>
+    </resultMap>
+
+    <resultMap id="DeviceAttributeMap" type="com.hzyw.iot.platform.devicemanager.domain.device.DeviceAttributeDO">
+        <id column="ATTR_KEY" jdbcType="VARCHAR" property="attrKey"/>
+        <result column="ATTR_NAME" jdbcType="VARCHAR" property="attrName"/>
+        <result column="VALUE_TYPE" jdbcType="VARCHAR" property="valueType"/>
+        <result column="UNIT" jdbcType="VARCHAR" property="unit"/>
+        <result column="METADATA" jdbcType="VARCHAR" property="metadata"/>
+    </resultMap>
+
+    <insert id="insertDeviceType" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+        insert into DEVICE_TYPE_T (TYPE_CODE, TYPE_NAME, DEVICE_DOMAIN, MANUFACTURER_CODE, SOFTWARE_VERSION,
+                                   COMMUNICATION_PORTS, SUPPORT_PROTOCOLS, META, HARDWARE_VERSION)
+        VALUES (#{typeCode}, #{typeName}, #{deviceDomain}, #{manufacturerCode}, #{softwareVersion},
+                #{communicationPorts}, #{supportProtocols}, #{meta}, #{hardwareVersion})
+    </insert>
+
+    <update id="updateDeviceTypeDetail" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+        update DEVICE_TYPE_T
+        <set>
+            <if test="typeName!=null">TYPE_NAME = #{typeName},</if>
+            <if test="softwareVersion!=null">SOFTWARE_VERSION = #{softwareVersion},</if>
+            <if test="hardwareVersion!=null">HARDWARE_VERSION = #{hardwareVersion},</if>
+            <if test="communicationPorts!=null">COMMUNICATION_PORTS = #{communicationPorts},</if>
+            <if test="supportProtocols!=null">SUPPORT_PROTOCOLS = #{supportProtocols},</if>
+            <if test="meta!=null">META = #{meta}</if>
+        </set>
+        where TYPE_CODE =#{typeCode} and DEVICE_DOMAIN=#{deviceDomain} and MANUFACTURER_CODE = #{manufacturerCode}
+    </update>
+
+    <insert id="saveDeviceType" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+        replace into DEVICE_TYPE_T (TYPE_CODE, TYPE_NAME, DEVICE_DOMAIN, MANUFACTURER_CODE, SOFTWARE_VERSION,
+                                    COMMUNICATION_PORTS, SUPPORT_PROTOCOLS, META, HARDWARE_VERSION)
+            VALUES (#{typeCode}, #{typeName}, #{deviceDomain}, #{manufacturerCode}, #{softwareVersion},
+                    #{communicationPorts}, #{supportProtocols}, #{meta}, #{hardwareVersion})
+    </insert>
+
+    <select id="selectDeviceType" resultMap="DeviceTypeMap">
+        SELECT
+        TYPE_CODE,
+        TYPE_NAME,
+        DEVICE_DOMAIN,
+        MANUFACTURER_CODE,
+        SOFTWARE_VERSION,
+        COMMUNICATION_PORTS,
+        SUPPORT_PROTOCOLS,
+        META,
+        HARDWARE_VERSION
+        FROM
+        DEVICE_TYPE_T
+        <where>
+            1=1
+            <if test="typeCode!=null and typeCode!=''">AND type_code=#{typeCode}</if>
+            <if test="deviceDomain!=null and deviceDomain!=''">AND device_domain=#{deviceDomain}</if>
+            <if test="manufacturerCode!=null">
+                AND manufacturer_code=#{manufacturerCode}
+            </if>
+        </where>
+    </select>
+
+    <select id="getDeviceType" resultMap="DeviceTypeMap">
+        select TYPE_CODE,
+               TYPE_NAME,
+               DEVICE_DOMAIN,
+               MANUFACTURER_CODE,
+               HARDWARE_VERSION,
+               SOFTWARE_VERSION,
+               COMMUNICATION_PORTS,
+               SUPPORT_PROTOCOLS,
+               META
+        from DEVICE_TYPE_T
+        where TYPE_CODE = #{typeCode}
+          and DEVICE_DOMAIN = #{deviceDomain}
+          and MANUFACTURER_CODE = #{manufacturerCode}
+    </select>
+
+    <select id="selectDeviceAttrByDeviceType" resultMap="DeviceAttributeMap" parameterType="com.hzyw.iot.platform.devicemanager.domain.device.DeviceTypeDO">
+       SELECT
+	        t2.ATTR_KEY,t2.ATTR_NAME,t2.VALUE_TYPE,t2.UNIT
+        FROM
+	        DEVICETYPE_ATTR_REL_T  t1,DEVICE_ATTRIBUTE_T t2 where t1.ATTR_KEY = t2.ATTR_KEY AND CONCAT(#{typeCode},'-',#{deviceDomain},'-',#{manufacturerCode})=t1.TYPE_ID
+
+    </select>
+</mapper>
