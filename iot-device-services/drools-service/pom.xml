@@ -13,7 +13,7 @@
 
     <properties>
         <platform.models.version>0.0.1-SNAPSHOT</platform.models.version>
-        <drools.version>7.10.0.Final</drools.version>
+        <drools.version>7.60.0.Final</drools.version>
     </properties>
 
     <dependencies>
