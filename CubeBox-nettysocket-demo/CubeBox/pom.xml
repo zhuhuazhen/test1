@@ -7,7 +7,7 @@
 	<properties>
 		<jdk.version>1.6</jdk.version>
 		<netty.version>4.0.21.Final</netty.version>
-		<zookeeper.version>3.4.6</zookeeper.version>
+		<zookeeper.version>3.4.14</zookeeper.version>
 	</properties>
 	<dependencies>
 		<dependency>
