@@ -6,7 +6,7 @@
 	<version>1.0.1</version>
 	<properties>
 		<jdk.version>1.6</jdk.version>
-		<netty.version>4.0.21.Final</netty.version>
+		<netty.version>4.1.42.Final</netty.version>
 		<zookeeper.version>3.4.6</zookeeper.version>
 	</properties>
 	<dependencies>
